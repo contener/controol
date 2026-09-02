@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none;
+}
+
+/* Impression d'une facture (bouton "Imprimer" de FactureEditorShell.vue et de
+   Factures/Show.vue) : seule la zone .print-area (l'aperçu du modèle sélectionné) est
+   visible à l'impression, le reste de l'application (nav, formulaire...) est masqué. */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .print-area,
+    .print-area * {
+        visibility: visible;
+    }
+
+    .print-area {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+    }
+}
