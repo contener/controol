@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import AdminSubNav from '../Partials/AdminSubNav.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -52,6 +53,8 @@ const rejeter = () => {
 
         <div class="py-8">
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <AdminSubNav />
+
                 <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
                     <div class="flex items-center justify-between mb-4">
                         <span class="px-2 py-1 text-xs font-medium rounded-full" :class="statutClasses[paiement.statut]">{{ statutLabels[paiement.statut] }}</span>

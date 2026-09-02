@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import AdminSubNav from '../Partials/AdminSubNav.vue';
 import TextInput from '@/Components/TextInput.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 
@@ -43,6 +44,8 @@ const basculer = (boutique) => {
 
         <div class="py-8">
             <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-4">
+                <AdminSubNav />
+
                 <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-4 flex flex-col sm:flex-row gap-3">
                     <TextInput v-model="recherche" placeholder="Rechercher une boutique..." class="flex-1" />
                     <SelectInput v-model="statutMarketplace" class="sm:w-56">

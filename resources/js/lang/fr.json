@@ -16,8 +16,10 @@
         "profile": "Profil",
         "subscription": "Abonnement",
         "view_public_shop": "Voir ma boutique publique",
+        "admin_dashboard": "Super Administration",
         "admin_payments": "Administration (paiements)",
         "admin_marketplace": "Administration (Marketplace)",
+        "admin_administrators": "Administrateurs",
         "logout": "Se déconnecter"
     },
     "common": {

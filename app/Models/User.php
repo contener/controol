@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,6 +67,17 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+        'admin_permissions_liste',
+    ];
+
+    /**
+     * Reflète le défaut SQL de la colonne est_actif (voir migration) sur l'objet PHP
+     * immédiatement après User::create(), sans attendre un fresh()/refresh() — Eloquent
+     * ne relit pas automatiquement les colonnes à défaut SQL après un INSERT, l'attribut
+     * resterait sinon null en mémoire (falsy) alors que la ligne réelle vaut 1 en base.
+     */
+    protected $attributes = [
+        'est_actif' => true,
     ];
 
     /**
@@ -79,6 +91,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'date_naissance' => 'date',
+            'est_actif' => 'boolean',
         ];
     }
 
@@ -96,6 +109,50 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return in_array($this->role, [self::ROLE_ADMIN, self::ROLE_SUPER_ADMIN], true);
+    }
+
+    /**
+     * Porte d'entrée de tout l'espace /admin — distincte de isAdmin() qui n'a pas de
+     * notion d'activation. Un admin désactivé (est_actif=false) perd tout accès à
+     * l'espace d'administration mais reste un utilisateur normal de l'application
+     * (aucun verrou sur la connexion elle-même).
+     */
+    public function canAccessAdminSpace(): bool
+    {
+        return $this->isSuperAdmin() || ($this->role === self::ROLE_ADMIN && $this->est_actif);
+    }
+
+    /**
+     * Seule source de vérité pour "cet administrateur peut-il effectuer cette action" —
+     * toujours interrogée fraîche via la relation adminPermissions (mise en cache par
+     * instance/requête par Eloquent, jamais par un cache applicatif) : une permission
+     * ajoutée ou retirée par le Super Admin doit prendre effet immédiatement, sans que
+     * l'administrateur concerné ait besoin de se reconnecter.
+     */
+    public function hasAdminPermission(string $permission): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->canAccessAdminSpace() && $this->adminPermissions->pluck('permission')->contains($permission);
+    }
+
+    public function adminPermissions(): HasMany
+    {
+        return $this->hasMany(AdminPermission::class);
+    }
+
+    /**
+     * Gardé par role === ROLE_ADMIN pour ne jamais interroger admin_permissions sur le
+     * chemin chaud des utilisateurs normaux (auth.user est reconstruit à chaque requête
+     * Inertia par Jetstream\ShareInertiaData) — n'a de sens que pour un compte admin.
+     */
+    protected function adminPermissionsListe(): Attribute
+    {
+        return Attribute::get(fn () => $this->role === self::ROLE_ADMIN
+            ? $this->adminPermissions->pluck('permission')->values()->all()
+            : []);
     }
 
     public function boutiques(): HasMany

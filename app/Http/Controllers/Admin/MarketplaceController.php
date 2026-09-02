@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminAudit;
 use App\Models\Boutique;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -10,8 +11,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Protégé par le middleware 'super_admin' sur le groupe de routes /admin (routes/web.php)
- * — voir Admin\PaiementController pour le même schéma.
+ * Protégé par EnsureAdminAccess (tout /admin/*) + une permission granulaire par action
+ * ('marketplace.voir'/'marketplace.suspendre', voir routes/web.php et
+ * App\Support\AdminPermissions) — un Super Admin passe toujours (hasAdminPermission()
+ * court-circuite dessus), donc aucun changement de comportement pour lui.
  */
 class MarketplaceController extends Controller
 {
@@ -59,9 +62,20 @@ class MarketplaceController extends Controller
         ]);
     }
 
-    public function basculer(Boutique $boutique): RedirectResponse
+    public function basculer(Request $request, Boutique $boutique): RedirectResponse
     {
-        $boutique->update(['marketplace_disabled_by_admin' => ! $boutique->marketplace_disabled_by_admin]);
+        $ancienEtat = $boutique->marketplace_disabled_by_admin;
+        $boutique->update(['marketplace_disabled_by_admin' => ! $ancienEtat]);
+
+        AdminAudit::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'marketplace_suspension_bascule',
+            'resource' => 'boutique',
+            'resource_id' => $boutique->id,
+            'ancienne_valeur' => ['marketplace_disabled_by_admin' => $ancienEtat],
+            'nouvelle_valeur' => ['marketplace_disabled_by_admin' => $boutique->marketplace_disabled_by_admin],
+            'ip_address' => $request->ip(),
+        ]);
 
         $message = $boutique->marketplace_disabled_by_admin
             ? "Boutique {$boutique->nom} désactivée de la Marketplace."

@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'boutique.selected' => \App\Http\Middleware\EnsureBoutiqueSelected::class,
             'super_admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
+            'admin.access' => \App\Http\Middleware\EnsureAdminAccess::class,
+            'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

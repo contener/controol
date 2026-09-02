@@ -13,9 +13,10 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Toutes les actions de ce contrôleur sont protégées par le middleware 'super_admin'
- * (voir routes/web.php) : aucune méthode ici ne doit jamais être atteignable sans que
- * ce middleware ait déjà validé Auth::user()->isSuperAdmin(). Ne pas retirer la
+ * Toutes les actions de ce contrôleur sont protégées par EnsureAdminAccess (tout
+ * /admin/*) + une permission granulaire par route ('paiements.voir'/'valider'/'refuser',
+ * voir routes/web.php et App\Support\AdminPermissions) — un Super Admin passe toujours
+ * (User::hasAdminPermission() court-circuite sur isSuperAdmin()). Ne pas retirer la
  * protection de route en supposant qu'un contrôle ici suffirait.
  */
 class PaiementController extends Controller

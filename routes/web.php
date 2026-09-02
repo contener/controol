@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdministrateurController;
 use App\Http\Controllers\Admin\MarketplaceController as AdminMarketplaceController;
 use App\Http\Controllers\Admin\PaiementController as AdminPaiementController;
 use App\Http\Controllers\AbonnementController;
@@ -66,15 +68,33 @@ Route::middleware([
     Route::get('/abonnement', [AbonnementController::class, 'index'])->name('abonnement.index');
     Route::post('/abonnement/plans/{plan}', [AbonnementController::class, 'demanderChangement'])->name('abonnement.changer');
 
-    // Toute route sous /admin exige le rôle super_admin, vérifié côté serveur à chaque
-    // requête par le middleware EnsureSuperAdmin — jamais uniquement par l'UI.
-    Route::prefix('admin')->name('admin.')->middleware('super_admin')->group(function () {
-        Route::get('/paiements', [AdminPaiementController::class, 'index'])->name('paiements.index');
-        Route::get('/paiements/{paiement}', [AdminPaiementController::class, 'show'])->name('paiements.show');
-        Route::post('/paiements/{paiement}/approuver', [AdminPaiementController::class, 'approuver'])->name('paiements.approuver');
-        Route::post('/paiements/{paiement}/rejeter', [AdminPaiementController::class, 'rejeter'])->name('paiements.rejeter');
+    // Toute route sous /admin exige au minimum d'être admin ou super_admin ET actif,
+    // vérifié côté serveur par EnsureAdminAccess — jamais uniquement par l'UI. Chaque
+    // action sensible ajoute en plus sa propre permission granulaire (admin.permission),
+    // vérifiée par EnsureAdminPermission via User::hasAdminPermission() (qui court-circuite
+    // toujours sur super_admin, donc aucune régression pour le Super Admin existant).
+    Route::prefix('admin')->name('admin.')->middleware('admin.access')->group(function () {
+        Route::get('/', AdminDashboardController::class)->name('dashboard');
 
-        Route::get('/marketplace', [AdminMarketplaceController::class, 'index'])->name('marketplace.index');
-        Route::patch('/marketplace/{boutique}/basculer', [AdminMarketplaceController::class, 'basculer'])->name('marketplace.basculer');
+        Route::get('/paiements', [AdminPaiementController::class, 'index'])->name('paiements.index')->middleware('admin.permission:paiements.voir');
+        Route::get('/paiements/{paiement}', [AdminPaiementController::class, 'show'])->name('paiements.show')->middleware('admin.permission:paiements.voir');
+        Route::post('/paiements/{paiement}/approuver', [AdminPaiementController::class, 'approuver'])->name('paiements.approuver')->middleware('admin.permission:paiements.valider');
+        Route::post('/paiements/{paiement}/rejeter', [AdminPaiementController::class, 'rejeter'])->name('paiements.rejeter')->middleware('admin.permission:paiements.refuser');
+
+        Route::get('/marketplace', [AdminMarketplaceController::class, 'index'])->name('marketplace.index')->middleware('admin.permission:marketplace.voir');
+        Route::patch('/marketplace/{boutique}/basculer', [AdminMarketplaceController::class, 'basculer'])->name('marketplace.basculer')->middleware('admin.permission:marketplace.suspendre');
+
+        // Gérer les administrateurs eux-mêmes reste un privilège non-délégable : aucune
+        // permission granulaire n'y donne accès, uniquement le rôle super_admin exact
+        // (EnsureSuperAdmin, inchangé) — voir App\Support\AdminPermissions pour le
+        // raisonnement complet.
+        Route::prefix('administrateurs')->name('administrateurs.')->middleware('super_admin')->group(function () {
+            Route::get('/', [AdministrateurController::class, 'index'])->name('index');
+            Route::get('/creer', [AdministrateurController::class, 'create'])->name('create');
+            Route::post('/', [AdministrateurController::class, 'store'])->name('store');
+            Route::get('/{administrateur}/modifier', [AdministrateurController::class, 'edit'])->name('edit');
+            Route::put('/{administrateur}', [AdministrateurController::class, 'update'])->name('update');
+            Route::patch('/{administrateur}/basculer', [AdministrateurController::class, 'basculerActivation'])->name('basculer');
+        });
     });
 });

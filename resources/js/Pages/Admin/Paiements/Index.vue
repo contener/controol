@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { Link, router, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import AdminSubNav from '../Partials/AdminSubNav.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -83,6 +84,8 @@ const validerRejet = () => {
 
         <div class="py-8">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
+                <AdminSubNav />
+
                 <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     <TextInput v-model="recherche" placeholder="Nom ou email..." />
                     <SelectInput v-model="statut">

@@ -22,6 +22,12 @@ const mesBoutiques = computed(() => page.props.mesBoutiques ?? []);
 const boutiqueCouranteId = computed(() => page.props.auth.user?.current_boutique_id);
 const boutiqueCourante = computed(() => mesBoutiques.value.find((b) => b.id === boutiqueCouranteId.value));
 
+// N'affiche/masque des liens que par confort — le backend (EnsureAdminAccess /
+// EnsureAdminPermission / super_admin) fait toujours foi, jamais cette visibilité seule.
+const estSuperAdmin = computed(() => page.props.auth.user?.role === 'super_admin');
+const estAdminOuPlus = computed(() => estSuperAdmin.value || page.props.auth.user?.role === 'admin');
+const aPermissionAdmin = (permission) => estSuperAdmin.value || (page.props.auth.user?.admin_permissions_liste ?? []).includes(permission);
+
 const switchBoutique = (boutique) => {
     router.post(route('boutiques.switch', boutique.id), {}, {
         preserveState: false,
@@ -166,12 +172,20 @@ const logout = () => {
                                             {{ t('nav.view_public_shop') }}
                                         </DropdownLink>
 
-                                        <DropdownLink v-if="$page.props.auth.user.role === 'super_admin'" :href="route('admin.paiements.index')">
+                                        <DropdownLink v-if="estAdminOuPlus" :href="route('admin.dashboard')">
+                                            {{ t('nav.admin_dashboard') }}
+                                        </DropdownLink>
+
+                                        <DropdownLink v-if="aPermissionAdmin('paiements.voir')" :href="route('admin.paiements.index')">
                                             {{ t('nav.admin_payments') }}
                                         </DropdownLink>
 
-                                        <DropdownLink v-if="$page.props.auth.user.role === 'super_admin'" :href="route('admin.marketplace.index')">
+                                        <DropdownLink v-if="aPermissionAdmin('marketplace.voir')" :href="route('admin.marketplace.index')">
                                             {{ t('nav.admin_marketplace') }}
+                                        </DropdownLink>
+
+                                        <DropdownLink v-if="estSuperAdmin" :href="route('admin.administrateurs.index')">
+                                            {{ t('nav.admin_administrators') }}
                                         </DropdownLink>
 
                                         <div class="border-t border-gray-200 dark:border-gray-700" />
