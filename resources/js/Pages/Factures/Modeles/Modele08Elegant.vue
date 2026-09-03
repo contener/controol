@@ -85,7 +85,10 @@ const { formatMontant } = useCurrencyFormat();
             <p class="whitespace-pre-line">{{ apercu.notes }}</p>
         </div>
 
-        <div v-if="apercu.boutique.note_pied_facture" class="mt-10 pt-6 border-t border-gray-100 text-center text-gray-400 text-[11px] italic tracking-wide">
+        <div v-if="apercu.garantie" class="mt-10 pt-6 border-t border-gray-100 text-center text-gray-400 text-[11px] italic tracking-wide">
+            <span class="font-semibold not-italic">Garantie : </span>{{ apercu.garantie }}
+        </div>
+        <div v-if="apercu.boutique.note_pied_facture" class="mt-3 pt-3 text-center text-gray-400 text-[11px] italic tracking-wide" :class="!apercu.garantie ? 'border-t border-gray-100 pt-6 mt-10' : ''">
             {{ apercu.boutique.note_pied_facture }}
         </div>
 

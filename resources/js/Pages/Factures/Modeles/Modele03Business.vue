@@ -118,7 +118,10 @@ const contactItems = computed(() => {
             <p class="text-gray-600 whitespace-pre-line">{{ apercu.notes }}</p>
         </div>
 
-        <div v-if="apercu.boutique.note_pied_facture" class="mt-8 pt-4 border-t border-dashed border-emerald-200">
+        <div v-if="apercu.garantie" class="mt-8 pt-4 border-t border-dashed border-emerald-200">
+            <p class="text-[11px] text-gray-400 italic leading-relaxed"><span class="font-semibold not-italic">Garantie : </span>{{ apercu.garantie }}</p>
+        </div>
+        <div v-if="apercu.boutique.note_pied_facture" class="mt-3 pt-3" :class="!apercu.garantie ? 'border-t border-dashed border-emerald-200' : ''">
             <p class="text-[11px] text-gray-400 italic leading-relaxed">{{ apercu.boutique.note_pied_facture }}</p>
         </div>
 

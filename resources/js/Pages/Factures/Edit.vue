@@ -18,6 +18,7 @@ const form = useForm({
     date_echeance: props.facture.date_echeance ?? '',
     remise: props.facture.remise,
     notes: props.facture.notes ?? '',
+    garantie: props.facture.garantie ?? '',
     statut: props.facture.statut,
     modele_id: props.facture.modele_id,
     lignes: props.facture.lignes.map((ligne) => ({

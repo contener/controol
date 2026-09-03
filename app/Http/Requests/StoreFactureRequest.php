@@ -31,6 +31,7 @@ class StoreFactureRequest extends FormRequest
             'date_echeance' => ['nullable', 'date', 'after_or_equal:date_emission'],
             'remise' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
+            'garantie' => ['nullable', 'string', 'max:1000'],
             'statut' => ['nullable', 'in:brouillon,envoyee,payee,annulee'],
             'modele_id' => ['nullable', 'integer', 'between:1,10'],
             'lignes' => ['required', 'array', 'min:1'],

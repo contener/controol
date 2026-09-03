@@ -24,6 +24,7 @@ const form = useForm({
     date_echeance: '',
     remise: 0,
     notes: '',
+    garantie: '',
     statut: 'brouillon',
     modele_id: props.modeleInitial,
     lignes: [

@@ -26,6 +26,7 @@ class Facture extends Model
         'total_tva',
         'total_ttc',
         'notes',
+        'garantie',
         'created_by',
     ];
 

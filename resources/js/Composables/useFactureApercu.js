@@ -93,6 +93,7 @@ export function useFactureApercu(form, { clients = () => [], boutique = () => ({
                 total_ttc: sousTotal + totalTva - remise,
             },
             notes: form.notes || null,
+            garantie: form.garantie || null,
         };
     });
 }

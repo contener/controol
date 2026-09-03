@@ -65,6 +65,7 @@ class FactureApercuBuilder
                 'total_ttc' => (float) $facture->total_ttc,
             ],
             'notes' => $facture->notes,
+            'garantie' => $facture->garantie,
         ];
     }
 }

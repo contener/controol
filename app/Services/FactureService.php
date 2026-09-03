@@ -31,6 +31,7 @@ class FactureService
                 'date_echeance' => $data['date_echeance'] ?? null,
                 'remise' => $data['remise'] ?? 0,
                 'notes' => $data['notes'] ?? null,
+                'garantie' => $data['garantie'] ?? null,
                 'created_by' => $user->id,
             ]);
 
@@ -54,6 +55,7 @@ class FactureService
                 'date_echeance' => $data['date_echeance'] ?? null,
                 'remise' => $data['remise'] ?? 0,
                 'notes' => $data['notes'] ?? null,
+                'garantie' => $data['garantie'] ?? null,
                 'modele_id' => $data['modele_id'] ?? $facture->modele_id->value,
             ]);
 

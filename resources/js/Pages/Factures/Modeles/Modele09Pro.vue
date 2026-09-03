@@ -128,7 +128,10 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
             <p class="text-gray-600 text-xs whitespace-pre-line">{{ apercu.notes }}</p>
         </div>
 
-        <div v-if="apercu.boutique.note_pied_facture" class="mt-4 text-[11px] text-gray-400 italic">
+        <div v-if="apercu.garantie" class="mt-4 text-[11px] text-gray-400 italic">
+            <span class="font-semibold not-italic">Garantie : </span>{{ apercu.garantie }}
+        </div>
+        <div v-if="apercu.boutique.note_pied_facture" class="mt-1 text-[11px] text-gray-400 italic" :class="!apercu.garantie ? 'mt-4' : ''">
             {{ apercu.boutique.note_pied_facture }}
         </div>
 

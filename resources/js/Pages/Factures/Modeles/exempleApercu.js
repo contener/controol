@@ -35,4 +35,5 @@ export const exempleApercu = {
     ],
     totaux: { sous_total: 725000, remise: 0, total_tva: 139562.5, total_ttc: 864562.5 },
     notes: 'Merci de votre confiance.',
+    garantie: 'Garantie de 6 mois. Ne couvre pas les dommages liés à l\'eau, aux chocs ou à une mauvaise utilisation.',
 };

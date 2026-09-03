@@ -241,4 +241,30 @@ class FactureModeleTest extends TestCase
         $this->assertSame($client->id, $copie->client_id);
         $this->assertSame(1, $copie->lignes()->count());
     }
+
+    // Le champ "garantie" est propre à chaque facture (pas à la boutique comme
+    // note_pied_facture) : deux factures de la même boutique peuvent avoir des garanties
+    // différentes, et il apparaît correctement dans l'aperçu construit côté serveur.
+    public function test_garantie_is_saved_per_invoice_and_appears_in_the_preview(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('gratuit');
+        $client = Client::create(['boutique_id' => $user->current_boutique_id, 'nom' => 'Client A', 'etiquette' => 'client']);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payloadFacture($client->id, [
+            'garantie' => "Garantie de 6 mois. Ne couvre pas l'eau, les chocs ou une mauvaise utilisation.",
+        ]))->assertRedirect();
+
+        $facture = Facture::latest('id')->first();
+        $this->assertSame("Garantie de 6 mois. Ne couvre pas l'eau, les chocs ou une mauvaise utilisation.", $facture->garantie);
+
+        $this->get(route('factures.show', $facture))
+            ->assertInertia(fn ($page) => $page->where('apercu.garantie', $facture->garantie));
+
+        // Une seconde facture de la même boutique, sans garantie précisée, ne doit rien
+        // hériter de la première (le champ est bien par facture, pas par boutique).
+        $this->post('/factures', $this->payloadFacture($client->id))->assertRedirect();
+        $secondeFacture = Facture::latest('id')->first();
+        $this->assertNull($secondeFacture->garantie);
+    }
 }

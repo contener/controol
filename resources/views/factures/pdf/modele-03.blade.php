@@ -128,6 +128,9 @@
         </div>
     @endif
 
+    @if($apercu['garantie'])
+        <div class="footer-note"><strong>Garantie :</strong> {{ $apercu['garantie'] }}</div>
+    @endif
     @if($apercu['boutique']['note_pied_facture'])
         <div class="footer-note">{{ $apercu['boutique']['note_pied_facture'] }}</div>
     @endif
