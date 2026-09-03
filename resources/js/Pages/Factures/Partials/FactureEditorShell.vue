@@ -27,8 +27,8 @@ const props = defineProps({
 const emit = defineEmits(['submit']);
 
 const apercu = useFactureApercu(props.form, {
-    clients: props.clients,
-    boutique: props.boutique,
+    clients: () => props.clients,
+    boutique: () => props.boutique,
     numeroPrevisualise: props.numeroPrevisualise,
 });
 
@@ -101,7 +101,7 @@ const imprimer = () => {
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6" :class="ongletMobile === 'apercu' ? 'hidden lg:block' : ''">
-                <FactureForm :form="form" :clients="clients" :produits="produits" :taux-tva-defaut="tauxTvaDefaut" />
+                <FactureForm :form="form" :clients="clients" :produits="produits" :boutique="boutique" :taux-tva-defaut="tauxTvaDefaut" />
             </div>
 
             <div class="lg:sticky lg:top-4 self-start" :class="ongletMobile === 'saisie' ? 'hidden lg:block' : ''">

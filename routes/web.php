@@ -39,6 +39,7 @@ Route::middleware([
     Route::resource('boutiques', BoutiqueController::class)->except(['show']);
     Route::post('/boutiques/{boutique}/switch', [BoutiqueController::class, 'switch'])->name('boutiques.switch');
     Route::patch('/boutiques/{boutique}/marketplace', [BoutiqueController::class, 'updateMarketplace'])->name('boutiques.marketplace');
+    Route::patch('/boutiques/{boutique}/nui', [BoutiqueController::class, 'updateNui'])->name('boutiques.nui');
 
     Route::middleware('boutique.selected')->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');

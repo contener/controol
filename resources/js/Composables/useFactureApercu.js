@@ -34,12 +34,21 @@ const clientVide = {
  * App\Support\FactureApercuBuilder côté serveur (voir sa docblock), pour qu'un modèle
  * n'ait jamais à connaître deux mappings différents.
  *
+ * clients/boutique sont acceptés en fonctions "getter" (ex. () => props.boutique) et non
+ * en valeurs destructurées directement : si on capturait juste props.boutique une seule
+ * fois à l'appel, un rechargement partiel Inertia qui remplace cet objet (ex. après
+ * modification du NUI depuis l'écran de saisie) ne serait jamais reflété dans l'aperçu —
+ * le computed() ci-dessous doit lire la prop en direct à chaque recalcul pour rester
+ * réactif à un remplacement complet de l'objet, pas seulement à une mutation interne.
+ *
  * @param {object} form - l'objet réactif retourné par useForm() d'Inertia
- * @param {{clients: Array, boutique: object, numeroPrevisualise?: string}} contexte
+ * @param {{clients: () => Array, boutique: () => object, numeroPrevisualise?: string}} contexte
  */
-export function useFactureApercu(form, { clients = [], boutique = {}, numeroPrevisualise = '(brouillon)' } = {}) {
+export function useFactureApercu(form, { clients = () => [], boutique = () => ({}), numeroPrevisualise = '(brouillon)' } = {}) {
     return computed(() => {
-        const client = clients.find((c) => c.id === Number(form.client_id)) ?? null;
+        const clientsValeur = clients();
+        const boutiqueValeur = boutique();
+        const client = clientsValeur.find((c) => c.id === Number(form.client_id)) ?? null;
 
         const lignes = (form.lignes ?? []).map((ligne) => ({
             designation: ligne.designation || '',
@@ -61,19 +70,19 @@ export function useFactureApercu(form, { clients = [], boutique = {}, numeroPrev
                 statut: form.statut ?? 'brouillon',
                 date_emission: form.date_emission || null,
                 date_echeance: form.date_echeance || null,
-                devise: boutique?.devise ?? 'XAF',
+                devise: boutiqueValeur?.devise ?? 'XAF',
             },
             boutique: {
-                nom: boutique?.nom ?? '',
-                logo_url: boutique?.logo_path ? `/storage/${boutique.logo_path}` : null,
-                adresse: boutique?.adresse ?? null,
-                ville: boutique?.ville ?? null,
-                pays: boutique?.pays ?? null,
-                telephone: boutique?.telephone ?? null,
-                whatsapp: boutique?.whatsapp ?? null,
-                email: boutique?.email ?? null,
-                nui: boutique?.nui ?? null,
-                note_pied_facture: boutique?.note_pied_facture ?? null,
+                nom: boutiqueValeur?.nom ?? '',
+                logo_url: boutiqueValeur?.logo_path ? `/storage/${boutiqueValeur.logo_path}` : null,
+                adresse: boutiqueValeur?.adresse ?? null,
+                ville: boutiqueValeur?.ville ?? null,
+                pays: boutiqueValeur?.pays ?? null,
+                telephone: boutiqueValeur?.telephone ?? null,
+                whatsapp: boutiqueValeur?.whatsapp ?? null,
+                email: boutiqueValeur?.email ?? null,
+                nui: boutiqueValeur?.nui ?? null,
+                note_pied_facture: boutiqueValeur?.note_pied_facture ?? null,
             },
             client: client ?? clientVide,
             lignes,

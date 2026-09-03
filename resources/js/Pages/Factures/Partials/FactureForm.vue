@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useForm } from '@inertiajs/vue3';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -12,11 +13,32 @@ const props = defineProps({
     form: Object,
     clients: Array,
     produits: Array,
+    boutique: {
+        type: Object,
+        default: null,
+    },
     tauxTvaDefaut: {
         type: Number,
         default: 0,
     },
 });
+
+// Le NUI est une propriété de la boutique, pas de la facture — le modifier ici met à
+// jour la boutique elle-même (via boutiques.nui) et s'appliquera à toutes ses futures
+// factures, pas seulement celle en cours de saisie.
+const formNui = useForm({ nui: props.boutique?.nui ?? '' });
+const nuiEnregistre = ref(false);
+watch(() => props.boutique?.nui, (valeur) => { formNui.nui = valeur ?? ''; });
+
+const enregistrerNui = () => {
+    formNui.patch(route('boutiques.nui', props.boutique.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            nuiEnregistre.value = true;
+            setTimeout(() => { nuiEnregistre.value = false; }, 2000);
+        },
+    });
+};
 
 const { formatMontant } = useCurrencyFormat();
 
@@ -65,6 +87,19 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
                 <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.nom }}</option>
             </SelectInput>
             <InputError :message="form.errors.client_id" class="mt-2" />
+        </section>
+
+        <section v-if="boutique">
+            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Boutique</h3>
+            <InputLabel for="nui" value="NUI (Numéro d'Identifiant Unique)" />
+            <div class="mt-1 flex items-start gap-2">
+                <TextInput id="nui" v-model="formNui.nui" type="text" class="block w-full" placeholder="M012312345678A" />
+                <SecondaryButton type="button" :disabled="formNui.processing" @click="enregistrerNui">
+                    {{ nuiEnregistre ? '✓ Enregistré' : 'Enregistrer' }}
+                </SecondaryButton>
+            </div>
+            <InputError :message="formNui.errors.nui" class="mt-2" />
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">S'applique à toutes les factures de cette boutique — modifiable aussi depuis les paramètres de la boutique.</p>
         </section>
 
         <section>

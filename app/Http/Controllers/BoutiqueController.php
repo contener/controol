@@ -143,6 +143,23 @@ class BoutiqueController extends Controller
         return back()->with('flash_success', 'Préférence Marketplace mise à jour.');
     }
 
+    /**
+     * Mise à jour rapide du NUI depuis l'écran de saisie de facture (FactureForm.vue) —
+     * évite à l'utilisateur de quitter la création de facture pour l'ajouter/corriger.
+     * Le NUI reste une propriété de la boutique (pas de la facture) : le modifier ici
+     * met à jour toutes les futures factures de cette boutique, jamais une seule.
+     */
+    public function updateNui(Request $request, Boutique $boutique): RedirectResponse
+    {
+        $this->authorize('update', $boutique);
+
+        $data = $request->validate(['nui' => ['nullable', 'string', 'max:50']]);
+
+        $boutique->update($data);
+
+        return back()->with('flash_success', 'NUI mis à jour.');
+    }
+
     private function genererSlugUnique(string $nom): string
     {
         $base = Str::slug($nom);
