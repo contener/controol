@@ -29,22 +29,25 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
 <template>
     <div class="bg-white text-gray-900 text-sm p-8 print:p-0">
         <div class="flex justify-between items-start gap-6">
-            <div class="flex items-center gap-3">
-                <img v-if="apercu.boutique.logo_url" :src="apercu.boutique.logo_url" class="h-16 w-16 object-contain rounded-lg border border-gray-100 p-1" alt="Logo">
+            <div class="flex items-center gap-4">
+                <img v-if="apercu.boutique.logo_url" :src="apercu.boutique.logo_url" class="h-16 w-16 object-contain rounded-xl border border-gray-100 p-1" alt="Logo">
                 <div>
-                    <h1 class="text-lg font-bold text-violet-700">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
+                    <h1 class="text-2xl font-bold text-violet-700 tracking-tight">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
+                    <div v-if="apercu.boutique.adresse || apercu.boutique.ville" class="text-gray-600 text-xs mt-1.5 font-medium">
+                        <span>📍</span>
+                        <span v-if="apercu.boutique.adresse">{{ apercu.boutique.adresse }}<span v-if="apercu.boutique.ville">, </span></span><span v-if="apercu.boutique.ville">{{ apercu.boutique.ville }}</span><span v-if="apercu.boutique.pays">, {{ apercu.boutique.pays }}</span>
+                    </div>
                     <div class="text-gray-500 text-xs mt-1 space-y-0.5">
-                        <div v-if="apercu.boutique.adresse">{{ apercu.boutique.adresse }}</div>
-                        <div v-if="apercu.boutique.ville">{{ apercu.boutique.ville }}, {{ apercu.boutique.pays }}</div>
                         <div v-if="apercu.boutique.email">{{ apercu.boutique.email }}</div>
+                        <div v-if="apercu.boutique.nui">NUI : {{ apercu.boutique.nui }}</div>
                     </div>
                 </div>
             </div>
             <div class="text-right">
                 <span class="inline-block text-xs font-bold px-3 py-1 rounded-full" :class="statutClasse">{{ statutLabel }}</span>
-                <div class="mt-2 bg-violet-50 border border-violet-100 rounded-lg px-4 py-2">
+                <div class="mt-2 bg-violet-50 border border-violet-100 rounded-lg px-4 py-2.5">
                     <div class="text-xs uppercase tracking-wide text-violet-500 font-semibold">Commande / Facture</div>
-                    <div class="font-bold text-violet-800">{{ apercu.meta.numero }}</div>
+                    <div class="font-bold text-violet-800 text-lg">{{ apercu.meta.numero }}</div>
                     <div class="text-gray-500 text-xs mt-1 space-y-0.5">
                         <div>Émise : {{ apercu.meta.date_emission || '—' }}</div>
                         <div v-if="apercu.meta.date_echeance">Échéance : {{ apercu.meta.date_echeance }}</div>
@@ -113,13 +116,17 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
                 <div class="flex justify-between text-gray-500"><span>Sous-total HT</span><span>{{ formatMontant(apercu.totaux.sous_total, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between text-gray-500"><span>TVA</span><span>{{ formatMontant(apercu.totaux.total_tva, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between text-gray-500"><span>Remise</span><span>- {{ formatMontant(apercu.totaux.remise, apercu.meta.devise) }}</span></div>
-                <div class="flex justify-between font-bold text-base bg-violet-600 text-white rounded px-2 py-1.5"><span>Total</span><span>{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span></div>
+                <div class="flex justify-between items-center font-bold text-lg bg-violet-600 text-white rounded-lg px-3 py-2.5 mt-1"><span>Total</span><span>{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span></div>
             </div>
         </div>
 
         <div v-if="apercu.notes" class="mt-6">
             <div class="text-xs font-semibold text-gray-500 uppercase mb-1">Notes</div>
             <p class="text-gray-600 whitespace-pre-line">{{ apercu.notes }}</p>
+        </div>
+
+        <div v-if="apercu.boutique.note_pied_facture" class="mt-6 pt-3 border-t border-dashed border-gray-200 text-[11px] text-gray-400 italic text-center">
+            {{ apercu.boutique.note_pied_facture }}
         </div>
 
         <div class="mt-10 pt-4 border-t border-gray-200 text-center text-xs text-gray-400">

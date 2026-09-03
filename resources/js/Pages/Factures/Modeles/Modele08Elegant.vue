@@ -9,14 +9,17 @@ const { formatMontant } = useCurrencyFormat();
 </script>
 
 <template>
-    <div class="bg-white text-gray-900 text-sm px-16 py-14 print:p-0 font-light">
+    <div class="bg-white text-gray-900 text-sm px-16 py-14 print:p-0 font-light border border-gray-100">
         <div class="text-center">
-            <img v-if="apercu.boutique.logo_url" :src="apercu.boutique.logo_url" class="h-12 w-auto object-contain mx-auto mb-4" alt="Logo">
-            <h1 class="font-serif text-2xl tracking-widest uppercase">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
-            <div class="text-gray-400 text-xs mt-2 tracking-wide space-x-2">
-                <span v-if="apercu.boutique.adresse">{{ apercu.boutique.adresse }}</span>
-                <span v-if="apercu.boutique.ville">· {{ apercu.boutique.ville }}</span>
-                <span v-if="apercu.boutique.email">· {{ apercu.boutique.email }}</span>
+            <img v-if="apercu.boutique.logo_url" :src="apercu.boutique.logo_url" class="h-12 w-auto object-contain mx-auto mb-5" alt="Logo">
+            <h1 class="font-serif text-3xl tracking-[0.15em] uppercase">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
+            <div v-if="apercu.boutique.adresse || apercu.boutique.ville" class="text-gray-400 text-xs mt-3 tracking-wide">
+                <span>📍</span>
+                <span v-if="apercu.boutique.adresse">{{ apercu.boutique.adresse }}<span v-if="apercu.boutique.ville">, </span></span><span v-if="apercu.boutique.ville">{{ apercu.boutique.ville }}</span><span v-if="apercu.boutique.pays">, {{ apercu.boutique.pays }}</span>
+            </div>
+            <div class="text-gray-400 text-xs mt-1.5 tracking-wide space-x-2">
+                <span v-if="apercu.boutique.email">{{ apercu.boutique.email }}</span>
+                <span v-if="apercu.boutique.nui">· NUI {{ apercu.boutique.nui }}</span>
             </div>
         </div>
 
@@ -67,10 +70,11 @@ const { formatMontant } = useCurrencyFormat();
             </tbody>
         </table>
 
-        <div class="mt-16 text-center">
-            <div class="uppercase tracking-widest text-gray-400 text-xs mb-2">Total à payer</div>
-            <div class="font-serif text-4xl">{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</div>
-            <div class="text-gray-400 text-xs mt-3 space-x-4">
+        <div class="mt-16 pt-10 border-t border-gray-100 text-center">
+            <div class="uppercase tracking-widest text-gray-400 text-xs mb-3">Total à payer</div>
+            <div class="font-serif text-5xl">{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</div>
+            <div class="w-10 h-px bg-gray-300 mx-auto mt-4 mb-3"></div>
+            <div class="text-gray-400 text-xs space-x-4">
                 <span>Sous-total {{ formatMontant(apercu.totaux.sous_total, apercu.meta.devise) }}</span>
                 <span>TVA {{ formatMontant(apercu.totaux.total_tva, apercu.meta.devise) }}</span>
                 <span v-if="apercu.totaux.remise">Remise - {{ formatMontant(apercu.totaux.remise, apercu.meta.devise) }}</span>
@@ -79,6 +83,10 @@ const { formatMontant } = useCurrencyFormat();
 
         <div v-if="apercu.notes" class="mt-14 text-center text-gray-400 text-xs">
             <p class="whitespace-pre-line">{{ apercu.notes }}</p>
+        </div>
+
+        <div v-if="apercu.boutique.note_pied_facture" class="mt-10 pt-6 border-t border-gray-100 text-center text-gray-400 text-[11px] italic tracking-wide">
+            {{ apercu.boutique.note_pied_facture }}
         </div>
 
         <div class="mt-20 flex justify-between items-end text-xs text-gray-400">

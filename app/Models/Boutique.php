@@ -28,6 +28,8 @@ class Boutique extends Model
         'email',
         'devise',
         'taux_tva_defaut',
+        'nui',
+        'note_pied_facture',
         'statut',
         'facebook_url',
         'instagram_url',

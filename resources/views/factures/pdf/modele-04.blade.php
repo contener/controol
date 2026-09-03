@@ -5,30 +5,33 @@
     <title>Facture {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
-        .hero { width: 100%; background: #6d28d9; color: #fff; border-radius: 10px; }
-        .hero td { padding: 26px 30px; text-align: center; }
+        .hero { width: 100%; background: #6d28d9; color: #fff; border-radius: 12px; }
+        .hero td { padding: 30px 32px; text-align: center; }
         .hero .logo { max-height: 50px; margin-bottom: 8px; }
-        .hero h1 { font-size: 20px; margin: 0 0 4px; color: #fff; }
+        .hero h1 { font-size: 23px; margin: 0 0 6px; color: #fff; }
         .hero .sub { color: #ddd6fe; font-size: 11px; }
-        .pill { display: inline-block; background: #8250e0; border-radius: 14px; padding: 5px 14px; font-size: 10px; margin: 10px 3px 0; color: #fff; }
-        .cards { width: 100%; margin-top: 16px; border-collapse: collapse; }
+        .pill { display: inline-block; background: #8250e0; border-radius: 14px; padding: 5px 14px; font-size: 10px; margin: 12px 3px 0; color: #fff; }
+        .cards { width: 100%; margin-top: 18px; border-collapse: collapse; }
         .cards td { vertical-align: top; width: 50%; }
-        .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; }
-        .card-label { font-size: 10px; text-transform: uppercase; color: #9ca3af; font-weight: bold; margin-bottom: 6px; }
+        .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; }
+        .card-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; font-weight: bold; margin-bottom: 6px; }
         .muted { color: #6b7280; }
-        table.lignes { width: 100%; border-collapse: collapse; margin-top: 16px; border: 1px solid #e5e7eb; border-radius: 8px; }
-        table.lignes th { text-align: left; font-size: 10px; text-transform: uppercase; color: #9ca3af; padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: normal; }
+        .nui-line { color: #6b7280; font-weight: bold; }
+        table.lignes { width: 100%; border-collapse: collapse; margin-top: 18px; border: 1px solid #e5e7eb; border-radius: 8px; }
+        table.lignes thead tr { background: #f5f3ff; }
+        table.lignes th { text-align: left; font-size: 10px; text-transform: uppercase; color: #6d28d9; padding: 10px; border-bottom: 1px solid #e5e7eb; font-weight: bold; }
         table.lignes td { padding: 10px; border-top: 1px solid #f3f4f6; }
         .text-right { text-align: right; }
         .qr-box { width: 70px; height: 70px; border: 1px dashed #d1d5db; border-radius: 8px; }
         .qr-box td { text-align: center; vertical-align: middle; font-size: 8px; color: #d1d5db; }
-        .tot-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; }
+        .tot-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; }
         .tot-card table { width: 100%; }
-        .tot-card td { padding: 2px 0; color: #6b7280; }
-        .total-final { background: #6d28d9; border-radius: 8px; margin-top: 8px; }
-        .total-final td { color: #fff; font-weight: bold; font-size: 13px; padding: 8px 10px; }
-        .notes-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 14px; margin-top: 16px; }
-        .footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid #f3f4f6; text-align: center; font-size: 10px; color: #9ca3af; }
+        .tot-card td { padding: 3px 0; color: #6b7280; }
+        .total-final { background: #6d28d9; border-radius: 8px; margin-top: 10px; }
+        .total-final td { color: #fff; font-weight: bold; font-size: 14px; padding: 10px 12px; }
+        .notes-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin-top: 18px; }
+        .footer-note { margin-top: 18px; padding-top: 14px; border-top: 1px dashed #e5e7eb; font-size: 10px; color: #9ca3af; font-style: italic; line-height: 1.5; }
+        .footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #f3f4f6; text-align: center; font-size: 10px; color: #9ca3af; }
     </style>
 </head>
 <body>
@@ -39,8 +42,14 @@
                     <img src="{{ $apercu['boutique']['logo_url'] }}" class="logo"><br>
                 @endif
                 <h1>{{ $apercu['boutique']['nom'] }}</h1>
-                @if($apercu['boutique']['ville'] || $apercu['boutique']['pays'])
-                    <div class="sub">{{ trim(($apercu['boutique']['ville'] ?? '').(($apercu['boutique']['ville'] && $apercu['boutique']['pays']) ? ', ' : '').($apercu['boutique']['pays'] ?? '')) }}</div>
+                @php
+                    $localisation = array_filter([
+                        $apercu['boutique']['adresse'] ?? null,
+                        trim(($apercu['boutique']['ville'] ?? '').(($apercu['boutique']['ville'] && $apercu['boutique']['pays']) ? ', ' : '').($apercu['boutique']['pays'] ?? '')) ?: null,
+                    ]);
+                @endphp
+                @if(count($localisation))
+                    <div class="sub">&#9679; {{ implode(' — ', $localisation) }}</div>
                 @endif
                 <div>
                     <span class="pill">Facture {{ $apercu['meta']['numero'] }}</span>
@@ -69,10 +78,10 @@
                 <div class="card">
                     <div class="card-label">Coordonnées</div>
                     <span class="muted">
-                        @if($apercu['boutique']['adresse']) {{ $apercu['boutique']['adresse'] }}<br>@endif
                         @if($apercu['boutique']['telephone']) Tél : {{ $apercu['boutique']['telephone'] }}<br>@endif
-                        @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}@endif
-                        @if(!$apercu['boutique']['adresse'] && !$apercu['boutique']['telephone'] && !$apercu['boutique']['email']) — @endif
+                        @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}<br>@endif
+                        @if($apercu['boutique']['nui'])<span class="nui-line">NUI : {{ $apercu['boutique']['nui'] }}</span>@endif
+                        @if(!$apercu['boutique']['telephone'] && !$apercu['boutique']['email'] && !$apercu['boutique']['nui']) — @endif
                     </span>
                 </div>
             </td>
@@ -133,6 +142,10 @@
             <div class="card-label">Notes</div>
             <p style="margin: 0;">{{ $apercu['notes'] }}</p>
         </div>
+    @endif
+
+    @if($apercu['boutique']['note_pied_facture'])
+        <div class="footer-note">{{ $apercu['boutique']['note_pied_facture'] }}</div>
     @endif
 
     <div class="footer">Merci de votre confiance.</div>

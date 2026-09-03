@@ -22,6 +22,8 @@ const form = useForm({
     email: props.boutique.email,
     devise: props.boutique.devise,
     taux_tva_defaut: props.boutique.taux_tva_defaut,
+    nui: props.boutique.nui,
+    note_pied_facture: props.boutique.note_pied_facture,
     facebook_url: props.boutique.facebook_url,
     instagram_url: props.boutique.instagram_url,
     telegram_url: props.boutique.telegram_url,

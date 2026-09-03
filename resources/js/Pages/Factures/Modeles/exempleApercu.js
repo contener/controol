@@ -17,6 +17,8 @@ export const exempleApercu = {
         telephone: '+237 6 00 00 00 00',
         whatsapp: '+237 6 00 00 00 00',
         email: 'contact@maboutique.demo',
+        nui: 'M012312345678A',
+        note_pied_facture: "La garantie ne couvre pas les dommages liés à une mauvaise utilisation.",
     },
     client: {
         nom: 'Société Alpha SARL',

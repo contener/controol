@@ -11,22 +11,23 @@ const { formatMontant } = useCurrencyFormat();
 <template>
     <div class="bg-white text-gray-900 text-sm p-8 print:p-0">
         <!-- Grande zone d'en-tête façon hero SaaS -->
-        <div class="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-8 py-10 text-center">
+        <div class="rounded-2xl bg-gradient-to-br from-violet-600 via-violet-600 to-indigo-700 text-white px-8 py-11 text-center shadow-sm">
             <img v-if="apercu.boutique.logo_url" :src="apercu.boutique.logo_url" class="h-14 w-auto object-contain mx-auto mb-3" alt="Logo">
-            <h1 class="text-2xl font-bold tracking-tight">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
-            <p v-if="apercu.boutique.ville || apercu.boutique.pays" class="mt-1 text-violet-100 text-xs">
-                {{ [apercu.boutique.ville, apercu.boutique.pays].filter(Boolean).join(', ') }}
+            <h1 class="text-3xl font-extrabold tracking-tight">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
+            <p v-if="apercu.boutique.adresse || apercu.boutique.ville || apercu.boutique.pays" class="mt-2 text-violet-100 text-xs flex items-center justify-center gap-1.5">
+                <span>📍</span>
+                <span>{{ [apercu.boutique.adresse, [apercu.boutique.ville, apercu.boutique.pays].filter(Boolean).join(', ')].filter(Boolean).join(' — ') }}</span>
             </p>
-            <div class="mt-5 flex justify-center gap-2 flex-wrap">
-                <span class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-medium">Facture {{ apercu.meta.numero }}</span>
+            <div class="mt-6 flex justify-center gap-2 flex-wrap">
+                <span class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide">Facture {{ apercu.meta.numero }}</span>
                 <span v-if="apercu.meta.date_emission" class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-medium">Émise le {{ apercu.meta.date_emission }}</span>
                 <span v-if="apercu.meta.date_echeance" class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-medium">Échéance {{ apercu.meta.date_echeance }}</span>
             </div>
         </div>
 
         <!-- Cartes : client / boutique -->
-        <div class="mt-6 grid grid-cols-2 gap-4">
-            <div class="rounded-lg border border-gray-200 shadow-sm p-4">
+        <div class="mt-7 grid grid-cols-2 gap-4">
+            <div class="rounded-lg border border-gray-200 shadow-sm p-5">
                 <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Facturé à</div>
                 <div class="font-semibold">{{ apercu.client.nom }}</div>
                 <div class="text-gray-500 space-y-0.5 mt-1">
@@ -36,27 +37,27 @@ const { formatMontant } = useCurrencyFormat();
                     <div v-if="apercu.client.telephone">{{ apercu.client.telephone }}</div>
                 </div>
             </div>
-            <div class="rounded-lg border border-gray-200 shadow-sm p-4">
+            <div class="rounded-lg border border-gray-200 shadow-sm p-5">
                 <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Coordonnées</div>
                 <div class="text-gray-500 space-y-0.5">
-                    <div v-if="apercu.boutique.adresse">{{ apercu.boutique.adresse }}</div>
                     <div v-if="apercu.boutique.telephone">Tél : {{ apercu.boutique.telephone }}</div>
                     <div v-if="apercu.boutique.email">{{ apercu.boutique.email }}</div>
-                    <div v-if="!apercu.boutique.adresse && !apercu.boutique.telephone && !apercu.boutique.email" class="text-gray-300">—</div>
+                    <div v-if="apercu.boutique.nui" class="font-medium text-gray-600">NUI : {{ apercu.boutique.nui }}</div>
+                    <div v-if="!apercu.boutique.telephone && !apercu.boutique.email && !apercu.boutique.nui" class="text-gray-300">—</div>
                 </div>
             </div>
         </div>
 
         <!-- Tableau épuré -->
-        <div class="mt-4 rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div class="mt-5 rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             <table class="w-full border-collapse">
                 <thead>
-                    <tr class="text-xs uppercase tracking-wide text-gray-400">
-                        <th class="text-left py-3 px-4 font-medium">Désignation</th>
-                        <th class="text-right py-3 px-4 font-medium">Qté</th>
-                        <th class="text-right py-3 px-4 font-medium">P.U. HT</th>
-                        <th class="text-right py-3 px-4 font-medium">TVA %</th>
-                        <th class="text-right py-3 px-4 font-medium">Total TTC</th>
+                    <tr class="bg-violet-50 text-xs uppercase tracking-wide text-violet-700">
+                        <th class="text-left py-3 px-4 font-semibold">Désignation</th>
+                        <th class="text-right py-3 px-4 font-semibold">Qté</th>
+                        <th class="text-right py-3 px-4 font-semibold">P.U. HT</th>
+                        <th class="text-right py-3 px-4 font-semibold">TVA %</th>
+                        <th class="text-right py-3 px-4 font-semibold">Total TTC</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,29 +79,33 @@ const { formatMontant } = useCurrencyFormat();
         </div>
 
         <!-- Résumé financier mis en avant -->
-        <div class="mt-4 flex justify-between items-start gap-4">
+        <div class="mt-5 flex justify-between items-start gap-4">
             <div class="w-20 h-20 border border-dashed border-gray-300 rounded-lg flex items-center justify-center text-[10px] text-gray-300 text-center leading-tight shrink-0">
                 QR Code
             </div>
-            <div class="flex-1 max-w-xs ml-auto rounded-lg border border-gray-200 shadow-sm p-4">
+            <div class="flex-1 max-w-xs ml-auto rounded-lg border border-gray-200 shadow-sm p-5">
                 <div class="space-y-1 text-gray-500">
                     <div class="flex justify-between"><span>Sous-total HT</span><span>{{ formatMontant(apercu.totaux.sous_total, apercu.meta.devise) }}</span></div>
                     <div class="flex justify-between"><span>TVA</span><span>{{ formatMontant(apercu.totaux.total_tva, apercu.meta.devise) }}</span></div>
                     <div class="flex justify-between"><span>Remise</span><span>- {{ formatMontant(apercu.totaux.remise, apercu.meta.devise) }}</span></div>
                 </div>
-                <div class="mt-3 flex justify-between items-center bg-violet-600 text-white rounded-lg px-4 py-3">
+                <div class="mt-3 flex justify-between items-center bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg px-4 py-3.5">
                     <span class="font-semibold">Total TTC</span>
-                    <span class="text-lg font-bold">{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span>
+                    <span class="text-xl font-extrabold">{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span>
                 </div>
             </div>
         </div>
 
-        <div v-if="apercu.notes" class="mt-6 rounded-lg border border-gray-200 shadow-sm p-4">
+        <div v-if="apercu.notes" class="mt-7 rounded-lg border border-gray-200 shadow-sm p-4">
             <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Notes</div>
             <p class="text-gray-600 whitespace-pre-line">{{ apercu.notes }}</p>
         </div>
 
-        <div class="mt-10 pt-4 border-t border-gray-100 text-xs text-gray-400 text-center tracking-wide">
+        <div v-if="apercu.boutique.note_pied_facture" class="mt-6 pt-4 border-t border-dashed border-gray-200">
+            <p class="text-[11px] text-gray-400 italic leading-relaxed">{{ apercu.boutique.note_pied_facture }}</p>
+        </div>
+
+        <div class="mt-8 pt-4 border-t border-gray-100 text-xs text-gray-400 text-center tracking-wide">
             Merci de votre confiance.
         </div>
     </div>

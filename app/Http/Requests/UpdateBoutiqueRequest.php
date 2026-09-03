@@ -25,6 +25,8 @@ class UpdateBoutiqueRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'devise' => ['nullable', 'string', 'max:3'],
             'taux_tva_defaut' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'nui' => ['nullable', 'string', 'max:50'],
+            'note_pied_facture' => ['nullable', 'string', 'max:1000'],
             'facebook_url' => ['nullable', 'url', 'max:255'],
             'instagram_url' => ['nullable', 'url', 'max:255'],
             'telegram_url' => ['nullable', 'url', 'max:255'],

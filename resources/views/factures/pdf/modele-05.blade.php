@@ -6,25 +6,30 @@
     <style>
         body { font-family: "DejaVu Serif", serif; font-size: 12px; color: #1f2937; }
         .page { padding: 10px 20px; }
-        .header { width: 100%; border-bottom: 1px solid #b45309; padding-bottom: 14px; }
+        .header { width: 100%; border-bottom: 2px solid #b45309; padding-bottom: 18px; }
         .header td { vertical-align: top; }
         .logo { max-height: 46px; margin-bottom: 8px; }
-        h1.nom { font-size: 18px; margin: 0 0 6px; font-weight: bold; letter-spacing: 0.5px; }
+        h1.nom { font-size: 20px; margin: 0 0 8px; font-weight: bold; letter-spacing: 0.5px; }
         .muted { color: #6b7280; font-size: 11px; }
+        .loc-block { font-size: 11px; color: #57534e; margin-bottom: 4px; }
+        .loc-block .pin { color: #b45309; margin-right: 3px; }
+        .nui-line { color: #6b7280; font-size: 11px; font-weight: bold; }
         .label-gold { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #b45309; font-weight: bold; }
-        .numero { font-size: 15px; font-weight: bold; margin-top: 3px; }
-        .client-section { margin-top: 26px; }
+        .numero { font-size: 17px; font-weight: bold; margin-top: 4px; }
+        .client-section { margin-top: 30px; }
         .client-nom { font-size: 13px; font-weight: bold; margin-top: 6px; }
-        table.lignes { width: 100%; border-collapse: collapse; margin-top: 26px; }
-        table.lignes th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; border-bottom: 2px solid #b45309; padding: 6px 4px 8px; font-weight: bold; }
-        table.lignes td { padding: 10px 4px; border-bottom: 1px solid #f0f0f0; }
+        table.lignes { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        table.lignes th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; border-bottom: 2px solid #b45309; padding: 8px 4px 10px; font-weight: bold; }
+        table.lignes td { padding: 11px 4px; border-bottom: 1px solid #f0f0f0; }
         .text-right { text-align: right; }
-        .totaux { width: 260px; margin-left: auto; margin-top: 14px; }
-        .totaux td { padding: 3px 4px; color: #6b7280; }
-        .total-final { width: 260px; margin-left: auto; border-top: 2px solid #b45309; margin-top: 4px; }
-        .total-final td { padding: 8px 4px 0; font-weight: bold; font-size: 14px; }
+        .totaux { width: 280px; margin-left: auto; margin-top: 16px; }
+        .totaux td { padding: 4px 4px; color: #6b7280; }
+        .total-final { width: 280px; margin-left: auto; margin-top: 10px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+        .total-final td { padding: 10px 14px; font-weight: bold; font-size: 15px; }
+        .total-final .label-final { font-size: 11px; letter-spacing: 0.5px; color: #78716c; font-weight: normal; }
         .total-final .montant { color: #92400e; }
-        .conditions { margin-top: 28px; font-size: 11px; color: #6b7280; }
+        .conditions { margin-top: 30px; font-size: 11px; color: #6b7280; }
+        .footer-note { margin-top: 26px; padding-top: 14px; border-top: 1px dashed #fde68a; font-size: 10px; color: #9ca3af; font-style: italic; line-height: 1.5; }
         .signatures { width: 100%; margin-top: 50px; }
         .signatures td { width: 50%; text-align: center; font-size: 11px; color: #6b7280; padding: 0 20px; }
         .sig-line { border-bottom: 1px solid #d1d5db; height: 34px; }
@@ -40,11 +45,19 @@
                         <img src="{{ $apercu['boutique']['logo_url'] }}" class="logo"><br>
                     @endif
                     <h1 class="nom">{{ $apercu['boutique']['nom'] }}</h1>
+                    @php
+                        $localisation = array_filter([
+                            $apercu['boutique']['adresse'] ?? null,
+                            trim(($apercu['boutique']['ville'] ?? '').(($apercu['boutique']['ville'] && $apercu['boutique']['pays']) ? ', ' : '').($apercu['boutique']['pays'] ?? '')) ?: null,
+                        ]);
+                    @endphp
+                    @if(count($localisation))
+                        <div class="loc-block"><span class="pin">&#9679;</span> {{ implode(' — ', $localisation) }}</div>
+                    @endif
                     <div class="muted">
-                        @if($apercu['boutique']['adresse']) {{ $apercu['boutique']['adresse'] }}<br>@endif
-                        @if($apercu['boutique']['ville']) {{ $apercu['boutique']['ville'] }} {{ $apercu['boutique']['pays'] }}<br>@endif
                         @if($apercu['boutique']['telephone']) Tél : {{ $apercu['boutique']['telephone'] }}<br>@endif
-                        @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}@endif
+                        @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}<br>@endif
+                        @if($apercu['boutique']['nui'])<span class="nui-line">NUI : {{ $apercu['boutique']['nui'] }}</span>@endif
                     </div>
                 </td>
                 <td style="width: 40%; text-align: right;">
@@ -104,7 +117,7 @@
             <tr><td>Remise</td><td class="text-right">- {{ number_format($apercu['totaux']['remise'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
         </table>
         <table class="total-final">
-            <tr><td>Total TTC</td><td class="text-right montant">{{ number_format($apercu['totaux']['total_ttc'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
+            <tr><td><span class="label-final">Total TTC</span></td><td class="text-right montant">{{ number_format($apercu['totaux']['total_ttc'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
         </table>
 
         <div class="conditions">
@@ -120,6 +133,10 @@
                 <div class="label-gold">Notes</div>
                 <p class="muted" style="margin-top: 4px;">{{ $apercu['notes'] }}</p>
             </div>
+        @endif
+
+        @if($apercu['boutique']['note_pied_facture'])
+            <div class="footer-note">{{ $apercu['boutique']['note_pied_facture'] }}</div>
         @endif
 
         <table class="signatures">

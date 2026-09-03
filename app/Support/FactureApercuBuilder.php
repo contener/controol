@@ -35,6 +35,8 @@ class FactureApercuBuilder
                 'telephone' => $boutique->telephone,
                 'whatsapp' => $boutique->whatsapp,
                 'email' => $boutique->email,
+                'nui' => $boutique->nui,
+                'note_pied_facture' => $boutique->note_pied_facture,
             ],
             'client' => [
                 'nom' => $client->nom,

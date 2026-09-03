@@ -5,15 +5,17 @@
     <title>Facture {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
-        .masthead { width: 100%; background: #0f172a; border-bottom: 4px solid #f59e0b; padding: 20px 30px; }
+        .masthead { width: 100%; background: #0f172a; border-bottom: 4px solid #f59e0b; padding: 24px 32px; }
         .masthead td { vertical-align: middle; }
         .logo { max-height: 50px; background: #fff; padding: 4px; border-radius: 4px; }
-        .masthead h1 { color: #fff; font-size: 22px; margin: 0 0 2px; letter-spacing: 1px; }
+        .masthead h1 { color: #fff; font-size: 24px; margin: 0 0 4px; letter-spacing: 1px; }
         .masthead .sub { color: #cbd5e1; font-size: 10px; }
+        .masthead .nui { color: #94a3b8; font-size: 9px; margin-top: 2px; }
         .masthead .facture-lbl { color: #f59e0b; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; }
-        .masthead .facture-num { color: #fff; font-size: 17px; font-weight: bold; }
-        .wrap { padding: 24px 30px; }
+        .masthead .facture-num { color: #fff; font-size: 18px; font-weight: bold; }
+        .wrap { padding: 26px 32px; }
         .muted { color: #6b7280; }
+        .locline { color: #4b5563; font-weight: bold; margin: 6px 0; font-size: 10px; }
         table.meta-dates { width: 100%; font-size: 11px; margin-bottom: 16px; }
         table.meta-dates .k { color: #9ca3af; padding-right: 6px; }
         table.meta-dates .v { font-weight: bold; padding-right: 30px; }
@@ -22,18 +24,21 @@
         table.infos td.sep { border-right: 1px solid #cbd5e1; }
         .lbl { font-size: 9px; text-transform: uppercase; color: #0f172a; font-weight: bold; letter-spacing: 1px; margin-bottom: 6px; }
         table.lignes { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table.lignes th { text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #0f172a; padding: 7px 6px; }
-        table.lignes td { padding: 7px 6px; border-bottom: 1px solid #e5e7eb; }
+        table.lignes th { text-align: left; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #0f172a; padding: 8px 6px; }
+        table.lignes td { padding: 8px 6px; border-bottom: 1px solid #e5e7eb; }
+        table.lignes tr.alt td { background: #f8fafc; }
         .text-right { text-align: right; }
-        .totaux { width: 280px; margin-left: auto; margin-top: 14px; }
+        .totaux { width: 290px; margin-left: auto; margin-top: 14px; }
         .totaux td { padding: 3px 8px; }
-        .totaux .total-final { font-weight: bold; font-size: 14px; background: #0f172a; color: #fff; border-radius: 4px; }
-        .totaux .paye { padding-top: 8px; }
+        .totaux .total-final { font-weight: bold; font-size: 15px; background: #0f172a; color: #fff; border-radius: 4px; border-top: 2px solid #f59e0b; }
+        .totaux .total-final td { padding: 9px 10px; }
+        .totaux .paye { padding-top: 10px; }
         .totaux .solde { font-weight: bold; }
         .solde-du { color: #d97706; }
         .solde-ok { color: #16a34a; }
         .paiement { margin-top: 18px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 10px 14px; }
         .conditions { margin-top: 14px; font-size: 10px; color: #9ca3af; }
+        .footer-note { margin-top: 16px; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 10px; color: #9ca3af; font-style: italic; }
         table.signatures { width: 100%; margin-top: 30px; border-collapse: collapse; }
         table.signatures td { width: 50%; border: 1px solid #cbd5e1; border-radius: 4px; padding: 14px; vertical-align: top; font-size: 10px; color: #6b7280; }
         table.signatures .who { font-weight: bold; color: #0f172a; margin-bottom: 30px; display: block; }
@@ -55,11 +60,14 @@
                     <img src="{{ $apercu['boutique']['logo_url'] }}" class="logo"><br>
                 @endif
                 <h1>{{ $apercu['boutique']['nom'] }}</h1>
-                <div class="sub">
-                    @if($apercu['boutique']['ville']) {{ $apercu['boutique']['ville'] }}@endif
-                    @if($apercu['boutique']['ville'] && $apercu['boutique']['pays']), @endif
-                    @if($apercu['boutique']['pays']) {{ $apercu['boutique']['pays'] }}@endif
-                </div>
+                @if($apercu['boutique']['ville'] || $apercu['boutique']['pays'])
+                    <div class="sub">
+                        &#128205;
+                        @if($apercu['boutique']['ville']) {{ $apercu['boutique']['ville'] }}@endif
+                        @if($apercu['boutique']['ville'] && $apercu['boutique']['pays']), @endif
+                        @if($apercu['boutique']['pays']) {{ $apercu['boutique']['pays'] }}@endif
+                    </div>
+                @endif
             </td>
             <td style="width: 35%; text-align: right;">
                 <div class="facture-lbl">Facture</div>
@@ -83,11 +91,18 @@
                 <td class="sep">
                     <div class="lbl">Émetteur</div>
                     <strong>{{ $apercu['boutique']['nom'] }}</strong><br>
+                    @if($apercu['boutique']['adresse'] || $apercu['boutique']['ville'])
+                        <div class="locline">
+                            &#128205;
+                            @if($apercu['boutique']['adresse']){{ $apercu['boutique']['adresse'] }}@if($apercu['boutique']['ville']), @endif @endif
+                            @if($apercu['boutique']['ville']){{ $apercu['boutique']['ville'] }}@endif
+                            @if($apercu['boutique']['pays']), {{ $apercu['boutique']['pays'] }}@endif
+                        </div>
+                    @endif
                     <span class="muted">
-                        @if($apercu['boutique']['adresse']) {{ $apercu['boutique']['adresse'] }}<br>@endif
-                        @if($apercu['boutique']['ville']) {{ $apercu['boutique']['ville'] }}, {{ $apercu['boutique']['pays'] }}<br>@endif
                         @if($apercu['boutique']['telephone']) Tél : {{ $apercu['boutique']['telephone'] }}<br>@endif
-                        @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}@endif
+                        @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}<br>@endif
+                        @if($apercu['boutique']['nui']) NUI : {{ $apercu['boutique']['nui'] }}@endif
                     </span>
                 </td>
                 <td>
@@ -116,7 +131,7 @@
             </thead>
             <tbody>
                 @foreach($apercu['lignes'] as $ligne)
-                    <tr>
+                    <tr @if($loop->index % 2 === 1) class="alt" @endif>
                         <td>
                             {{ $ligne['designation'] }}
                             @if($ligne['description'])
@@ -159,6 +174,10 @@
                 <strong class="muted">Notes</strong>
                 <p>{{ $apercu['notes'] }}</p>
             </div>
+        @endif
+
+        @if($apercu['boutique']['note_pied_facture'])
+            <div class="footer-note">{{ $apercu['boutique']['note_pied_facture'] }}</div>
         @endif
 
         <table class="signatures">

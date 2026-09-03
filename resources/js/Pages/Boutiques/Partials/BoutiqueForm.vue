@@ -75,12 +75,24 @@ const onFile = (event, champ, form) => {
                     <TextInput id="taux_tva_defaut" v-model="form.taux_tva_defaut" type="number" step="0.01" class="mt-1 block w-full" />
                     <InputError :message="form.errors.taux_tva_defaut" class="mt-2" />
                 </div>
+                <div>
+                    <InputLabel for="nui" value="NUI (Numéro d'Identifiant Unique)" />
+                    <TextInput id="nui" v-model="form.nui" type="text" class="mt-1 block w-full" placeholder="M012312345678A" />
+                    <InputError :message="form.errors.nui" class="mt-2" />
+                </div>
             </div>
 
             <div class="mt-6">
                 <InputLabel for="description" value="Description" />
                 <textarea id="description" v-model="form.description" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
                 <InputError :message="form.errors.description" class="mt-2" />
+            </div>
+
+            <div class="mt-6">
+                <InputLabel for="note_pied_facture" value="Note de bas de facture" />
+                <textarea id="note_pied_facture" v-model="form.note_pied_facture" rows="2" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Ex. : La garantie ne couvre pas les dommages liés à une mauvaise utilisation." />
+                <InputError :message="form.errors.note_pied_facture" class="mt-2" />
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Affichée automatiquement en bas de toutes les factures de cette boutique (conditions, garantie...).</p>
             </div>
         </section>
 

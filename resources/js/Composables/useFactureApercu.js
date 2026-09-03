@@ -72,6 +72,8 @@ export function useFactureApercu(form, { clients = [], boutique = {}, numeroPrev
                 telephone: boutique?.telephone ?? null,
                 whatsapp: boutique?.whatsapp ?? null,
                 email: boutique?.email ?? null,
+                nui: boutique?.nui ?? null,
+                note_pied_facture: boutique?.note_pied_facture ?? null,
             },
             client: client ?? clientVide,
             lignes,

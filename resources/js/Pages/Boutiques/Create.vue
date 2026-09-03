@@ -19,6 +19,8 @@ const form = useForm({
     email: '',
     devise: 'XAF',
     taux_tva_defaut: 19.25,
+    nui: '',
+    note_pied_facture: '',
     facebook_url: '',
     instagram_url: '',
     telegram_url: '',

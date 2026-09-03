@@ -20,7 +20,9 @@ const soldeRestant = computed(() => props.apercu.totaux.total_ttc - montantPaye.
                     <img v-if="apercu.boutique.logo_url" :src="apercu.boutique.logo_url" class="h-14 w-auto object-contain bg-white rounded p-1" alt="Logo">
                     <div>
                         <h1 class="text-2xl font-bold text-white tracking-wide">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
-                        <div class="text-slate-300 text-xs mt-1">{{ apercu.boutique.ville }}<span v-if="apercu.boutique.ville && apercu.boutique.pays">, </span>{{ apercu.boutique.pays }}</div>
+                        <div v-if="apercu.boutique.ville || apercu.boutique.pays" class="text-slate-300 text-xs mt-1.5">
+                            <span>📍</span> {{ apercu.boutique.ville }}<span v-if="apercu.boutique.ville && apercu.boutique.pays">, </span>{{ apercu.boutique.pays }}
+                        </div>
                     </div>
                 </div>
                 <div class="text-right text-white">
@@ -46,11 +48,14 @@ const soldeRestant = computed(() => props.apercu.totaux.total_ttc - montantPaye.
                 <div class="p-4 border-r border-slate-300">
                     <div class="text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Émetteur</div>
                     <div class="font-semibold">{{ apercu.boutique.nom }}</div>
-                    <div class="text-gray-500 text-xs space-y-0.5 mt-1">
-                        <div v-if="apercu.boutique.adresse">{{ apercu.boutique.adresse }}</div>
-                        <div v-if="apercu.boutique.ville">{{ apercu.boutique.ville }}, {{ apercu.boutique.pays }}</div>
+                    <div v-if="apercu.boutique.adresse || apercu.boutique.ville" class="text-gray-600 text-xs mt-1.5">
+                        <span>📍</span>
+                        <span v-if="apercu.boutique.adresse">{{ apercu.boutique.adresse }}<span v-if="apercu.boutique.ville">, </span></span><span v-if="apercu.boutique.ville">{{ apercu.boutique.ville }}</span><span v-if="apercu.boutique.pays">, {{ apercu.boutique.pays }}</span>
+                    </div>
+                    <div class="text-gray-500 text-xs space-y-0.5 mt-1.5">
                         <div v-if="apercu.boutique.telephone">Tél : {{ apercu.boutique.telephone }}</div>
                         <div v-if="apercu.boutique.email">{{ apercu.boutique.email }}</div>
+                        <div v-if="apercu.boutique.nui" class="font-medium text-gray-600">NUI : {{ apercu.boutique.nui }}</div>
                     </div>
                 </div>
                 <div class="p-4">
@@ -77,7 +82,7 @@ const soldeRestant = computed(() => props.apercu.totaux.total_ttc - montantPaye.
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(ligne, i) in apercu.lignes" :key="i" class="border-b border-gray-100">
+                    <tr v-for="(ligne, i) in apercu.lignes" :key="i" class="border-b border-gray-100" :class="i % 2 === 1 ? 'bg-slate-50' : ''">
                         <td class="py-2">
                             <div>{{ ligne.designation || '—' }}</div>
                             <div v-if="ligne.description" class="text-xs text-gray-400">{{ ligne.description }}</div>
@@ -97,7 +102,7 @@ const soldeRestant = computed(() => props.apercu.totaux.total_ttc - montantPaye.
                 <div class="flex justify-between text-gray-500"><span>Sous-total HT</span><span>{{ formatMontant(apercu.totaux.sous_total, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between text-gray-500"><span>Remise</span><span>- {{ formatMontant(apercu.totaux.remise, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between text-gray-500"><span>TVA</span><span>{{ formatMontant(apercu.totaux.total_tva, apercu.meta.devise) }}</span></div>
-                <div class="flex justify-between font-bold text-base bg-slate-900 text-white rounded px-2 py-1.5"><span>Total TTC</span><span>{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span></div>
+                <div class="flex justify-between items-center font-bold text-lg bg-slate-900 text-white rounded-md px-3 py-2.5 mt-1 border-t-2 border-amber-500"><span>Total TTC</span><span>{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between text-gray-500 pt-1"><span>Montant payé</span><span>{{ formatMontant(montantPaye, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between font-semibold" :class="soldeRestant > 0 ? 'text-amber-600' : 'text-green-600'"><span>Solde restant</span><span>{{ formatMontant(soldeRestant, apercu.meta.devise) }}</span></div>
             </div>
@@ -118,6 +123,10 @@ const soldeRestant = computed(() => props.apercu.totaux.total_ttc - montantPaye.
             <div v-if="apercu.notes" class="mt-4">
                 <div class="text-xs font-semibold text-gray-500 uppercase mb-1">Notes</div>
                 <p class="text-gray-600 whitespace-pre-line">{{ apercu.notes }}</p>
+            </div>
+
+            <div v-if="apercu.boutique.note_pied_facture" class="mt-6 pt-3 border-t border-slate-100 text-[11px] text-gray-400 italic">
+                {{ apercu.boutique.note_pied_facture }}
             </div>
 
             <div class="mt-12 grid grid-cols-2 gap-8 text-xs text-gray-500">

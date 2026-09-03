@@ -54,7 +54,7 @@ class FactureController extends Controller
             'clients' => Client::orderBy('nom')->get(['id', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'numero_fiscal', 'etiquette']),
             'produits' => Produit::orderBy('nom')->get(['id', 'nom', 'type', 'prix_vente', 'tva_taux', 'unite', 'gere_stock', 'quantite_stock']),
             'tauxTvaDefaut' => $this->tauxTvaDefaut($request),
-            'boutique' => $request->user()->currentBoutique->only(['nom', 'logo_path', 'adresse', 'ville', 'pays', 'telephone', 'whatsapp', 'email', 'devise']),
+            'boutique' => $request->user()->currentBoutique->only(['nom', 'logo_path', 'adresse', 'ville', 'pays', 'telephone', 'whatsapp', 'email', 'devise', 'nui', 'note_pied_facture']),
             'modeles' => $this->modelesDisponibles($request->user()),
             'modeleInitial' => (int) $request->integer('modele', 1),
         ]);
@@ -93,7 +93,7 @@ class FactureController extends Controller
             'facture' => $facture->load('lignes'),
             'clients' => Client::orderBy('nom')->get(['id', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'numero_fiscal', 'etiquette']),
             'produits' => Produit::orderBy('nom')->get(['id', 'nom', 'type', 'prix_vente', 'tva_taux', 'unite', 'gere_stock', 'quantite_stock']),
-            'boutique' => $request->user()->currentBoutique->only(['nom', 'logo_path', 'adresse', 'ville', 'pays', 'telephone', 'whatsapp', 'email', 'devise']),
+            'boutique' => $request->user()->currentBoutique->only(['nom', 'logo_path', 'adresse', 'ville', 'pays', 'telephone', 'whatsapp', 'email', 'devise', 'nui', 'note_pied_facture']),
             'modeles' => $this->modelesDisponibles($request->user()),
         ]);
     }

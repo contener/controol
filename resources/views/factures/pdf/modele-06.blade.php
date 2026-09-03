@@ -5,32 +5,37 @@
     <title>Facture {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
-        .topbar { width: 100%; background: #1e293b; color: #fff; }
-        .topbar td { padding: 16px 20px; vertical-align: middle; }
-        .topbar h1 { font-size: 16px; margin: 0; color: #fff; }
-        .logo { max-height: 34px; margin-right: 8px; }
-        .ref-box { border: 1px solid #64748b; border-radius: 4px; padding: 8px 14px; text-align: right; }
+        .topbar { width: 100%; background: #1e293b; color: #fff; border-bottom: 4px solid #f59e0b; }
+        .topbar td { padding: 20px 24px; vertical-align: middle; }
+        .topbar h1 { font-size: 19px; margin: 0; color: #fff; letter-spacing: 0.5px; }
+        .logo { max-height: 40px; margin-right: 10px; background: #fff; border-radius: 4px; padding: 3px; }
+        .ref-box { border: 1px solid #64748b; background: rgba(255,255,255,0.06); border-radius: 5px; padding: 10px 16px; text-align: right; }
         .ref-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #cbd5e1; }
-        .ref-numero { font-size: 14px; font-weight: bold; margin-top: 2px; }
-        .page { padding: 20px; }
-        .meta-row { text-align: right; font-size: 11px; color: #6b7280; margin-bottom: 16px; }
+        .ref-numero { font-size: 15px; font-weight: bold; margin-top: 3px; }
+        .page { padding: 24px 20px; }
+        .meta-row { text-align: right; font-size: 11px; color: #6b7280; margin-bottom: 18px; }
         .meta-row strong { color: #374151; }
         .boxes { width: 100%; border-collapse: collapse; }
         .boxes td { width: 50%; vertical-align: top; }
         .party-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 12px 14px; }
         .party-label { font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: bold; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 6px; }
         .muted { color: #6b7280; }
+        .locline { color: #4b5563; margin: 6px 0; font-size: 11px; }
+        .nui-line { color: #4b5563; font-weight: bold; }
         table.lignes { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
-        table.lignes th { text-align: left; text-transform: uppercase; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px; }
-        table.lignes td { padding: 6px; border: 1px solid #e2e8f0; }
+        table.lignes th { text-align: left; text-transform: uppercase; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 7px 6px; }
+        table.lignes td { padding: 7px 6px; border: 1px solid #e2e8f0; }
+        table.lignes tr.alt td { background: #f8fafc; }
         .text-right { text-align: right; }
-        .totaux { width: 260px; margin-left: auto; margin-top: 14px; }
-        .totaux td { padding: 3px 8px; }
-        .totaux .total-final { font-weight: bold; font-size: 14px; border-top: 2px solid #1e293b; }
+        .totaux { width: 270px; margin-left: auto; margin-top: 16px; }
+        .totaux td { padding: 4px 8px; }
+        .totaux .total-final { font-weight: bold; font-size: 15px; background: #1e293b; color: #fff; border-radius: 5px; }
+        .totaux .total-final td { padding: 10px 10px; }
         .conditions { margin-top: 26px; border-top: 1px solid #e5e7eb; padding-top: 12px; font-size: 11px; color: #6b7280; }
         .conditions-label { font-size: 10px; text-transform: uppercase; color: #475569; font-weight: bold; margin-bottom: 4px; }
         .paiement { margin-top: 14px; border: 1px solid #e5e7eb; border-radius: 4px; padding: 10px 14px; }
-        .footer { margin-top: 30px; padding-top: 14px; border-top: 1px solid #e5e7eb; }
+        .footer-note { margin-top: 18px; padding-top: 12px; border-top: 1px solid #f3f4f6; font-size: 10px; color: #9ca3af; font-style: italic; }
+        .footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #e5e7eb; }
         .footer td { font-size: 10px; color: #9ca3af; vertical-align: bottom; }
         .sig-line { width: 160px; border-bottom: 1px solid #cbd5e1; height: 24px; }
     </style>
@@ -67,11 +72,18 @@
                     <div class="party-box">
                         <div class="party-label">Émetteur</div>
                         <strong>{{ $apercu['boutique']['nom'] }}</strong><br>
+                        @if($apercu['boutique']['adresse'] || $apercu['boutique']['ville'])
+                            <div class="locline">
+                                &#128205;
+                                @if($apercu['boutique']['adresse']){{ $apercu['boutique']['adresse'] }}@if($apercu['boutique']['ville']), @endif @endif
+                                @if($apercu['boutique']['ville']){{ $apercu['boutique']['ville'] }}@endif
+                                @if($apercu['boutique']['pays']), {{ $apercu['boutique']['pays'] }}@endif
+                            </div>
+                        @endif
                         <span class="muted">
-                            @if($apercu['boutique']['adresse']) {{ $apercu['boutique']['adresse'] }}<br>@endif
-                            @if($apercu['boutique']['ville']) {{ $apercu['boutique']['ville'] }} {{ $apercu['boutique']['pays'] }}<br>@endif
                             @if($apercu['boutique']['telephone']) Tél : {{ $apercu['boutique']['telephone'] }}<br>@endif
-                            @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}@endif
+                            @if($apercu['boutique']['email']) {{ $apercu['boutique']['email'] }}<br>@endif
+                            @if($apercu['boutique']['nui'])<span class="nui-line">NUI : {{ $apercu['boutique']['nui'] }}</span>@endif
                         </span>
                     </div>
                 </td>
@@ -105,7 +117,7 @@
             </thead>
             <tbody>
                 @foreach($apercu['lignes'] as $ligne)
-                    <tr>
+                    <tr @if($loop->index % 2 === 1) class="alt" @endif>
                         <td>
                             {{ $ligne['designation'] }}
                             @if($ligne['description'])
@@ -148,6 +160,10 @@
                 <strong>Notes</strong>
                 <p>{{ $apercu['notes'] }}</p>
             </div>
+        @endif
+
+        @if($apercu['boutique']['note_pied_facture'])
+            <div class="footer-note">{{ $apercu['boutique']['note_pied_facture'] }}</div>
         @endif
 
         <table class="footer" style="width: 100%;">
