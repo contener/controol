@@ -70,8 +70,8 @@ class AdminPermissions
 
     /**
      * Clés effectivement vérifiées par un middleware admin.permission:<cle> aujourd'hui.
-     * Le reste du catalogue est réservé pour de futures sections (gestion des utilisateurs
-     * finaux, gestion générale des boutiques, abonnements, notifications).
+     * Le reste du catalogue est réservé pour de futures sections (gestion générale des
+     * boutiques indépendamment d'un utilisateur, abonnements, notifications).
      */
     public const CLES_ACTIVES = [
         'paiements.voir',
@@ -79,6 +79,9 @@ class AdminPermissions
         'paiements.refuser',
         'marketplace.voir',
         'marketplace.suspendre',
+        'utilisateurs.voir',
+        'utilisateurs.suspendre',
+        'utilisateurs.supprimer',
     ];
 
     public const PRESETS_PAR_ROLE = [

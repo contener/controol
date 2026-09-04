@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdministrateurController;
 use App\Http\Controllers\Admin\MarketplaceController as AdminMarketplaceController;
 use App\Http\Controllers\Admin\PaiementController as AdminPaiementController;
+use App\Http\Controllers\Admin\UtilisateurController as AdminUtilisateurController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CampagneSocialeController;
@@ -32,6 +33,7 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
+    'account.active',
 ])->group(function () {
     Route::get('/compte/dashboard', CompteDashboardController::class)->name('compte.dashboard');
     Route::patch('/preferences', [PreferenceController::class, 'update'])->name('preferences.update');
@@ -96,6 +98,19 @@ Route::middleware([
             Route::get('/{administrateur}/modifier', [AdministrateurController::class, 'edit'])->name('edit');
             Route::put('/{administrateur}', [AdministrateurController::class, 'update'])->name('update');
             Route::patch('/{administrateur}/basculer', [AdministrateurController::class, 'basculerActivation'])->name('basculer');
+        });
+
+        // Utilisateurs finaux (boutiquiers) — distinct des administrateurs ci-dessus.
+        // Chaque action a sa propre permission granulaire ; contrairement à la gestion
+        // des administrateurs, ce n'est volontairement PAS exclusif à super_admin, pour
+        // rester cohérent avec le catalogue de permissions existant (un Super Admin peut
+        // déléguer utilisateurs.suspendre/supprimer à un administrateur de confiance).
+        Route::prefix('utilisateurs')->name('utilisateurs.')->group(function () {
+            Route::get('/', [AdminUtilisateurController::class, 'index'])->name('index')->middleware('admin.permission:utilisateurs.voir');
+            Route::get('/{utilisateur}', [AdminUtilisateurController::class, 'show'])->name('show')->middleware('admin.permission:utilisateurs.voir');
+            Route::patch('/{utilisateur}/basculer', [AdminUtilisateurController::class, 'basculerActivation'])->name('basculer')->middleware('admin.permission:utilisateurs.suspendre');
+            Route::delete('/{utilisateur}/boutiques/{boutique}', [AdminUtilisateurController::class, 'destroyBoutique'])->name('boutiques.destroy')->middleware('admin.permission:utilisateurs.supprimer');
+            Route::delete('/{utilisateur}', [AdminUtilisateurController::class, 'destroy'])->name('destroy')->middleware('admin.permission:utilisateurs.supprimer');
         });
     });
 });

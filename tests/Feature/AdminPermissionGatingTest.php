@@ -61,7 +61,10 @@ class AdminPermissionGatingTest extends TestCase
         $this->actingAs($admin)->get('/admin/administrateurs')->assertStatus(403);
     }
 
-    // TEST 3 — désactivation : 403 immédiat sur une action pourtant permise juste avant.
+    // TEST 3 — désactivation : blocage immédiat et total sur une action pourtant permise
+    // juste avant. Depuis EnsureAccountActive (compte désactivé = déconnexion immédiate,
+    // quelle que soit la route), l'utilisateur n'atteint même plus le contrôle de
+    // permission : il est redirigé vers /login avant de pouvoir agir.
     public function test_deactivating_admin_immediately_blocks_previously_allowed_action(): void
     {
         $admin = $this->creerAdminAvecPermissions(['paiements.voir', 'paiements.valider']);
@@ -71,8 +74,8 @@ class AdminPermissionGatingTest extends TestCase
 
         $admin->forceFill(['est_actif' => false])->save();
 
-        $this->actingAs($admin)->get('/admin/paiements')->assertStatus(403);
-        $this->actingAs($admin)->post("/admin/paiements/{$paiement->id}/approuver")->assertStatus(403);
+        $this->actingAs($admin)->get('/admin/paiements')->assertRedirect(route('login'));
+        $this->actingAs($admin)->post("/admin/paiements/{$paiement->id}/approuver")->assertRedirect(route('login'));
         $this->assertSame('en_attente', $paiement->fresh()->statut, 'Le paiement ne doit pas avoir été traité.');
     }
 
