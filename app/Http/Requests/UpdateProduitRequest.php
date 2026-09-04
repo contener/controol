@@ -2,14 +2,22 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\CompresseImagesTeleversees;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateProduitRequest extends FormRequest
 {
+    use CompresseImagesTeleversees;
+
     public function authorize(): bool
     {
         return $this->user()->can('update', $this->route('produit'));
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->compresserImage('photo', 2048);
     }
 
     public function rules(): array

@@ -3,7 +3,9 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Services\ImageCompressionService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
@@ -17,6 +19,12 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update(User $user, array $input): void
     {
+        // Compresse avant la validation ('max:1024' ci-dessous) plutôt que de rejeter une
+        // photo trop lourde — voir App\Services\ImageCompressionService.
+        if (($input['photo'] ?? null) instanceof UploadedFile) {
+            $input['photo'] = app(ImageCompressionService::class)->compresserSiNecessaire($input['photo'], 1024 * 1024);
+        }
+
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],

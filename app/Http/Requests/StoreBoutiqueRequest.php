@@ -2,13 +2,22 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\CompresseImagesTeleversees;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreBoutiqueRequest extends FormRequest
 {
+    use CompresseImagesTeleversees;
+
     public function authorize(): bool
     {
         return $this->user()->can('create', \App\Models\Boutique::class);
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->compresserImage('logo', 2048);
+        $this->compresserImage('banniere', 4096);
     }
 
     public function rules(): array
