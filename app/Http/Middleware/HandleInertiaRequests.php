@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Message;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -49,6 +50,15 @@ class HandleInertiaRequests extends Middleware
                 }
 
                 return $user->boutiques()->orderBy('nom')->get(['id', 'nom', 'slug', 'statut']);
+            },
+            'messagesNonLus' => function () use ($request) {
+                $user = $request->user();
+
+                if (! $user || ! $user->currentBoutique) {
+                    return 0;
+                }
+
+                return Message::where('lu', false)->count();
             },
         ];
     }

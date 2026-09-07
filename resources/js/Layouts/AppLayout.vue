@@ -19,6 +19,7 @@ const page = usePage();
 const showingNavigationDropdown = ref(false);
 
 const mesBoutiques = computed(() => page.props.mesBoutiques ?? []);
+const messagesNonLus = computed(() => page.props.messagesNonLus ?? 0);
 const boutiqueCouranteId = computed(() => page.props.auth.user?.current_boutique_id);
 const boutiqueCourante = computed(() => mesBoutiques.value.find((b) => b.id === boutiqueCouranteId.value));
 
@@ -83,6 +84,12 @@ const logout = () => {
                                 </NavLink>
                                 <NavLink :href="route('depenses.index')" :active="route().current('depenses.*')">
                                     {{ t('nav.expenses') }}
+                                </NavLink>
+                                <NavLink :href="route('messages.index')" :active="route().current('messages.*')" class="relative">
+                                    {{ t('nav.messages') }}
+                                    <span v-if="messagesNonLus > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
+                                        {{ messagesNonLus > 99 ? '99+' : messagesNonLus }}
+                                    </span>
                                 </NavLink>
                             </div>
                         </div>
@@ -256,6 +263,12 @@ const logout = () => {
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('depenses.index')" :active="route().current('depenses.*')">
                             {{ t('nav.expenses') }}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('messages.index')" :active="route().current('messages.*')">
+                            {{ t('nav.messages') }}
+                            <span v-if="messagesNonLus > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
+                                {{ messagesNonLus > 99 ? '99+' : messagesNonLus }}
+                            </span>
                         </ResponsiveNavLink>
                     </div>
 

@@ -17,7 +17,7 @@ class StoreProduitRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->compresserImage('photo', 2048);
+        $this->compresserImage('photo', 2048, forcerCarre: true);
     }
 
     public function rules(): array

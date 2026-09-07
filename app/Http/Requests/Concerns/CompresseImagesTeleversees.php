@@ -11,10 +11,10 @@ use App\Services\ImageCompressionService;
  */
 trait CompresseImagesTeleversees
 {
-    protected function compresserImage(string $champ, int $tailleMaxKo): void
+    protected function compresserImage(string $champ, int $tailleMaxKo, bool $forcerCarre = false): void
     {
         if ($this->hasFile($champ)) {
-            $compressee = app(ImageCompressionService::class)->compresserSiNecessaire($this->file($champ), $tailleMaxKo * 1024);
+            $compressee = app(ImageCompressionService::class)->compresserSiNecessaire($this->file($champ), $tailleMaxKo * 1024, $forcerCarre);
             $this->files->set($champ, $compressee);
 
             // allFiles()/file() mémorisent leur résultat dans Request::$convertedFiles dès

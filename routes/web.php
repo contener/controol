@@ -16,6 +16,7 @@ use App\Http\Controllers\DestinationSocialeController;
 use App\Http\Controllers\FactureController;
 use App\Http\Controllers\FactureModeleController;
 use App\Http\Controllers\MarketplaceController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\PublicBoutiqueController;
@@ -28,6 +29,9 @@ Route::get('/', function () {
 
 Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/boutique/{slug}', [PublicBoutiqueController::class, 'show'])->name('public.boutique');
+Route::post('/boutique/{slug}/message', [PublicBoutiqueController::class, 'envoyerMessage'])
+    ->middleware('throttle:5,1')
+    ->name('public.boutique.message');
 
 Route::middleware([
     'auth:sanctum',
@@ -49,6 +53,10 @@ Route::middleware([
         Route::resource('clients', ClientController::class)->except(['show']);
         Route::resource('produits', ProduitController::class)->except(['show']);
         Route::resource('depenses', DepenseController::class)->except(['show']);
+
+        Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
+        Route::patch('/messages/{message}/lu', [MessageController::class, 'marquerLu'])->name('messages.lu');
+        Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
 
         Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
         Route::get('/stock/{produit}/mouvements', [StockController::class, 'mouvements'])->name('stock.mouvements');

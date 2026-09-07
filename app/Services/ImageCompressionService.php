@@ -14,13 +14,21 @@ use Illuminate\Http\UploadedFile;
  * Ne modifie jamais un fichier déjà sous la limite. Si GD est indisponible ou le format
  * n'est pas pris en charge (rare : gif, bmp...), le fichier original est retourné tel
  * quel — la règle de validation 'max:' habituelle s'applique alors en repli sûr.
+ *
+ * Avec $forcerCarre, recadre aussi l'image au centre sur un carré (plus petit côté) avant
+ * la compression — utilisé pour les photos de produits, dont les dimensions d'origine
+ * varient d'un produit à l'autre et cassent l'alignement des grilles d'affichage.
  */
 class ImageCompressionService
 {
     private const LARGEUR_MINIMALE = 300;
 
-    public function compresserSiNecessaire(UploadedFile $fichier, int $tailleMaxOctets): UploadedFile
+    public function compresserSiNecessaire(UploadedFile $fichier, int $tailleMaxOctets, bool $forcerCarre = false): UploadedFile
     {
+        if ($forcerCarre && extension_loaded('gd')) {
+            $fichier = $this->recadrerEnCarre($fichier) ?? $fichier;
+        }
+
         if ($fichier->getSize() <= $tailleMaxOctets || ! extension_loaded('gd')) {
             return $fichier;
         }
@@ -68,6 +76,50 @@ class ImageCompressionService
         }
 
         imagedestroy($image);
+
+        return new UploadedFile($cheminTemp, $fichier->getClientOriginalName(), $mime, null, true);
+    }
+
+    // Recadrage centré au plus petit côté (largeur ou hauteur) — jamais d'étirement, la
+    // photo garde ses proportions sur la zone conservée. Retourne null si l'image est déjà
+    // carrée ou illisible, pour laisser l'appelant conserver le fichier d'origine tel quel.
+    private function recadrerEnCarre(UploadedFile $fichier): ?UploadedFile
+    {
+        $mime = $fichier->getMimeType();
+        $image = $this->charger($fichier->getRealPath(), $mime);
+
+        if (! $image) {
+            return null;
+        }
+
+        $largeur = imagesx($image);
+        $hauteur = imagesy($image);
+
+        if ($largeur === $hauteur) {
+            imagedestroy($image);
+
+            return null;
+        }
+
+        $cote = min($largeur, $hauteur);
+        $x = (int) (($largeur - $cote) / 2);
+        $y = (int) (($hauteur - $cote) / 2);
+
+        $carre = imagecreatetruecolor($cote, $cote);
+
+        if ($mime === 'image/png') {
+            imagealphablending($carre, false);
+            imagesavealpha($carre, true);
+            imagefilledrectangle($carre, 0, 0, $cote, $cote, imagecolorallocatealpha($carre, 0, 0, 0, 127));
+        }
+
+        imagecopy($carre, $image, 0, 0, $x, $y, $cote, $cote);
+        imagedestroy($image);
+
+        $extension = $fichier->getClientOriginalExtension() ?: 'jpg';
+        $cheminTemp = tempnam(sys_get_temp_dir(), 'img_carre_').'.'.$extension;
+        $this->encoder($carre, $mime, $cheminTemp, 90);
+        imagedestroy($carre);
 
         return new UploadedFile($cheminTemp, $fichier->getClientOriginalName(), $mime, null, true);
     }
