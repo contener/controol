@@ -20,6 +20,7 @@ const showingNavigationDropdown = ref(false);
 
 const mesBoutiques = computed(() => page.props.mesBoutiques ?? []);
 const messagesNonLus = computed(() => page.props.messagesNonLus ?? 0);
+const mesConversationsNonLues = computed(() => page.props.mesConversationsNonLues ?? 0);
 const boutiqueCouranteId = computed(() => page.props.auth.user?.current_boutique_id);
 const boutiqueCourante = computed(() => mesBoutiques.value.find((b) => b.id === boutiqueCouranteId.value));
 
@@ -89,6 +90,12 @@ const logout = () => {
                                     {{ t('nav.messages') }}
                                     <span v-if="messagesNonLus > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
                                         {{ messagesNonLus > 99 ? '99+' : messagesNonLus }}
+                                    </span>
+                                </NavLink>
+                                <NavLink :href="route('mes-conversations.index')" :active="route().current('mes-conversations.*')" class="relative">
+                                    {{ t('nav.my_conversations') }}
+                                    <span v-if="mesConversationsNonLues > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
+                                        {{ mesConversationsNonLues > 99 ? '99+' : mesConversationsNonLues }}
                                     </span>
                                 </NavLink>
                             </div>
@@ -268,6 +275,12 @@ const logout = () => {
                             {{ t('nav.messages') }}
                             <span v-if="messagesNonLus > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
                                 {{ messagesNonLus > 99 ? '99+' : messagesNonLus }}
+                            </span>
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('mes-conversations.index')" :active="route().current('mes-conversations.*')">
+                            {{ t('nav.my_conversations') }}
+                            <span v-if="mesConversationsNonLues > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
+                                {{ mesConversationsNonLues > 99 ? '99+' : mesConversationsNonLues }}
                             </span>
                         </ResponsiveNavLink>
                     </div>

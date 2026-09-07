@@ -4,6 +4,7 @@ import { Link, router } from '@inertiajs/vue3';
 import TextInput from '@/Components/TextInput.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import PartageLiens from '@/Components/PartageLiens.vue';
+import ContactVendeurModal from '@/Components/ContactVendeurModal.vue';
 
 const props = defineProps({
     boutiques: Object,
@@ -34,6 +35,9 @@ function appliquerFiltres() {
 }
 
 const formatMontant = (montant, devise) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(montant) + ' ' + devise;
+
+const produitMessage = ref(null);
+const fermerMessage = () => { produitMessage.value = null; };
 </script>
 
 <template>
@@ -61,27 +65,40 @@ const formatMontant = (montant, devise) => new Intl.NumberFormat('fr-FR', { maxi
         <div v-if="promotions.length > 0">
             <h2 class="text-lg font-semibold text-gray-900 mb-3">Promotions en ce moment</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Link
+                <div
                     v-for="produit in promotions"
                     :key="produit.id"
-                    :href="route('public.boutique', produit.boutique.slug)"
-                    class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition"
+                    class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition flex flex-col"
                 >
-                    <div class="aspect-square bg-gray-100">
-                        <img v-if="produit.photo_path" :src="`/storage/${produit.photo_path}`" class="w-full h-full object-cover" :alt="produit.nom" loading="lazy">
-                        <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-2xl">📦</div>
-                    </div>
-                    <div class="p-2">
-                        <div class="text-xs text-gray-500 truncate">{{ produit.boutique.nom }}</div>
-                        <div class="text-sm font-medium text-gray-900 truncate">{{ produit.nom }}</div>
-                        <div class="flex items-center gap-1.5 mt-0.5">
-                            <span class="text-sm font-semibold text-red-600">{{ formatMontant(produit.promotion_prix, produit.boutique.devise) }}</span>
-                            <span class="text-xs text-gray-400 line-through">{{ formatMontant(produit.prix_vente, produit.boutique.devise) }}</span>
+                    <Link :href="route('public.boutique', produit.boutique.slug)">
+                        <div class="aspect-square bg-gray-100">
+                            <img v-if="produit.photo_path" :src="`/storage/${produit.photo_path}`" class="w-full h-full object-cover" :alt="produit.nom" loading="lazy">
+                            <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-2xl">📦</div>
                         </div>
-                    </div>
-                </Link>
+                        <div class="p-2">
+                            <div class="text-xs text-gray-500 truncate">{{ produit.boutique.nom }}</div>
+                            <div class="text-sm font-medium text-gray-900 truncate">{{ produit.nom }}</div>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="text-sm font-semibold text-red-600">{{ formatMontant(produit.promotion_prix, produit.boutique.devise) }}</span>
+                                <span class="text-xs text-gray-400 line-through">{{ formatMontant(produit.prix_vente, produit.boutique.devise) }}</span>
+                            </div>
+                        </div>
+                    </Link>
+                    <button type="button" class="mx-2 mb-2 inline-flex items-center justify-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-50" @click="produitMessage = produit">
+                        💬 Message
+                    </button>
+                </div>
             </div>
         </div>
+
+        <ContactVendeurModal
+            :show="produitMessage !== null"
+            :boutique-slug="produitMessage?.boutique?.slug ?? ''"
+            :produit="produitMessage"
+            :conversation="null"
+            @close="fermerMessage"
+            @sent="fermerMessage"
+        />
 
         <div>
             <h2 class="text-lg font-semibold text-gray-900 mb-3">Boutiques</h2>

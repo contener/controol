@@ -82,6 +82,7 @@ class PagesRenderTest extends TestCase
             '/depenses/create',
             "/depenses/{$depense->id}/edit",
             '/messages',
+            '/mes-conversations',
             '/abonnement',
         ] as $uri) {
             $this->get($uri)->assertOk();

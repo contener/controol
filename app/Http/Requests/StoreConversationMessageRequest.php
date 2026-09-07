@@ -4,11 +4,11 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreMessageRequest extends FormRequest
+class StoreConversationMessageRequest extends FormRequest
 {
     // Action publique, accessible à tout visiteur anonyme d'une boutique — aucune
-    // authentification requise. Le rattachement à la boutique/au produit est vérifié et
-    // fixé côté contrôleur, jamais depuis l'entrée utilisateur.
+    // authentification requise. Le rattachement à la boutique/au produit/à l'identité du
+    // visiteur est vérifié et fixé côté contrôleur, jamais depuis l'entrée utilisateur.
     public function authorize(): bool
     {
         return true;

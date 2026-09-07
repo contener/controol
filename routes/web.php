@@ -15,7 +15,9 @@ use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\DestinationSocialeController;
 use App\Http\Controllers\FactureController;
 use App\Http\Controllers\FactureModeleController;
+use App\Http\Controllers\GuestConversationController;
 use App\Http\Controllers\MarketplaceController;
+use App\Http\Controllers\MesConversationsController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProduitController;
@@ -29,9 +31,16 @@ Route::get('/', function () {
 
 Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
 Route::get('/boutique/{slug}', [PublicBoutiqueController::class, 'show'])->name('public.boutique');
-Route::post('/boutique/{slug}/message', [PublicBoutiqueController::class, 'envoyerMessage'])
+Route::post('/boutique/{slug}/messages', [PublicBoutiqueController::class, 'envoyerMessage'])
     ->middleware('throttle:5,1')
-    ->name('public.boutique.message');
+    ->name('public.boutique.messages.store');
+
+Route::get('/conversations/{conversation}', [GuestConversationController::class, 'show'])
+    ->middleware('signed')
+    ->name('public.conversations.show');
+Route::post('/conversations/{conversation}/repondre', [GuestConversationController::class, 'repondre'])
+    ->middleware('throttle:5,1')
+    ->name('public.conversations.repondre');
 
 Route::middleware([
     'auth:sanctum',
@@ -47,6 +56,11 @@ Route::middleware([
     Route::patch('/boutiques/{boutique}/marketplace', [BoutiqueController::class, 'updateMarketplace'])->name('boutiques.marketplace');
     Route::patch('/boutiques/{boutique}/nui', [BoutiqueController::class, 'updateNui'])->name('boutiques.nui');
 
+    // Hors boutique.selected : un utilisateur peut consulter ses conversations en tant que
+    // visiteur/acheteur même s'il ne possède lui-même aucune boutique.
+    Route::get('/mes-conversations', [MesConversationsController::class, 'index'])->name('mes-conversations.index');
+    Route::post('/mes-conversations/{conversation}/repondre', [MesConversationsController::class, 'repondre'])->name('mes-conversations.repondre');
+
     Route::middleware('boutique.selected')->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
@@ -55,8 +69,9 @@ Route::middleware([
         Route::resource('depenses', DepenseController::class)->except(['show']);
 
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
-        Route::patch('/messages/{message}/lu', [MessageController::class, 'marquerLu'])->name('messages.lu');
-        Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
+        Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');
+        Route::post('/messages/{conversation}/repondre', [MessageController::class, 'repondre'])->name('messages.repondre');
+        Route::patch('/messages/{conversation}/statut', [MessageController::class, 'updateStatut'])->name('messages.statut');
 
         Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
         Route::get('/stock/{produit}/mouvements', [StockController::class, 'mouvements'])->name('stock.mouvements');

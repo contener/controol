@@ -1,15 +1,10 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import PartageLiens from '@/Components/PartageLiens.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
-import DialogModal from '@/Components/DialogModal.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
-import InputError from '@/Components/InputError.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
+import ContactVendeurModal from '@/Components/ContactVendeurModal.vue';
 
 const props = defineProps({
     boutique: Object,
@@ -17,6 +12,8 @@ const props = defineProps({
     categories: Array,
     filtres: Object,
     meta: Object,
+    mesConversations: { type: Array, default: () => [] },
+    conversationActive: { type: Object, default: null },
 });
 
 const page = usePage();
@@ -42,32 +39,38 @@ const lienWhatsapp = (produit) => {
 
 const lienContact = computed(() => lienWhatsapp(null));
 
-const produitMessage = ref(null);
-const formMessage = useForm({
-    nom_visiteur: '',
-    contact_visiteur: '',
-    contenu: '',
-    produit_id: null,
-});
+const produitActif = ref(null);
+
+const conversationPourProduit = (produitId) => props.mesConversations.find((c) => c.produit_id === produitId) ?? null;
 
 const ouvrirMessage = (produit) => {
-    produitMessage.value = produit;
-    formMessage.reset();
-    formMessage.clearErrors();
-    formMessage.produit_id = produit.id;
-    formMessage.contenu = `Bonjour, je suis intéressé(e) par "${produit.nom}".`;
+    const existante = conversationPourProduit(produit.id);
+    if (existante) {
+        router.get(route('public.boutique', props.boutique.slug), { conversation: existante.id }, {
+            only: ['conversationActive'],
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => { produitActif.value = produit; },
+        });
+        return;
+    }
+    produitActif.value = produit;
 };
 
 const fermerMessage = () => {
-    produitMessage.value = null;
+    produitActif.value = null;
 };
 
-const envoyerMessage = () => {
-    formMessage.post(route('public.boutique.message', props.boutique.slug), {
-        preserveScroll: true,
-        onSuccess: () => fermerMessage(),
-    });
-};
+// Garde-fou : après un changement de produit sans rechargement (nouveau produit sans
+// conversation existante), `conversationActive` peut encore contenir le fil du produit
+// précédemment ouvert tant qu'aucun rechargement ne l'a remplacé — ne jamais l'afficher
+// pour le mauvais produit.
+const conversationPourModal = computed(() => {
+    if (!produitActif.value || !props.conversationActive) {
+        return null;
+    }
+    return props.conversationActive.produit_id === produitActif.value.id ? props.conversationActive : null;
+});
 </script>
 
 <template>
@@ -166,36 +169,14 @@ const envoyerMessage = () => {
                 </div>
             </div>
 
-            <DialogModal :show="produitMessage !== null" @close="fermerMessage">
-                <template #title>Laisser un message au vendeur</template>
-                <template #content>
-                    <p class="text-sm text-gray-500 mb-4" v-if="produitMessage">À propos de « {{ produitMessage.nom }} »</p>
-
-                    <div>
-                        <InputLabel for="nom_visiteur" value="Votre nom" />
-                        <TextInput id="nom_visiteur" v-model="formMessage.nom_visiteur" class="mt-1 block w-full" autocomplete="name" />
-                        <InputError :message="formMessage.errors.nom_visiteur" class="mt-2" />
-                    </div>
-
-                    <div class="mt-4">
-                        <InputLabel for="contact_visiteur" value="Téléphone ou email (optionnel)" />
-                        <TextInput id="contact_visiteur" v-model="formMessage.contact_visiteur" class="mt-1 block w-full" placeholder="Pour que le vendeur puisse vous répondre" />
-                        <InputError :message="formMessage.errors.contact_visiteur" class="mt-2" />
-                    </div>
-
-                    <div class="mt-4">
-                        <InputLabel for="contenu" value="Votre message" />
-                        <textarea id="contenu" v-model="formMessage.contenu" rows="4" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
-                        <InputError :message="formMessage.errors.contenu" class="mt-2" />
-                    </div>
-                </template>
-                <template #footer>
-                    <SecondaryButton @click="fermerMessage">Annuler</SecondaryButton>
-                    <PrimaryButton class="ms-3" :class="{ 'opacity-25': formMessage.processing }" :disabled="formMessage.processing" @click="envoyerMessage">
-                        Envoyer
-                    </PrimaryButton>
-                </template>
-            </DialogModal>
+            <ContactVendeurModal
+                :show="produitActif !== null"
+                :boutique-slug="boutique.slug"
+                :produit="produitActif"
+                :conversation="conversationPourModal"
+                @close="fermerMessage"
+                @sent="fermerMessage"
+            />
 
             <div class="mt-10 mb-16 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-8 text-center text-white">
                 <h2 class="text-xl font-bold">Vous souhaitez vous aussi vendre vos produits en ligne ?</h2>

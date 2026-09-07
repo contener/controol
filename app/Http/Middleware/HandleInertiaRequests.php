@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Message;
+use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,6 +41,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('flash_success'),
                 'error' => fn () => $request->session()->get('flash_error'),
+                'lien_conversation' => fn () => $request->session()->get('flash_lien_conversation'),
             ],
             'mesBoutiques' => function () use ($request) {
                 $user = $request->user();
@@ -58,7 +59,22 @@ class HandleInertiaRequests extends Middleware
                     return 0;
                 }
 
-                return Message::where('lu', false)->count();
+                // Nombre de CONVERSATIONS avec au moins un message non lu, pas de messages
+                // bruts — scope automatique via BelongsToBoutique (Auth::check() est vrai ici).
+                return Conversation::where('messages_non_lus_boutique', '>', 0)->count();
+            },
+            'mesConversationsNonLues' => function () use ($request) {
+                $user = $request->user();
+
+                if (! $user) {
+                    return 0;
+                }
+
+                // Vue "acheteur" : jamais scopée par currentBoutique, donc withoutGlobalScopes.
+                return Conversation::withoutGlobalScopes()
+                    ->where('visiteur_user_id', $user->id)
+                    ->where('messages_non_lus_visiteur', '>', 0)
+                    ->count();
             },
         ];
     }

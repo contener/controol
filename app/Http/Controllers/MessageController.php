@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Message;
+use App\Http\Requests\ReplyConversationRequest;
+use App\Http\Requests\StoreConversationDepuisClientRequest;
+use App\Models\Client;
+use App\Models\Conversation;
+use App\Models\ConversationMessage;
+use App\Services\VisiteurIdentiteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,33 +18,76 @@ class MessageController extends Controller
 {
     public function index(Request $request): Response
     {
-        $this->authorize('viewAny', Message::class);
+        $this->authorize('viewAny', Conversation::class);
 
-        $messages = Message::with('produit:id,nom')
-            ->latest()
-            ->paginate(15)
+        $conversations = Conversation::with(['produit:id,nom', 'client:id,nom', 'dernierMessage'])
+            ->orderByDesc('dernier_message_a')
+            ->paginate(20)
             ->withQueryString();
 
+        $conversationActive = null;
+        if ($request->filled('conversation')) {
+            $conversationActive = Conversation::with(['produit:id,nom', 'client:id,nom', 'messages'])
+                ->find($request->integer('conversation'));
+
+            if ($conversationActive) {
+                $this->authorize('view', $conversationActive);
+
+                if ($conversationActive->messages_non_lus_boutique > 0) {
+                    $conversationActive->update(['messages_non_lus_boutique' => 0]);
+                }
+            }
+        }
+
         return Inertia::render('Messages/Index', [
-            'messages' => $messages,
+            'conversations' => $conversations,
+            'conversationActive' => $conversationActive,
+            'clients' => Client::query()->orderBy('nom')->get(['id', 'nom']),
         ]);
     }
 
-    public function marquerLu(Message $message): RedirectResponse
+    public function store(StoreConversationDepuisClientRequest $request, VisiteurIdentiteService $identite): RedirectResponse
     {
-        $this->authorize('update', $message);
+        $this->authorize('create', Conversation::class);
 
-        $message->update(['lu' => true]);
+        $client = Client::findOrFail($request->integer('client_id'));
 
-        return back();
+        $conversation = Conversation::create([
+            'produit_id' => $request->integer('produit_id') ?: null,
+            'client_id' => $client->id,
+            'visiteur_nom' => $client->nom,
+            'visiteur_contact' => $client->email ?? $client->telephone,
+            'statut' => Conversation::STATUT_OUVERTE,
+        ]);
+
+        $conversation->messages()->create([
+            'expediteur' => ConversationMessage::EXPEDITEUR_BOUTIQUE,
+            'contenu' => $request->string('contenu')->toString(),
+        ]);
+        $conversation->update(['dernier_message_a' => now()]);
+
+        return back()->with('flash_success', 'Conversation créée.')
+            ->with('flash_lien_conversation', $identite->lienSigne($conversation));
     }
 
-    public function destroy(Message $message): RedirectResponse
+    public function repondre(ReplyConversationRequest $request, Conversation $conversation): RedirectResponse
     {
-        $this->authorize('delete', $message);
+        $conversation->messages()->create([
+            'expediteur' => ConversationMessage::EXPEDITEUR_BOUTIQUE,
+            'contenu' => $request->string('contenu')->toString(),
+        ]);
+        $conversation->increment('messages_non_lus_visiteur', 1, ['dernier_message_a' => now()]);
 
-        $message->delete();
+        return back()->with('flash_success', 'Réponse envoyée.');
+    }
 
-        return back()->with('flash_success', 'Message supprimé.');
+    public function updateStatut(Request $request, Conversation $conversation): RedirectResponse
+    {
+        $this->authorize('updateStatut', $conversation);
+
+        $data = $request->validate(['statut' => ['required', Rule::in(Conversation::STATUTS)]]);
+        $conversation->update(['statut' => $data['statut']]);
+
+        return back()->with('flash_success', 'Statut de la conversation mis à jour.');
     }
 }
