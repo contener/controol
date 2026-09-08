@@ -23,7 +23,7 @@ const onFile = (event, champ, form) => {
 <template>
     <form class="space-y-8" @submit.prevent="emit('submit')">
         <section>
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Informations générales</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Informations générales</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                     <InputLabel for="nom" value="Nom de la boutique *" />
@@ -84,38 +84,38 @@ const onFile = (event, champ, form) => {
 
             <div class="mt-6">
                 <InputLabel for="description" value="Description" />
-                <textarea id="description" v-model="form.description" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+                <textarea id="description" v-model="form.description" rows="3" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" />
                 <InputError :message="form.errors.description" class="mt-2" />
             </div>
 
             <div class="mt-6">
                 <InputLabel for="note_pied_facture" value="Note de bas de facture" />
-                <textarea id="note_pied_facture" v-model="form.note_pied_facture" rows="2" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Ex. : La garantie ne couvre pas les dommages liés à une mauvaise utilisation." />
+                <textarea id="note_pied_facture" v-model="form.note_pied_facture" rows="2" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" placeholder="Ex. : La garantie ne couvre pas les dommages liés à une mauvaise utilisation." />
                 <InputError :message="form.errors.note_pied_facture" class="mt-2" />
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Affichée automatiquement en bas de toutes les factures de cette boutique (conditions, garantie...).</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Affichée automatiquement en bas de toutes les factures de cette boutique (conditions, garantie...).</p>
             </div>
         </section>
 
-        <section class="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Apparence</h3>
+        <section class="border-t border-slate-200 dark:border-slate-700 pt-6">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Apparence</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                     <InputLabel for="logo" value="Logo" />
                     <img v-if="boutique?.logo_path" :src="`/storage/${boutique.logo_path}`" class="h-16 w-16 object-cover rounded mb-2" alt="Logo actuel">
-                    <input id="logo" type="file" accept="image/*" class="mt-1 block w-full text-sm dark:text-gray-300" @change="onFile($event, 'logo', form)">
+                    <input id="logo" type="file" accept="image/*" class="mt-1 block w-full text-sm dark:text-slate-300" @change="onFile($event, 'logo', form)">
                     <InputError :message="form.errors.logo" class="mt-2" />
                 </div>
                 <div>
                     <InputLabel for="banniere" value="Bannière" />
                     <img v-if="boutique?.banniere_path" :src="`/storage/${boutique.banniere_path}`" class="h-16 w-full object-cover rounded mb-2" alt="Bannière actuelle">
-                    <input id="banniere" type="file" accept="image/*" class="mt-1 block w-full text-sm dark:text-gray-300" @change="onFile($event, 'banniere', form)">
+                    <input id="banniere" type="file" accept="image/*" class="mt-1 block w-full text-sm dark:text-slate-300" @change="onFile($event, 'banniere', form)">
                     <InputError :message="form.errors.banniere" class="mt-2" />
                 </div>
             </div>
         </section>
 
-        <section class="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">Réseaux sociaux (pour le partage)</h3>
+        <section class="border-t border-slate-200 dark:border-slate-700 pt-6">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Réseaux sociaux (pour le partage)</h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
                     <InputLabel for="facebook_url" value="Lien Facebook" />

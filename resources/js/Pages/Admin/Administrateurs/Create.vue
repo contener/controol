@@ -39,14 +39,14 @@ const submit = () => {
 <template>
     <AppLayout title="Créer un administrateur">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Créer un administrateur</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Créer un administrateur</h2>
         </template>
 
         <div class="py-8">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 <AdminSubNav />
 
-                <form class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 space-y-6" @submit.prevent="submit">
+                <form class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6 space-y-6" @submit.prevent="submit">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <InputLabel for="name" value="Nom complet *" />
@@ -67,7 +67,7 @@ const submit = () => {
                             <InputLabel for="password" value="Mot de passe temporaire *" />
                             <TextInput id="password" v-model="form.password" type="text" class="mt-1 block w-full" required />
                             <InputError :message="form.errors.password" class="mt-2" />
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">À communiquer à l'administrateur ; il pourra le changer depuis son profil.</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">À communiquer à l'administrateur ; il pourra le changer depuis son profil.</p>
                         </div>
                     </div>
 
@@ -78,11 +78,11 @@ const submit = () => {
                             <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
                         </SelectInput>
                         <InputError :message="form.errors.admin_role_label" class="mt-2" />
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Préremplit les permissions ci-dessous ; vous pouvez ensuite les ajuster librement.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Préremplit les permissions ci-dessous ; vous pouvez ensuite les ajuster librement.</p>
                     </div>
 
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Permissions</h3>
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Permissions</h3>
                         <PermissionsGrid v-model="form.permissions" :groupes-permissions="groupesPermissions" />
                         <InputError :message="form.errors.permissions" class="mt-2" />
                     </div>

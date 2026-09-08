@@ -46,8 +46,8 @@ const rejeter = () => {
     <AppLayout :title="`Paiement #${paiement.id}`">
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Paiement #{{ paiement.id }}</h2>
-                <Link :href="route('admin.paiements.index')" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">Retour à la liste</Link>
+                <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Paiement #{{ paiement.id }}</h2>
+                <Link :href="route('admin.paiements.index')" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Retour à la liste</Link>
             </div>
         </template>
 
@@ -55,7 +55,7 @@ const rejeter = () => {
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 <AdminSubNav />
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6">
                     <div class="flex items-center justify-between mb-4">
                         <span class="px-2 py-1 text-xs font-medium rounded-full" :class="statutClasses[paiement.statut]">{{ statutLabels[paiement.statut] }}</span>
                         <div v-if="paiement.statut === 'en_attente'" class="space-x-3">
@@ -66,63 +66,63 @@ const rejeter = () => {
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Utilisateur</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ paiement.user.name }}</div>
-                            <div class="text-gray-500 dark:text-gray-400">{{ paiement.user.email }}</div>
-                            <div class="text-gray-500 dark:text-gray-400">{{ paiement.user.telephone ?? '—' }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Utilisateur</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ paiement.user.name }}</div>
+                            <div class="text-slate-500 dark:text-slate-400">{{ paiement.user.email }}</div>
+                            <div class="text-slate-500 dark:text-slate-400">{{ paiement.user.telephone ?? '—' }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Plan demandé</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ paiement.abonnement?.plan?.nom ?? '—' }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Plan demandé</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ paiement.abonnement?.plan?.nom ?? '—' }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Montant</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ formatMontant(paiement.montant, paiement.devise) }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Montant</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ formatMontant(paiement.montant, paiement.devise) }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Moyen de paiement</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ paiement.moyen_paiement }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Moyen de paiement</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ paiement.moyen_paiement }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Référence de transaction</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ paiement.reference_transaction ?? '—' }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Référence de transaction</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ paiement.reference_transaction ?? '—' }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Créé le</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ formatDate(paiement.created_at) }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Créé le</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ formatDate(paiement.created_at) }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Traité le</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ formatDate(paiement.valide_at) }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Traité le</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ formatDate(paiement.valide_at) }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Traité par</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ paiement.validateur?.name ?? '—' }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Traité par</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ paiement.validateur?.name ?? '—' }}</div>
                         </div>
                         <div v-if="paiement.motif_rejet" class="sm:col-span-2">
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Motif du refus</div>
-                            <div class="font-medium text-gray-900 dark:text-gray-100">{{ paiement.motif_rejet }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Motif du refus</div>
+                            <div class="font-medium text-slate-900 dark:text-slate-100">{{ paiement.motif_rejet }}</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Journal d'audit</h3>
+                        <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100">Journal d'audit</h3>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                                 <tr v-if="paiement.audits.length === 0">
-                                    <td class="px-6 py-6 text-center text-gray-400 dark:text-gray-500">Aucune action enregistrée pour l'instant.</td>
+                                    <td class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucune action enregistrée pour l'instant.</td>
                                 </tr>
                                 <tr v-for="audit in paiement.audits" :key="audit.id">
-                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ formatDate(audit.created_at) }}</td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ actionLabels[audit.action] }}</td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ statutLabels[audit.statut_avant] }} → {{ statutLabels[audit.statut_apres] }}</td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ audit.admin.name }}</td>
-                                    <td class="px-6 py-3 text-sm text-gray-500 dark:text-gray-400">{{ audit.motif ?? '—' }}</td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-xs text-gray-400 dark:text-gray-500">{{ audit.ip_address }}</td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ formatDate(audit.created_at) }}</td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{{ actionLabels[audit.action] }}</td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ statutLabels[audit.statut_avant] }} → {{ statutLabels[audit.statut_apres] }}</td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ audit.admin.name }}</td>
+                                    <td class="px-6 py-3 text-sm text-slate-500 dark:text-slate-400">{{ audit.motif ?? '—' }}</td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-xs text-slate-400 dark:text-slate-500">{{ audit.ip_address }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -148,7 +148,7 @@ const rejeter = () => {
             <template #title>Refuser le paiement</template>
             <template #content>
                 <InputLabel for="motif" value="Motif du refus *" />
-                <textarea id="motif" v-model="formRejet.motif" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+                <textarea id="motif" v-model="formRejet.motif" rows="3" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" />
                 <InputError :message="formRejet.errors.motif" class="mt-2" />
             </template>
             <template #footer>

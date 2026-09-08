@@ -56,43 +56,43 @@ const submit = () => {
 <template>
     <AppLayout title="Stock">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Gestion des stocks</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Gestion des stocks</h2>
         </template>
 
         <div class="py-8">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-4">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-4">
                     <label class="flex items-center gap-2">
                         <Checkbox v-model:checked="ruptureUniquement" @change="toggleRupture" />
-                        <span class="text-sm text-gray-700 dark:text-gray-300">Afficher uniquement les produits en rupture de stock</span>
+                        <span class="text-sm text-slate-700 dark:text-slate-300">Afficher uniquement les produits en rupture de stock</span>
                     </label>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-900">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Produit</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Référence</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Quantité en stock</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Seuil d'alerte</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Produit</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Référence</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Quantité en stock</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Seuil d'alerte</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="produits.data.length === 0">
-                                <td colspan="5" class="px-6 py-6 text-center text-gray-400 dark:text-gray-500">Aucun produit avec suivi de stock.</td>
+                                <td colspan="5" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun produit avec suivi de stock.</td>
                             </tr>
-                            <tr v-for="produit in produits.data" :key="produit.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ produit.nom }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ produit.reference ?? '—' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right" :class="produit.seuil_alerte !== null && produit.quantite_stock <= produit.seuil_alerte ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-900 dark:text-gray-100'">
+                            <tr v-for="produit in produits.data" :key="produit.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{{ produit.nom }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ produit.reference ?? '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right" :class="produit.seuil_alerte !== null && produit.quantite_stock <= produit.seuil_alerte ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-slate-900 dark:text-slate-100'">
                                     {{ produit.quantite_stock }} {{ produit.unite }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">{{ produit.seuil_alerte ?? '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500 dark:text-slate-400">{{ produit.seuil_alerte ?? '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
-                                    <button class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300" @click="ouvrirModal(produit)">Mouvement</button>
-                                    <Link :href="route('stock.mouvements', produit.id)" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-200">Historique</Link>
+                                    <button class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300" @click="ouvrirModal(produit)">Mouvement</button>
+                                    <Link :href="route('stock.mouvements', produit.id)" class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-200">Historique</Link>
                                 </td>
                             </tr>
                         </tbody>
@@ -106,7 +106,7 @@ const submit = () => {
                         :href="link.url ?? '#'"
                         v-html="link.label"
                         class="px-3 py-1 text-sm rounded border"
-                        :class="link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                        :class="link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'"
                         :disabled="!link.url"
                     />
                 </div>
@@ -115,7 +115,7 @@ const submit = () => {
 
         <Modal :show="showModal" @close="fermerModal">
             <div class="p-6">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Mouvement de stock — {{ produitCible?.nom }}</h3>
+                <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100">Mouvement de stock — {{ produitCible?.nom }}</h3>
 
                 <form class="mt-6 space-y-4" @submit.prevent="submit">
                     <div>

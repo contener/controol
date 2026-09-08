@@ -36,7 +36,7 @@ const submit = () => {
 <template>
     <AppLayout title="Nouvelle boutique">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Nouvelle boutique</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Nouvelle boutique</h2>
         </template>
 
         <div class="py-8">
@@ -46,7 +46,7 @@ const submit = () => {
                     <a :href="route('abonnement.index')" class="underline font-medium">Passez à un plan supérieur</a> pour en créer davantage.
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6">
                     <BoutiqueForm :form="form" :processing="form.processing" @submit="submit" />
                 </div>
             </div>

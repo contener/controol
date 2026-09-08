@@ -40,7 +40,7 @@ const submit = () => {
 <template>
     <AppLayout title="Modifier la facture">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Modifier la facture {{ facture.numero }}</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Modifier la facture {{ facture.numero }}</h2>
         </template>
 
         <div class="py-8">

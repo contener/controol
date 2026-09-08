@@ -22,7 +22,7 @@ const tuiles = [
 <template>
     <AppLayout title="Super Administration">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Super Administration</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Super Administration</h2>
         </template>
 
         <div class="py-8">
@@ -30,23 +30,23 @@ const tuiles = [
                 <AdminSubNav />
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div v-for="tuile in tuiles" :key="tuile.cle" class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+                    <div v-for="tuile in tuiles" :key="tuile.cle" class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-500 dark:text-gray-400">{{ tuile.label }}</span>
+                            <span class="text-sm text-slate-500 dark:text-slate-400">{{ tuile.label }}</span>
                             <span class="text-xl">{{ tuile.icone }}</span>
                         </div>
-                        <div class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ formatNombre(stats[tuile.cle]) }}</div>
+                        <div class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ formatNombre(stats[tuile.cle]) }}</div>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Abonnés par plan</h3>
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Abonnés par plan</h3>
                     <div class="flex flex-wrap gap-6">
                         <div v-for="(total, plan) in stats.abonnes_par_plan" :key="plan">
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">{{ plan }}</div>
-                            <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ formatNombre(total) }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">{{ plan }}</div>
+                            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ formatNombre(total) }}</div>
                         </div>
-                        <div v-if="Object.keys(stats.abonnes_par_plan ?? {}).length === 0" class="text-sm text-gray-400 dark:text-gray-500">
+                        <div v-if="Object.keys(stats.abonnes_par_plan ?? {}).length === 0" class="text-sm text-slate-400 dark:text-slate-500">
                             Aucun abonnement actif pour le moment.
                         </div>
                     </div>

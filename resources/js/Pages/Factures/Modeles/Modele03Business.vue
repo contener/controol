@@ -18,30 +18,30 @@ const contactItems = computed(() => {
 </script>
 
 <template>
-    <div class="bg-white text-gray-900 text-sm p-8 print:p-0">
+    <div class="bg-white text-slate-900 text-sm p-8 print:p-0">
         <!-- En-tête : logo mis en avant -->
         <div class="flex justify-between items-start gap-8 pb-7 border-b-2 border-emerald-700">
             <div class="flex-1">
                 <img v-if="apercu.boutique.logo_url" :src="apercu.boutique.logo_url" class="h-20 w-auto object-contain mb-3" alt="Logo">
                 <h1 class="text-2xl font-bold tracking-tight">{{ apercu.boutique.nom || 'Ma boutique' }}</h1>
-                <div v-if="apercu.boutique.adresse || apercu.boutique.ville || apercu.boutique.pays" class="mt-2.5 flex items-start gap-1.5 text-gray-700">
+                <div v-if="apercu.boutique.adresse || apercu.boutique.ville || apercu.boutique.pays" class="mt-2.5 flex items-start gap-1.5 text-slate-700">
                     <span class="text-emerald-700 leading-none">📍</span>
                     <span class="leading-snug">
                         {{ [apercu.boutique.adresse, [apercu.boutique.ville, apercu.boutique.pays].filter(Boolean).join(', ')].filter(Boolean).join(' — ') }}
                     </span>
                 </div>
-                <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-500">
+                <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-slate-500">
                     <template v-for="(item, i) in contactItems" :key="i">
                         <span>{{ item }}</span>
-                        <span v-if="i < contactItems.length - 1" class="text-gray-300">•</span>
+                        <span v-if="i < contactItems.length - 1" class="text-slate-300">•</span>
                     </template>
                 </div>
-                <div v-if="apercu.boutique.nui" class="mt-1 text-xs font-medium text-gray-500">NUI : {{ apercu.boutique.nui }}</div>
+                <div v-if="apercu.boutique.nui" class="mt-1 text-xs font-medium text-slate-500">NUI : {{ apercu.boutique.nui }}</div>
             </div>
             <div class="shrink-0 text-right bg-emerald-50 border border-emerald-200 rounded-xl px-6 py-5">
                 <div class="text-xs font-bold uppercase tracking-widest text-emerald-700">Facture</div>
                 <div class="text-xl font-extrabold text-emerald-900 mt-0.5">{{ apercu.meta.numero }}</div>
-                <div class="mt-2.5 text-gray-500 space-y-0.5">
+                <div class="mt-2.5 text-slate-500 space-y-0.5">
                     <div>Émission : {{ apercu.meta.date_emission || '—' }}</div>
                     <div v-if="apercu.meta.date_echeance">Échéance : {{ apercu.meta.date_echeance }}</div>
                 </div>
@@ -49,10 +49,10 @@ const contactItems = computed(() => {
         </div>
 
         <!-- Client -->
-        <div class="mt-7 border-l-4 border-emerald-500 bg-gray-50 rounded-r-lg p-5">
-            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Facturé à</div>
+        <div class="mt-7 border-l-4 border-emerald-500 bg-slate-50 rounded-r-lg p-5">
+            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Facturé à</div>
             <div class="font-medium">{{ apercu.client.nom }}</div>
-            <div class="text-gray-500 space-y-0.5">
+            <div class="text-slate-500 space-y-0.5">
                 <div v-if="apercu.client.adresse">{{ apercu.client.adresse }}</div>
                 <div v-if="apercu.client.ville">{{ apercu.client.ville }} {{ apercu.client.pays }}</div>
                 <div v-if="apercu.client.email">{{ apercu.client.email }}</div>
@@ -61,7 +61,7 @@ const contactItems = computed(() => {
         </div>
 
         <!-- Tableau produits élégant -->
-        <div class="mt-6 rounded-lg border border-gray-200 overflow-hidden">
+        <div class="mt-6 rounded-lg border border-slate-200 overflow-hidden">
             <table class="w-full border-collapse">
                 <thead>
                     <tr class="bg-emerald-700 text-white text-xs uppercase tracking-wide">
@@ -76,7 +76,7 @@ const contactItems = computed(() => {
                     <tr v-for="(ligne, i) in apercu.lignes" :key="i" :class="i % 2 === 1 ? 'bg-emerald-50/50' : 'bg-white'">
                         <td class="py-2.5 px-3">
                             <div>{{ ligne.designation || '—' }}</div>
-                            <div v-if="ligne.description" class="text-xs text-gray-400">{{ ligne.description }}</div>
+                            <div v-if="ligne.description" class="text-xs text-slate-400">{{ ligne.description }}</div>
                         </td>
                         <td class="py-2.5 px-3 text-right">{{ ligne.quantite }}</td>
                         <td class="py-2.5 px-3 text-right">{{ formatMontant(ligne.prix_unitaire) }}</td>
@@ -84,7 +84,7 @@ const contactItems = computed(() => {
                         <td class="py-2.5 px-3 text-right">{{ formatMontant(ligne.montant_ttc) }}</td>
                     </tr>
                     <tr v-if="apercu.lignes.length === 0">
-                        <td colspan="5" class="py-6 text-center text-gray-400">Aucune ligne pour le moment.</td>
+                        <td colspan="5" class="py-6 text-center text-slate-400">Aucune ligne pour le moment.</td>
                     </tr>
                 </tbody>
             </table>
@@ -92,7 +92,7 @@ const contactItems = computed(() => {
 
         <!-- Résumé financier -->
         <div class="mt-5 ml-auto w-72">
-            <div class="space-y-1 text-gray-500">
+            <div class="space-y-1 text-slate-500">
                 <div class="flex justify-between"><span>Sous-total HT</span><span>{{ formatMontant(apercu.totaux.sous_total, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between"><span>TVA</span><span>{{ formatMontant(apercu.totaux.total_tva, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between"><span>Remise</span><span>- {{ formatMontant(apercu.totaux.remise, apercu.meta.devise) }}</span></div>
@@ -104,9 +104,9 @@ const contactItems = computed(() => {
         </div>
 
         <!-- Paiement -->
-        <div class="mt-8 border border-gray-200 rounded-lg p-4">
-            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Modalités de paiement</div>
-            <div class="text-gray-500 space-y-0.5">
+        <div class="mt-8 border border-slate-200 rounded-lg p-4">
+            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Modalités de paiement</div>
+            <div class="text-slate-500 space-y-0.5">
                 <div v-if="apercu.boutique.whatsapp">WhatsApp : {{ apercu.boutique.whatsapp }}</div>
                 <div v-if="apercu.boutique.telephone">Tél : {{ apercu.boutique.telephone }}</div>
                 <div v-if="apercu.boutique.email">{{ apercu.boutique.email }}</div>
@@ -114,18 +114,18 @@ const contactItems = computed(() => {
         </div>
 
         <div v-if="apercu.notes" class="mt-6">
-            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Notes</div>
-            <p class="text-gray-600 whitespace-pre-line">{{ apercu.notes }}</p>
+            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</div>
+            <p class="text-slate-600 whitespace-pre-line">{{ apercu.notes }}</p>
         </div>
 
         <div v-if="apercu.garantie" class="mt-8 pt-4 border-t border-dashed border-emerald-200">
-            <p class="text-[11px] text-gray-400 italic leading-relaxed"><span class="font-semibold not-italic">Garantie : </span>{{ apercu.garantie }}</p>
+            <p class="text-[11px] text-slate-400 italic leading-relaxed"><span class="font-semibold not-italic">Garantie : </span>{{ apercu.garantie }}</p>
         </div>
         <div v-if="apercu.boutique.note_pied_facture" class="mt-3 pt-3" :class="!apercu.garantie ? 'border-t border-dashed border-emerald-200' : ''">
-            <p class="text-[11px] text-gray-400 italic leading-relaxed">{{ apercu.boutique.note_pied_facture }}</p>
+            <p class="text-[11px] text-slate-400 italic leading-relaxed">{{ apercu.boutique.note_pied_facture }}</p>
         </div>
 
-        <div class="mt-8 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center">
+        <div class="mt-8 pt-4 border-t border-slate-200 text-xs text-slate-400 text-center">
             Merci de votre confiance.
         </div>
     </div>

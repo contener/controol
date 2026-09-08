@@ -63,7 +63,7 @@ const copierLien = () => {
     <DialogModal :show="show" @close="$emit('close')">
         <template #title>Contacter la boutique</template>
         <template #content>
-            <p v-if="produit" class="text-sm text-gray-500 mb-4">À propos de « {{ produit.nom }} »</p>
+            <p v-if="produit" class="text-sm text-slate-500 mb-4">À propos de « {{ produit.nom }} »</p>
 
             <ConversationThread v-if="conversation" :messages="conversation.messages" me="visiteur" class="mb-4 max-h-64 overflow-y-auto" />
 
@@ -83,11 +83,11 @@ const copierLien = () => {
 
             <div class="mt-4">
                 <InputLabel for="contenu" :value="conversation ? 'Votre réponse' : 'Votre message'" />
-                <textarea id="contenu" v-model="form.contenu" rows="3" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+                <textarea id="contenu" v-model="form.contenu" rows="3" class="mt-1 block w-full border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" />
                 <InputError :message="form.errors.contenu" class="mt-2" />
             </div>
 
-            <div v-if="lienConversation" class="mt-4 rounded-md bg-indigo-50 border border-indigo-200 px-3 py-2 text-xs text-indigo-800 flex items-center justify-between gap-2">
+            <div v-if="lienConversation" class="mt-4 rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800 flex items-center justify-between gap-2">
                 <span>Conservez ce lien pour retrouver cette conversation depuis un autre appareil.</span>
                 <button type="button" class="shrink-0 font-medium underline" @click="copierLien">Copier</button>
             </div>

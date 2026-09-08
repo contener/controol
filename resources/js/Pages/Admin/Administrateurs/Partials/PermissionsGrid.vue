@@ -25,16 +25,16 @@ const basculer = (cle) => {
 <template>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div v-for="(groupe, cleGroupe) in groupesPermissions" :key="cleGroupe">
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{{ groupe.label }}</h4>
+            <h4 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">{{ groupe.label }}</h4>
             <div class="space-y-1.5">
                 <label
                     v-for="(libelle, cle) in groupe.permissions"
                     :key="cle"
-                    class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+                    class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
                 >
                     <input
                         type="checkbox"
-                        class="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        class="rounded border-slate-300 dark:border-slate-600 dark:bg-slate-700 text-blue-600 shadow-sm focus:ring-blue-500"
                         :checked="estCochee(cle)"
                         @change="basculer(cle)"
                     >

@@ -56,8 +56,8 @@ const actionLabels = {
     <AppLayout :title="`Modifier ${administrateur.name}`">
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Modifier {{ administrateur.name }}</h2>
-                <span class="px-2 py-1 text-xs font-medium rounded-full" :class="administrateur.est_actif ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'">
+                <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Modifier {{ administrateur.name }}</h2>
+                <span class="px-2 py-1 text-xs font-medium rounded-full" :class="administrateur.est_actif ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'">
                     {{ administrateur.est_actif ? 'Actif' : 'Inactif' }}
                 </span>
             </div>
@@ -67,17 +67,17 @@ const actionLabels = {
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 <AdminSubNav />
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 flex items-center justify-between">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6 flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Statut du compte</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Statut du compte</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                             Un administrateur désactivé perd immédiatement l'accès à l'espace d'administration, sans que son historique soit supprimé.
                         </p>
                     </div>
                     <SecondaryButton @click="basculer">{{ administrateur.est_actif ? 'Désactiver' : 'Réactiver' }}</SecondaryButton>
                 </div>
 
-                <form class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 space-y-6" @submit.prevent="submit">
+                <form class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6 space-y-6" @submit.prevent="submit">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <InputLabel for="name" value="Nom complet *" />
@@ -111,7 +111,7 @@ const actionLabels = {
                     </div>
 
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Permissions</h3>
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Permissions</h3>
                         <PermissionsGrid v-model="form.permissions" :groupes-permissions="groupesPermissions" />
                         <InputError :message="form.errors.permissions" class="mt-2" />
                     </div>
@@ -121,16 +121,16 @@ const actionLabels = {
                     </div>
                 </form>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Historique</h3>
-                    <div v-if="audits.length === 0" class="text-sm text-gray-400 dark:text-gray-500">Aucune action enregistrée pour le moment.</div>
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Historique</h3>
+                    <div v-if="audits.length === 0" class="text-sm text-slate-400 dark:text-slate-500">Aucune action enregistrée pour le moment.</div>
                     <ul v-else class="space-y-2 text-sm">
-                        <li v-for="audit in audits" :key="audit.id" class="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
-                            <span class="text-gray-700 dark:text-gray-300">
+                        <li v-for="audit in audits" :key="audit.id" class="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-2">
+                            <span class="text-slate-700 dark:text-slate-300">
                                 {{ actionLabels[audit.action] ?? audit.action }}
-                                <span class="text-gray-400 dark:text-gray-500">par {{ audit.admin?.name ?? '—' }}</span>
+                                <span class="text-slate-400 dark:text-slate-500">par {{ audit.admin?.name ?? '—' }}</span>
                             </span>
-                            <span class="text-gray-400 dark:text-gray-500">{{ formatDateHeure(audit.created_at) }}</span>
+                            <span class="text-slate-400 dark:text-slate-500">{{ formatDateHeure(audit.created_at) }}</span>
                         </li>
                     </ul>
                 </div>

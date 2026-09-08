@@ -43,13 +43,13 @@ const fermerMessage = () => { produitMessage.value = null; };
 <template>
     <div class="space-y-8">
         <div class="text-center">
-            <h1 class="text-3xl font-bold text-gray-900">Marketplace</h1>
-            <p class="mt-2 text-gray-500">Découvrez des boutiques et leurs produits, partout où elles sont installées.</p>
+            <h1 class="text-3xl font-bold text-slate-900">Marketplace</h1>
+            <p class="mt-2 text-slate-500">Découvrez des boutiques et leurs produits, partout où elles sont installées.</p>
         </div>
 
         <div class="bg-white shadow-sm rounded-lg p-4 flex flex-col sm:flex-row gap-3">
             <div class="flex-1 relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">🔎</span>
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔎</span>
                 <TextInput v-model="recherche" placeholder="Rechercher une boutique ou un produit..." class="w-full pl-9" />
             </div>
             <SelectInput v-model="categorie" class="sm:w-56">
@@ -63,7 +63,7 @@ const fermerMessage = () => { produitMessage.value = null; };
         </div>
 
         <div v-if="promotions.length > 0">
-            <h2 class="text-lg font-semibold text-gray-900 mb-3">Promotions en ce moment</h2>
+            <h2 class="text-lg font-semibold text-slate-900 mb-3">Promotions en ce moment</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div
                     v-for="produit in promotions"
@@ -71,20 +71,20 @@ const fermerMessage = () => { produitMessage.value = null; };
                     class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition flex flex-col"
                 >
                     <Link :href="route('public.boutique', produit.boutique.slug)">
-                        <div class="aspect-square bg-gray-100">
+                        <div class="aspect-square bg-slate-100">
                             <img v-if="produit.photo_path" :src="`/storage/${produit.photo_path}`" class="w-full h-full object-cover" :alt="produit.nom" loading="lazy">
-                            <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-2xl">📦</div>
+                            <div v-else class="w-full h-full flex items-center justify-center text-slate-300 text-2xl">📦</div>
                         </div>
                         <div class="p-2">
-                            <div class="text-xs text-gray-500 truncate">{{ produit.boutique.nom }}</div>
-                            <div class="text-sm font-medium text-gray-900 truncate">{{ produit.nom }}</div>
+                            <div class="text-xs text-slate-500 truncate">{{ produit.boutique.nom }}</div>
+                            <div class="text-sm font-medium text-slate-900 truncate">{{ produit.nom }}</div>
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span class="text-sm font-semibold text-red-600">{{ formatMontant(produit.promotion_prix, produit.boutique.devise) }}</span>
-                                <span class="text-xs text-gray-400 line-through">{{ formatMontant(produit.prix_vente, produit.boutique.devise) }}</span>
+                                <span class="text-xs text-slate-400 line-through">{{ formatMontant(produit.prix_vente, produit.boutique.devise) }}</span>
                             </div>
                         </div>
                     </Link>
-                    <button type="button" class="mx-2 mb-2 inline-flex items-center justify-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-50" @click="produitMessage = produit">
+                    <button type="button" class="mx-2 mb-2 inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-medium rounded-md hover:bg-slate-50" @click="produitMessage = produit">
                         💬 Message
                     </button>
                 </div>
@@ -101,9 +101,9 @@ const fermerMessage = () => { produitMessage.value = null; };
         />
 
         <div>
-            <h2 class="text-lg font-semibold text-gray-900 mb-3">Boutiques</h2>
+            <h2 class="text-lg font-semibold text-slate-900 mb-3">Boutiques</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div v-if="boutiques.data.length === 0" class="col-span-full text-center text-gray-400 py-16 bg-white rounded-lg shadow-sm">
+                <div v-if="boutiques.data.length === 0" class="col-span-full text-center text-slate-400 py-16 bg-white rounded-lg shadow-sm">
                     Aucune boutique ne correspond à votre recherche pour le moment.
                 </div>
 
@@ -113,17 +113,17 @@ const fermerMessage = () => { produitMessage.value = null; };
                     :href="route('public.boutique', boutique.slug)"
                     class="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition flex flex-col"
                 >
-                    <div class="h-32 bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                    <div class="h-32 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
                         <img v-if="boutique.logo_path" :src="`/storage/${boutique.logo_path}`" class="h-20 w-20 rounded-full object-cover border-4 border-white shadow" :alt="boutique.nom" loading="lazy">
-                        <div v-else class="h-20 w-20 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-indigo-600 shadow">
+                        <div v-else class="h-20 w-20 rounded-full bg-white flex items-center justify-center text-2xl font-bold text-blue-600 shadow">
                             {{ boutique.nom.charAt(0) }}
                         </div>
                     </div>
                     <div class="p-4 flex-1 flex flex-col">
-                        <h3 class="font-semibold text-gray-900">{{ boutique.nom }}</h3>
-                        <p class="text-sm text-gray-500">{{ [boutique.categorie, boutique.ville].filter(Boolean).join(' · ') || '—' }}</p>
-                        <p class="mt-2 text-xs text-gray-400">{{ boutique.produits_count }} produit(s)</p>
-                        <span class="mt-3 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-50 text-indigo-700">
+                        <h3 class="font-semibold text-slate-900">{{ boutique.nom }}</h3>
+                        <p class="text-sm text-slate-500">{{ [boutique.categorie, boutique.ville].filter(Boolean).join(' · ') || '—' }}</p>
+                        <p class="mt-2 text-xs text-slate-400">{{ boutique.produits_count }} produit(s)</p>
+                        <span class="mt-3 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium rounded-md bg-blue-50 text-blue-700">
                             Voir la boutique
                         </span>
                     </div>
@@ -137,14 +137,14 @@ const fermerMessage = () => { produitMessage.value = null; };
                     :href="link.url ?? '#'"
                     v-html="link.label"
                     class="px-3 py-1 text-sm rounded border"
-                    :class="link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'"
+                    :class="link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'"
                     :disabled="!link.url"
                 />
             </div>
         </div>
 
         <div class="bg-white shadow-sm rounded-lg p-6">
-            <h3 class="text-sm font-semibold text-gray-900 mb-3">Partager la Marketplace</h3>
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">Partager la Marketplace</h3>
             <PartageLiens :url="marketplaceUrl" texte="Découvrez cette marketplace de boutiques locales !" />
         </div>
     </div>

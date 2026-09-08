@@ -79,14 +79,14 @@ const validerRejet = () => {
 <template>
     <AppLayout title="Administration — Paiements">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Administration — Paiements d'abonnement</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Administration — Paiements d'abonnement</h2>
         </template>
 
         <div class="py-8">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
                 <AdminSubNav />
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-4 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     <TextInput v-model="recherche" placeholder="Nom ou email..." />
                     <SelectInput v-model="statut">
                         <option value="">Tous les statuts</option>
@@ -103,41 +103,41 @@ const validerRejet = () => {
                     <TextInput v-model="fin" type="date" />
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-900">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Utilisateur</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plan</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Montant</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Moyen</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Créé le</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Statut</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Utilisateur</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Plan</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Montant</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Moyen</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Créé le</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Statut</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="paiements.data.length === 0">
-                                <td colspan="7" class="px-6 py-6 text-center text-gray-400 dark:text-gray-500">Aucun paiement.</td>
+                                <td colspan="7" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun paiement.</td>
                             </tr>
-                            <tr v-for="paiement in paiements.data" :key="paiement.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            <tr v-for="paiement in paiements.data" :key="paiement.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">
                                     {{ paiement.user.name }}
-                                    <div class="text-xs text-gray-400 dark:text-gray-500">{{ paiement.user.email }}</div>
-                                    <div v-if="paiement.user.telephone" class="text-xs text-gray-400 dark:text-gray-500">{{ paiement.user.telephone }}</div>
+                                    <div class="text-xs text-slate-400 dark:text-slate-500">{{ paiement.user.email }}</div>
+                                    <div v-if="paiement.user.telephone" class="text-xs text-slate-400 dark:text-slate-500">{{ paiement.user.telephone }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ paiement.abonnement?.plan?.nom ?? '—' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">{{ formatMontant(paiement.montant, paiement.devise) }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ paiement.abonnement?.plan?.nom ?? '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-900 dark:text-slate-100">{{ formatMontant(paiement.montant, paiement.devise) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                                     {{ paiement.moyen_paiement }}
-                                    <div v-if="paiement.reference_transaction" class="text-xs text-gray-400 dark:text-gray-500">Réf. {{ paiement.reference_transaction }}</div>
+                                    <div v-if="paiement.reference_transaction" class="text-xs text-slate-400 dark:text-slate-500">Réf. {{ paiement.reference_transaction }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ new Date(paiement.created_at).toLocaleString('fr-FR') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ new Date(paiement.created_at).toLocaleString('fr-FR') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs font-medium rounded-full" :class="statutClasses[paiement.statut]">{{ statutLabels[paiement.statut] }}</span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
-                                    <Link :href="route('admin.paiements.show', paiement.id)" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">Voir</Link>
+                                    <Link :href="route('admin.paiements.show', paiement.id)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Voir</Link>
                                     <template v-if="paiement.statut === 'en_attente'">
                                         <button class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300" @click="confirmerApprobation(paiement)">Approuver</button>
                                         <button class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300" @click="ouvrirRejet(paiement)">Refuser</button>
@@ -155,7 +155,7 @@ const validerRejet = () => {
                         :href="link.url ?? '#'"
                         v-html="link.label"
                         class="px-3 py-1 text-sm rounded border"
-                        :class="link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                        :class="link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'"
                         :disabled="!link.url"
                     />
                 </div>
@@ -179,7 +179,7 @@ const validerRejet = () => {
             <template #title>Refuser le paiement</template>
             <template #content>
                 <InputLabel for="motif" value="Motif du refus *" />
-                <textarea id="motif" v-model="formRejet.motif" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Référence de paiement incorrecte..." />
+                <textarea id="motif" v-model="formRejet.motif" rows="3" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" placeholder="Référence de paiement incorrecte..." />
                 <InputError :message="formRejet.errors.motif" class="mt-2" />
             </template>
             <template #footer>

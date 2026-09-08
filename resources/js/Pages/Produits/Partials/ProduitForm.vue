@@ -92,26 +92,26 @@ const onPhoto = (event) => {
 
         <div>
             <InputLabel for="description" value="Description" />
-            <textarea id="description" v-model="form.description" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+            <textarea id="description" v-model="form.description" rows="3" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" />
             <InputError :message="form.errors.description" class="mt-2" />
         </div>
 
         <div>
             <InputLabel for="photo" value="Photo (vitrine publique)" />
             <img v-if="produit?.photo_path" :src="`/storage/${produit.photo_path}`" class="h-20 w-20 object-cover rounded mb-2" alt="Photo actuelle">
-            <input id="photo" type="file" accept="image/*" class="mt-1 block w-full text-sm dark:text-gray-100" @change="onPhoto">
+            <input id="photo" type="file" accept="image/*" class="mt-1 block w-full text-sm dark:text-slate-100" @change="onPhoto">
             <InputError :message="form.errors.photo" class="mt-2" />
         </div>
 
         <label class="flex items-center gap-2">
             <Checkbox v-model:checked="form.actif" />
-            <span class="text-sm text-gray-700 dark:text-gray-300">Visible sur la boutique publique</span>
+            <span class="text-sm text-slate-700 dark:text-slate-300">Visible sur la boutique publique</span>
         </label>
 
-        <div v-if="estProduit" class="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-4">
+        <div v-if="estProduit" class="border-t border-slate-200 dark:border-slate-700 pt-6 space-y-4">
             <label class="flex items-center gap-2">
                 <Checkbox v-model:checked="form.gere_stock" />
-                <span class="text-sm text-gray-700 dark:text-gray-300">Gérer le stock pour ce produit</span>
+                <span class="text-sm text-slate-700 dark:text-slate-300">Gérer le stock pour ce produit</span>
             </label>
 
             <div v-if="form.gere_stock" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -127,7 +127,7 @@ const onPhoto = (event) => {
                     <InputError :message="form.errors.seuil_alerte" class="mt-2" />
                 </div>
             </div>
-            <p v-if="modification" class="text-sm text-gray-500 dark:text-gray-400">
+            <p v-if="modification" class="text-sm text-slate-500 dark:text-slate-400">
                 La quantité en stock se modifie depuis la page Stock (mouvements d'entrée/sortie/ajustement).
             </p>
         </div>

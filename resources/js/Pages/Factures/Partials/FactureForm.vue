@@ -80,7 +80,7 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
 <template>
     <div class="space-y-8">
         <section>
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Client</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Client</h3>
             <InputLabel for="client_id" value="Client *" />
             <SelectInput id="client_id" v-model="form.client_id" class="mt-1 block w-full">
                 <option :value="null" disabled>Sélectionner un client</option>
@@ -90,7 +90,7 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
         </section>
 
         <section v-if="boutique">
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Boutique</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Boutique</h3>
             <InputLabel for="nui" value="NUI (Numéro d'Identifiant Unique)" />
             <div class="mt-1 flex items-start gap-2">
                 <TextInput id="nui" v-model="formNui.nui" type="text" class="block w-full" placeholder="M012312345678A" />
@@ -99,11 +99,11 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
                 </SecondaryButton>
             </div>
             <InputError :message="formNui.errors.nui" class="mt-2" />
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">S'applique à toutes les factures de cette boutique — modifiable aussi depuis les paramètres de la boutique.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">S'applique à toutes les factures de cette boutique — modifiable aussi depuis les paramètres de la boutique.</p>
         </section>
 
         <section>
-            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Informations de la facture</h3>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Informations de la facture</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <InputLabel for="date_emission" value="Date d'émission *" />
@@ -120,13 +120,13 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
 
         <section>
             <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Produits</h3>
+                <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Produits</h3>
                 <SecondaryButton type="button" @click="ajouterLigne">+ Ajouter un produit</SecondaryButton>
             </div>
             <InputError :message="form.errors.lignes" class="mb-2" />
 
             <div class="space-y-3">
-                <div v-for="(ligne, index) in form.lignes" :key="index" class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 space-y-2">
+                <div v-for="(ligne, index) in form.lignes" :key="index" class="border border-slate-200 dark:border-slate-700 rounded-lg p-3 space-y-2">
                     <div class="flex items-start gap-2">
                         <SelectInput v-model="ligne.produit_id" class="block w-full text-sm" @change="appliquerProduit(ligne)">
                             <option :value="null">Ligne libre</option>
@@ -159,12 +159,12 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
                         </div>
                     </div>
 
-                    <div class="text-right text-sm text-gray-500 dark:text-gray-400">
-                        Total ligne : <span class="font-medium text-gray-900 dark:text-gray-100">{{ formatMontant(calculerLigne(ligne).montant_ttc) }}</span>
+                    <div class="text-right text-sm text-slate-500 dark:text-slate-400">
+                        Total ligne : <span class="font-medium text-slate-900 dark:text-slate-100">{{ formatMontant(calculerLigne(ligne).montant_ttc) }}</span>
                     </div>
                 </div>
 
-                <div v-if="form.lignes.length === 0" class="text-center text-gray-400 dark:text-gray-500 py-6 border border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                <div v-if="form.lignes.length === 0" class="text-center text-slate-400 dark:text-slate-500 py-6 border border-dashed border-slate-200 dark:border-slate-700 rounded-lg">
                     Aucun produit. Cliquez sur "Ajouter un produit".
                 </div>
             </div>
@@ -173,15 +173,15 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
         <section class="grid grid-cols-1 gap-6">
             <div>
                 <InputLabel for="notes" value="Notes" />
-                <textarea id="notes" v-model="form.notes" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+                <textarea id="notes" v-model="form.notes" rows="3" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" />
                 <InputError :message="form.errors.notes" class="mt-2" />
             </div>
 
             <div>
                 <InputLabel for="garantie" value="Garantie" />
-                <textarea id="garantie" v-model="form.garantie" rows="2" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Ex. : Garantie de 6 mois. Ne couvre pas les dommages liés à l'eau, aux chocs ou à une mauvaise utilisation." />
+                <textarea id="garantie" v-model="form.garantie" rows="2" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" placeholder="Ex. : Garantie de 6 mois. Ne couvre pas les dommages liés à l'eau, aux chocs ou à une mauvaise utilisation." />
                 <InputError :message="form.errors.garantie" class="mt-2" />
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Propre à cette facture. Affichée en bas de la facture, en petits caractères.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Propre à cette facture. Affichée en bas de la facture, en petits caractères.</p>
             </div>
 
             <div>
@@ -190,11 +190,11 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
                 <InputError :message="form.errors.remise" class="mt-2" />
             </div>
 
-            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-1 text-sm">
-                <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Sous-total HT</span><span class="text-gray-900 dark:text-gray-100">{{ formatMontant(sousTotal) }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">TVA</span><span class="text-gray-900 dark:text-gray-100">{{ formatMontant(totalTva) }}</span></div>
-                <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Remise</span><span class="text-gray-900 dark:text-gray-100">- {{ formatMontant(form.remise) }}</span></div>
-                <div class="flex justify-between font-semibold text-base border-t border-gray-200 dark:border-gray-700 pt-1 mt-1"><span>Total TTC</span><span>{{ formatMontant(totalTtc) }}</span></div>
+            <div class="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 space-y-1 text-sm">
+                <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Sous-total HT</span><span class="text-slate-900 dark:text-slate-100">{{ formatMontant(sousTotal) }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">TVA</span><span class="text-slate-900 dark:text-slate-100">{{ formatMontant(totalTva) }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Remise</span><span class="text-slate-900 dark:text-slate-100">- {{ formatMontant(form.remise) }}</span></div>
+                <div class="flex justify-between font-semibold text-base border-t border-slate-200 dark:border-slate-700 pt-1 mt-1"><span>Total TTC</span><span>{{ formatMontant(totalTtc) }}</span></div>
             </div>
         </section>
     </div>

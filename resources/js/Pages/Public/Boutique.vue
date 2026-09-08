@@ -83,36 +83,36 @@ const conversationPourModal = computed(() => {
         <meta v-if="meta.image" property="og:image" :content="meta.image">
     </Head>
 
-    <div class="min-h-screen bg-gray-50">
-        <header class="bg-white border-b border-gray-100">
+    <div class="min-h-screen bg-slate-50">
+        <header class="bg-white border-b border-slate-100">
             <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
                 <Link href="/" class="flex items-center gap-2">
                     <ApplicationMark class="h-6 w-auto" />
-                    <span class="text-sm font-semibold text-gray-900 hidden sm:inline">Controol</span>
+                    <span class="text-sm font-semibold text-slate-900 hidden sm:inline">Controol</span>
                 </Link>
                 <div class="flex items-center gap-4 text-sm">
-                    <Link :href="route('marketplace.index')" class="font-medium text-gray-600 hover:text-gray-900">Marketplace</Link>
-                    <Link v-if="utilisateur" :href="route('dashboard')" class="font-medium text-indigo-600 hover:text-indigo-500">Mon espace</Link>
-                    <Link v-else :href="route('login')" class="font-medium text-indigo-600 hover:text-indigo-500">Se connecter</Link>
+                    <Link :href="route('marketplace.index')" class="font-medium text-slate-600 hover:text-slate-900">Marketplace</Link>
+                    <Link v-if="utilisateur" :href="route('dashboard')" class="font-medium text-blue-600 hover:text-blue-500">Mon espace</Link>
+                    <Link v-else :href="route('login')" class="font-medium text-blue-600 hover:text-blue-500">Se connecter</Link>
                 </div>
             </div>
         </header>
 
         <FlashMessages />
 
-        <div v-if="boutique.banniere_path" class="h-40 sm:h-56 w-full bg-gray-200 bg-cover bg-center" :style="`background-image: url(/storage/${boutique.banniere_path})`" />
+        <div v-if="boutique.banniere_path" class="h-40 sm:h-56 w-full bg-slate-200 bg-cover bg-center" :style="`background-image: url(/storage/${boutique.banniere_path})`" />
 
         <div class="max-w-5xl mx-auto px-4 -mt-10 relative">
             <div class="bg-white rounded-xl shadow-sm p-6 flex flex-col sm:flex-row sm:items-center gap-4">
                 <img v-if="boutique.logo_path" :src="`/storage/${boutique.logo_path}`" class="h-20 w-20 rounded-full object-cover border-4 border-white shadow" :alt="boutique.nom">
-                <div v-else class="h-20 w-20 rounded-full bg-indigo-100 flex items-center justify-center text-2xl font-bold text-indigo-600 border-4 border-white shadow">
+                <div v-else class="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-600 border-4 border-white shadow">
                     {{ boutique.nom.charAt(0) }}
                 </div>
 
                 <div class="flex-1">
-                    <h1 class="text-xl font-bold text-gray-900">{{ boutique.nom }}</h1>
-                    <p v-if="boutique.categorie" class="text-sm text-gray-500">{{ boutique.categorie }} · {{ boutique.ville }}</p>
-                    <p v-if="boutique.description" class="mt-2 text-sm text-gray-600">{{ boutique.description }}</p>
+                    <h1 class="text-xl font-bold text-slate-900">{{ boutique.nom }}</h1>
+                    <p v-if="boutique.categorie" class="text-sm text-slate-500">{{ boutique.categorie }} · {{ boutique.ville }}</p>
+                    <p v-if="boutique.description" class="mt-2 text-sm text-slate-600">{{ boutique.description }}</p>
                 </div>
 
                 <a v-if="lienContact" :href="lienContact" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 shrink-0">
@@ -127,7 +127,7 @@ const conversationPourModal = computed(() => {
             <div v-if="categories.length > 0" class="mt-6 flex flex-wrap gap-2">
                 <button
                     class="px-3 py-1 text-sm rounded-full border"
-                    :class="!filtres.categorie ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300'"
+                    :class="!filtres.categorie ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300'"
                     @click="filtrerCategorie(null)"
                 >
                     Tout
@@ -136,7 +136,7 @@ const conversationPourModal = computed(() => {
                     v-for="cat in categories"
                     :key="cat"
                     class="px-3 py-1 text-sm rounded-full border"
-                    :class="filtres.categorie === cat ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300'"
+                    :class="filtres.categorie === cat ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300'"
                     @click="filtrerCategorie(cat)"
                 >
                     {{ cat }}
@@ -144,25 +144,25 @@ const conversationPourModal = computed(() => {
             </div>
 
             <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div v-if="produits.length === 0" class="col-span-full text-center text-gray-400 py-16">
+                <div v-if="produits.length === 0" class="col-span-full text-center text-slate-400 py-16">
                     Aucun produit disponible pour le moment.
                 </div>
 
                 <div v-for="produit in produits" :key="produit.id" class="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
-                    <div class="aspect-square bg-gray-100">
+                    <div class="aspect-square bg-slate-100">
                         <img v-if="produit.photo_path" :src="`/storage/${produit.photo_path}`" class="w-full h-full object-cover" :alt="produit.nom" loading="lazy">
-                        <div v-else class="w-full h-full flex items-center justify-center text-gray-300 text-3xl">📦</div>
+                        <div v-else class="w-full h-full flex items-center justify-center text-slate-300 text-3xl">📦</div>
                     </div>
                     <div class="p-3 flex-1 flex flex-col">
-                        <h3 class="text-sm font-medium text-gray-900 line-clamp-2">{{ produit.nom }}</h3>
+                        <h3 class="text-sm font-medium text-slate-900 line-clamp-2">{{ produit.nom }}</h3>
                         <div class="mt-1 flex items-center gap-2">
-                            <span class="text-sm font-semibold text-gray-900">{{ formatMontant(produit.promotion_prix ?? produit.prix_vente) }}</span>
-                            <span v-if="produit.promotion_prix" class="text-xs text-gray-400 line-through">{{ formatMontant(produit.prix_vente) }}</span>
+                            <span class="text-sm font-semibold text-slate-900">{{ formatMontant(produit.promotion_prix ?? produit.prix_vente) }}</span>
+                            <span v-if="produit.promotion_prix" class="text-xs text-slate-400 line-through">{{ formatMontant(produit.prix_vente) }}</span>
                         </div>
                         <a v-if="lienWhatsapp(produit)" :href="lienWhatsapp(produit)" target="_blank" class="mt-2 inline-flex items-center justify-center px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700">
                             Commander
                         </a>
-                        <button type="button" class="mt-2 inline-flex items-center justify-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-50" @click="ouvrirMessage(produit)">
+                        <button type="button" class="mt-2 inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-medium rounded-md hover:bg-slate-50" @click="ouvrirMessage(produit)">
                             💬 Message
                         </button>
                     </div>
@@ -178,18 +178,18 @@ const conversationPourModal = computed(() => {
                 @sent="fermerMessage"
             />
 
-            <div class="mt-10 mb-16 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-8 text-center text-white">
+            <div class="mt-10 mb-16 bg-gradient-to-br from-blue-600 to-purple-700 rounded-2xl p-8 text-center text-white">
                 <h2 class="text-xl font-bold">Vous souhaitez vous aussi vendre vos produits en ligne ?</h2>
-                <p class="mt-2 text-indigo-100 max-w-md mx-auto text-sm">
+                <p class="mt-2 text-blue-100 max-w-md mx-auto text-sm">
                     Créez votre propre boutique gratuitement et commencez à présenter vos produits à vos clients.
                 </p>
-                <Link :href="lienCreerBoutique" class="mt-5 inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+                <Link :href="lienCreerBoutique" class="mt-5 inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50">
                     Créer ma boutique gratuitement
                 </Link>
             </div>
         </div>
 
-        <footer class="text-center text-xs text-gray-400 pb-8">
+        <footer class="text-center text-xs text-slate-400 pb-8">
             Boutique propulsée par la plateforme —
             <Link :href="route('marketplace.index')" class="underline">Découvrir la Marketplace</Link>
         </footer>

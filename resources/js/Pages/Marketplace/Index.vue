@@ -31,15 +31,15 @@ const utilisateur = computed(() => page.props.auth?.user ?? null);
 
     <AppLayout v-if="utilisateur" title="Marketplace">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Marketplace</h2>
+            <h2 class="font-semibold text-xl text-slate-800 leading-tight">Marketplace</h2>
         </template>
 
         <div class="py-8">
             <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <div v-if="!planAutoriseMarketplace" class="rounded-lg bg-white dark:bg-gray-800 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
+                <div v-if="!planAutoriseMarketplace" class="rounded-lg bg-white dark:bg-slate-800 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h3 class="font-semibold text-gray-900 dark:text-gray-100">Présentez votre boutique à davantage de clients</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Cette fonctionnalité est disponible avec un abonnement payant.</p>
+                        <h3 class="font-semibold text-slate-900 dark:text-slate-100">Présentez votre boutique à davantage de clients</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Cette fonctionnalité est disponible avec un abonnement payant.</p>
                     </div>
                     <Link :href="route('abonnement.index')">
                         <PrimaryButton>Voir les forfaits</PrimaryButton>
@@ -58,15 +58,15 @@ const utilisateur = computed(() => page.props.auth?.user ?? null);
         </div>
     </AppLayout>
 
-    <div v-else class="min-h-screen bg-gray-50">
-        <header class="bg-white border-b border-gray-100">
+    <div v-else class="min-h-screen bg-slate-50">
+        <header class="bg-white border-b border-slate-100">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <Link href="/" class="flex items-center gap-2">
                     <ApplicationMark class="h-7 w-auto" />
-                    <span class="font-semibold text-gray-900">Controol</span>
+                    <span class="font-semibold text-slate-900">Controol</span>
                 </Link>
                 <div class="flex items-center gap-3">
-                    <Link :href="route('login')" class="text-sm font-medium text-gray-600 hover:text-gray-900">Se connecter</Link>
+                    <Link :href="route('login')" class="text-sm font-medium text-slate-600 hover:text-slate-900">Se connecter</Link>
                     <Link :href="route('register')">
                         <PrimaryButton>Créer un compte</PrimaryButton>
                     </Link>
@@ -84,12 +84,12 @@ const utilisateur = computed(() => page.props.auth?.user ?? null);
                 :marketplace-url="meta.url"
             />
 
-            <div class="mt-12 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-8 sm:p-12 text-center text-white">
+            <div class="mt-12 bg-gradient-to-br from-blue-600 to-purple-700 rounded-2xl p-8 sm:p-12 text-center text-white">
                 <h2 class="text-2xl font-bold">Vous souhaitez vous aussi vendre vos produits en ligne ?</h2>
-                <p class="mt-3 text-indigo-100 max-w-xl mx-auto">
+                <p class="mt-3 text-blue-100 max-w-xl mx-auto">
                     Créez votre propre boutique gratuitement et commencez à présenter vos produits à vos clients dès aujourd'hui.
                 </p>
-                <Link :href="route('register')" class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+                <Link :href="route('register')" class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-blue-700 hover:bg-blue-50">
                     Créer ma boutique gratuitement
                 </Link>
             </div>

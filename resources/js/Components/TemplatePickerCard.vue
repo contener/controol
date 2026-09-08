@@ -26,15 +26,15 @@ const emit = defineEmits(['select']);
         <div
             v-for="modele in modeles"
             :key="modele.id"
-            class="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 overflow-hidden transition"
-            :class="selectionne === modele.id ? 'border-indigo-500' : 'border-transparent'"
+            class="relative bg-white dark:bg-slate-800 rounded-lg shadow-sm border-2 overflow-hidden transition"
+            :class="selectionne === modele.id ? 'border-blue-500' : 'border-transparent'"
         >
-            <div class="h-40 overflow-hidden relative bg-gray-100 dark:bg-gray-900">
+            <div class="h-40 overflow-hidden relative bg-slate-100 dark:bg-slate-900">
                 <div class="origin-top-left scale-[0.27] w-[370%] h-[370%] pointer-events-none">
                     <InvoicePreview :modele-id="modele.id" :apercu="apercuExemple" />
                 </div>
 
-                <div v-if="!modele.autorise" class="absolute inset-0 bg-gray-900/70 flex flex-col items-center justify-center text-center px-4 gap-2">
+                <div v-if="!modele.autorise" class="absolute inset-0 bg-slate-900/70 flex flex-col items-center justify-center text-center px-4 gap-2">
                     <span class="text-2xl">🔒</span>
                     <p class="text-white text-xs">Disponible avec le plan Basique ou Pro</p>
                     <Link :href="route('abonnement.index')">
@@ -45,8 +45,8 @@ const emit = defineEmits(['select']);
 
             <div class="p-3 flex items-center justify-between gap-2">
                 <div>
-                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ modele.label }}</div>
-                    <span class="text-xs" :class="modele.gratuit ? 'text-green-600 dark:text-green-400' : 'text-indigo-600 dark:text-indigo-400'">
+                    <div class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ modele.label }}</div>
+                    <span class="text-xs" :class="modele.gratuit ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'">
                         {{ modele.gratuit ? 'Gratuit' : 'Basique / Pro' }}
                     </span>
                 </div>
@@ -54,7 +54,7 @@ const emit = defineEmits(['select']);
                     v-if="modele.autorise"
                     type="button"
                     class="text-xs font-medium px-2.5 py-1.5 rounded-md"
-                    :class="selectionne === modele.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'"
+                    :class="selectionne === modele.id ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'"
                     @click="emit('select', modele.id)"
                 >
                     {{ selectionne === modele.id ? '✓ Sélectionné' : 'Choisir' }}

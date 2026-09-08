@@ -64,8 +64,8 @@ const actionLabels = {
     <AppLayout :title="`Utilisateur — ${utilisateur.name}`">
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">{{ utilisateur.name }}</h2>
-                <span class="px-2 py-1 text-xs font-medium rounded-full" :class="utilisateur.est_actif ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'">
+                <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">{{ utilisateur.name }}</h2>
+                <span class="px-2 py-1 text-xs font-medium rounded-full" :class="utilisateur.est_actif ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'">
                     {{ utilisateur.est_actif ? 'Actif' : 'Inactif' }}
                 </span>
             </div>
@@ -75,27 +75,27 @@ const actionLabels = {
             <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 <AdminSubNav />
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Email</div>
-                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ utilisateur.email }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Email</div>
+                            <div class="mt-1 text-slate-900 dark:text-slate-100">{{ utilisateur.email }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Téléphone</div>
-                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ utilisateur.telephone ?? '—' }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Téléphone</div>
+                            <div class="mt-1 text-slate-900 dark:text-slate-100">{{ utilisateur.telephone ?? '—' }}</div>
                         </div>
                         <div v-if="permissionsWhatsapp?.voir">
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">WhatsApp</div>
-                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ utilisateur.whatsapp ?? 'Non renseigné' }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">WhatsApp</div>
+                            <div class="mt-1 text-slate-900 dark:text-slate-100">{{ utilisateur.whatsapp ?? 'Non renseigné' }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Plan actif</div>
-                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ utilisateur.plan ?? '—' }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Plan actif</div>
+                            <div class="mt-1 text-slate-900 dark:text-slate-100">{{ utilisateur.plan ?? '—' }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Inscrit le</div>
-                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ formatDate(utilisateur.created_at) }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Inscrit le</div>
+                            <div class="mt-1 text-slate-900 dark:text-slate-100">{{ formatDate(utilisateur.created_at) }}</div>
                         </div>
                     </div>
                     <div v-if="permissionsWhatsapp?.contacter" class="mt-4">
@@ -103,26 +103,26 @@ const actionLabels = {
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 flex items-center justify-between">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6 flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Statut du compte</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Statut du compte</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                             Un compte désactivé est immédiatement déconnecté et ne peut plus se connecter à l'application.
                         </p>
                     </div>
                     <SecondaryButton @click="basculer">{{ utilisateur.est_actif ? 'Désactiver' : 'Réactiver' }}</SecondaryButton>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg">
                     <div class="p-6 pb-3">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Boutiques ({{ boutiques.length }})</h3>
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Boutiques ({{ boutiques.length }})</h3>
                     </div>
-                    <div v-if="boutiques.length === 0" class="px-6 pb-6 text-sm text-gray-400 dark:text-gray-500">Aucune boutique.</div>
-                    <div v-else class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <div v-if="boutiques.length === 0" class="px-6 pb-6 text-sm text-slate-400 dark:text-slate-500">Aucune boutique.</div>
+                    <div v-else class="divide-y divide-slate-100 dark:divide-slate-700">
                         <div v-for="boutique in boutiques" :key="boutique.id" class="px-6 py-4 flex items-center justify-between">
                             <div>
-                                <div class="font-medium text-gray-900 dark:text-gray-100">{{ boutique.nom }}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                <div class="font-medium text-slate-900 dark:text-slate-100">{{ boutique.nom }}</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                     {{ boutique.clients_count }} client(s) · {{ boutique.produits_count }} produit(s) · {{ boutique.factures_count }} facture(s)
                                 </div>
                             </div>
@@ -133,38 +133,38 @@ const actionLabels = {
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Historique</h3>
-                    <div v-if="audits.length === 0" class="text-sm text-gray-400 dark:text-gray-500">Aucune action enregistrée pour le moment.</div>
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Historique</h3>
+                    <div v-if="audits.length === 0" class="text-sm text-slate-400 dark:text-slate-500">Aucune action enregistrée pour le moment.</div>
                     <ul v-else class="space-y-2 text-sm">
-                        <li v-for="audit in audits" :key="audit.id" class="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
-                            <span class="text-gray-700 dark:text-gray-300">
+                        <li v-for="audit in audits" :key="audit.id" class="flex justify-between border-b border-slate-100 dark:border-slate-700 pb-2">
+                            <span class="text-slate-700 dark:text-slate-300">
                                 {{ actionLabels[audit.action] ?? audit.action }}
-                                <span class="text-gray-400 dark:text-gray-500">par {{ audit.admin?.name ?? '—' }}</span>
+                                <span class="text-slate-400 dark:text-slate-500">par {{ audit.admin?.name ?? '—' }}</span>
                             </span>
-                            <span class="text-gray-400 dark:text-gray-500">{{ formatDateHeure(audit.created_at) }}</span>
+                            <span class="text-slate-400 dark:text-slate-500">{{ formatDateHeure(audit.created_at) }}</span>
                         </li>
                     </ul>
                 </div>
 
-                <div v-if="permissionsWhatsapp?.historique" class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Historique des relances WhatsApp</h3>
-                    <div v-if="logsWhatsapp.length === 0" class="text-sm text-gray-400 dark:text-gray-500">Aucune relance WhatsApp pour le moment.</div>
+                <div v-if="permissionsWhatsapp?.historique" class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Historique des relances WhatsApp</h3>
+                    <div v-if="logsWhatsapp.length === 0" class="text-sm text-slate-400 dark:text-slate-500">Aucune relance WhatsApp pour le moment.</div>
                     <ul v-else class="space-y-3 text-sm">
-                        <li v-for="log in logsWhatsapp" :key="log.id" class="border-b border-gray-100 dark:border-gray-700 pb-3">
+                        <li v-for="log in logsWhatsapp" :key="log.id" class="border-b border-slate-100 dark:border-slate-700 pb-3">
                             <div class="flex items-center justify-between gap-2 flex-wrap">
-                                <span class="text-gray-500 dark:text-gray-400">
+                                <span class="text-slate-500 dark:text-slate-400">
                                     Ouvert par {{ log.admin?.name ?? '—' }} le {{ formatDateHeure(log.ouvert_a) }}
                                 </span>
                                 <span
                                     class="px-2 py-0.5 text-xs font-medium rounded-full"
-                                    :class="log.confirme ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'"
+                                    :class="log.confirme ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'"
                                 >
                                     {{ log.confirme ? 'Confirmé' : 'Non confirmé' }}
                                 </span>
                             </div>
-                            <p class="mt-1 text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ log.message }}</p>
-                            <button v-if="!log.confirme" class="mt-1 text-xs text-indigo-600 dark:text-indigo-400 hover:underline" @click="confirmerEnvoi(log)">
+                            <p class="mt-1 text-slate-700 dark:text-slate-300 whitespace-pre-line">{{ log.message }}</p>
+                            <button v-if="!log.confirme" class="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline" @click="confirmerEnvoi(log)">
                                 Marquer comme envoyé
                             </button>
                         </li>

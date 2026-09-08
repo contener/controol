@@ -24,38 +24,38 @@ const typeClasses = {
     <AppLayout :title="`Historique — ${produit.nom}`">
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Historique de stock — {{ produit.nom }}</h2>
-                <Link :href="route('stock.index')" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">Retour au stock</Link>
+                <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Historique de stock — {{ produit.nom }}</h2>
+                <Link :href="route('stock.index')" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Retour au stock</Link>
             </div>
         </template>
 
         <div class="py-8">
             <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-4">
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-900">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Quantité</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Avant → Après</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Motif</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Utilisateur</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Type</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Quantité</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Avant → Après</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Motif</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Utilisateur</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="mouvements.data.length === 0">
-                                <td colspan="6" class="px-6 py-6 text-center text-gray-400 dark:text-gray-500">Aucun mouvement enregistré.</td>
+                                <td colspan="6" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun mouvement enregistré.</td>
                             </tr>
-                            <tr v-for="mvt in mouvements.data" :key="mvt.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ new Date(mvt.created_at).toLocaleString('fr-FR') }}</td>
+                            <tr v-for="mvt in mouvements.data" :key="mvt.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ new Date(mvt.created_at).toLocaleString('fr-FR') }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs font-medium rounded-full" :class="typeClasses[mvt.type]">{{ typeLabels[mvt.type] }}</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-gray-100">{{ mvt.quantite }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">{{ mvt.quantite_avant }} → {{ mvt.quantite_apres }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ mvt.motif ?? '—' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ mvt.user?.name ?? '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-900 dark:text-slate-100">{{ mvt.quantite }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-500 dark:text-slate-400">{{ mvt.quantite_avant }} → {{ mvt.quantite_apres }}</td>
+                                <td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{{ mvt.motif ?? '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ mvt.user?.name ?? '—' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -68,7 +68,7 @@ const typeClasses = {
                         :href="link.url ?? '#'"
                         v-html="link.label"
                         class="px-3 py-1 text-sm rounded border"
-                        :class="link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                        :class="link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'"
                         :disabled="!link.url"
                     />
                 </div>

@@ -21,7 +21,7 @@ const statutLabels = {
 };
 
 const statutClasses = {
-    brouillon: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300',
+    brouillon: 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300',
     envoyee: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300',
     payee: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
     annulee: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
@@ -55,7 +55,7 @@ const imprimer = () => {
         <template #header>
             <div class="flex flex-wrap items-center justify-between gap-4 print:hidden">
                 <div class="flex items-center gap-3">
-                    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Facture {{ facture.numero }}</h2>
+                    <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Facture {{ facture.numero }}</h2>
                     <span class="px-2 py-1 text-xs font-medium rounded-full" :class="statutClasses[facture.statut]">{{ statutLabels[facture.statut] }}</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
@@ -84,7 +84,7 @@ const imprimer = () => {
                     <FacturesSubNav />
                 </div>
 
-                <div class="print-area bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg print:shadow-none print:rounded-none">
+                <div class="print-area bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg print:shadow-none print:rounded-none">
                     <InvoicePreview :modele-id="facture.modele_id" :apercu="apercu" />
                 </div>
             </div>

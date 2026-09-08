@@ -85,7 +85,7 @@ const formatDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
 <template>
     <AppLayout title="Administration — Contacts">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Contacts</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Contacts</h2>
         </template>
 
         <div class="py-8">
@@ -93,25 +93,25 @@ const formatDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
                 <AdminSubNav />
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Total contacts</div>
-                        <div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ statistiques.total }}</div>
+                    <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Total contacts</div>
+                        <div class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ statistiques.total }}</div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Contacts WhatsApp</div>
-                        <div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ statistiques.sur_whatsapp }}</div>
+                    <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Contacts WhatsApp</div>
+                        <div class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ statistiques.sur_whatsapp }}</div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Comptes CONTROOL</div>
-                        <div class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ statistiques.comptes_lies }}</div>
+                    <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Comptes CONTROOL</div>
+                        <div class="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ statistiques.comptes_lies }}</div>
                     </div>
-                    <button type="button" class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 text-left hover:ring-2 hover:ring-indigo-500" @click="filtreWhatsappSansCompte">
-                        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">WhatsApp sans compte</div>
-                        <div class="mt-1 text-2xl font-semibold text-indigo-600 dark:text-indigo-400">{{ statistiques.whatsapp_sans_compte }}</div>
+                    <button type="button" class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4 text-left hover:ring-2 hover:ring-blue-500" @click="filtreWhatsappSansCompte">
+                        <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">WhatsApp sans compte</div>
+                        <div class="mt-1 text-2xl font-semibold text-blue-600 dark:text-blue-400">{{ statistiques.whatsapp_sans_compte }}</div>
                     </button>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 flex flex-wrap gap-3 items-center justify-between">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4 flex flex-wrap gap-3 items-center justify-between">
                     <div class="flex flex-wrap gap-2">
                         <Link v-if="permissionsContacts?.importer" :href="route('admin.contacts.import.index')">
                             <SecondaryButton>Importer Excel</SecondaryButton>
@@ -123,7 +123,7 @@ const formatDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4 flex flex-col sm:flex-row gap-3 flex-wrap">
                     <TextInput v-model="recherche" placeholder="Rechercher (nom, téléphone, WhatsApp, email)..." class="flex-1 min-w-[220px]" />
                     <SelectInput v-model="statutWhatsapp" class="sm:w-48">
                         <option value="">Tous (WhatsApp)</option>
@@ -138,56 +138,56 @@ const formatDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
                         <option value="">Tous (statut)</option>
                         <option v-for="(libelle, cle) in statutsCommerciaux" :key="cle" :value="cle">{{ libelle }}</option>
                     </SelectInput>
-                    <label class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <input v-model="jamaisRelance" type="checkbox" class="rounded border-gray-300">
+                    <label class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+                        <input v-model="jamaisRelance" type="checkbox" class="rounded border-slate-300">
                         Jamais relancé
                     </label>
                 </div>
 
-                <div v-if="selection.length > 0" class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 flex flex-wrap items-center gap-3 text-sm">
-                    <span class="text-indigo-800 dark:text-indigo-300">{{ selection.length }} sélectionné(s)</span>
+                <div v-if="selection.length > 0" class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 flex flex-wrap items-center gap-3 text-sm">
+                    <span class="text-blue-800 dark:text-blue-300">{{ selection.length }} sélectionné(s)</span>
                     <SelectInput v-if="permissionsContacts?.modifier" class="sm:w-56" @change="(e) => changerStatutSelection(e.target.value)">
                         <option value="">Changer le statut commercial...</option>
                         <option v-for="(libelle, cle) in statutsCommerciaux" :key="cle" :value="cle">{{ libelle }}</option>
                     </SelectInput>
-                    <a v-if="permissionsContacts?.exporter" :href="lienExportSelection" class="text-indigo-700 dark:text-indigo-300 underline">Exporter la sélection</a>
+                    <a v-if="permissionsContacts?.exporter" :href="lienExportSelection" class="text-blue-700 dark:text-blue-300 underline">Exporter la sélection</a>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead class="bg-slate-50 dark:bg-slate-900">
                             <tr>
-                                <th class="px-4 py-3"><input type="checkbox" class="rounded border-gray-300" @change="toutSelectionner" /></th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Nom</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">WhatsApp</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Compte</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Statut</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Dernière relance</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
+                                <th class="px-4 py-3"><input type="checkbox" class="rounded border-slate-300" @change="toutSelectionner" /></th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Nom</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">WhatsApp</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Compte</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Statut</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Dernière relance</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="contacts.data.length === 0">
-                                <td colspan="7" class="px-4 py-6 text-center text-gray-400 dark:text-gray-500">Aucun contact trouvé.</td>
+                                <td colspan="7" class="px-4 py-6 text-center text-slate-400 dark:text-slate-500">Aucun contact trouvé.</td>
                             </tr>
-                            <tr v-for="contact in contacts.data" :key="contact.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-4 py-4"><input v-model="selection" type="checkbox" :value="contact.id" class="rounded border-gray-300" /></td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{{ contact.nom ?? '—' }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ contact.whatsapp ?? contact.telephone ?? 'Non renseigné' }}</td>
+                            <tr v-for="contact in contacts.data" :key="contact.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                                <td class="px-4 py-4"><input v-model="selection" type="checkbox" :value="contact.id" class="rounded border-slate-300" /></td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{{ contact.nom ?? '—' }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ contact.whatsapp ?? contact.telephone ?? 'Non renseigné' }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm">
-                                    <Link v-if="contact.utilisateur" :href="route('admin.utilisateurs.show', contact.utilisateur.id)" class="text-indigo-600 dark:text-indigo-400 hover:underline">
+                                    <Link v-if="contact.utilisateur" :href="route('admin.utilisateurs.show', contact.utilisateur.id)" class="text-blue-600 dark:text-blue-400 hover:underline">
                                         {{ contact.utilisateur.name }}
                                     </Link>
-                                    <span v-else class="text-gray-400 dark:text-gray-500">Non inscrit</span>
+                                    <span v-else class="text-slate-400 dark:text-slate-500">Non inscrit</span>
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                                         {{ statutsCommerciaux[contact.statut_commercial] ?? contact.statut_commercial }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ formatDate(contact.dernier_contact_a) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ formatDate(contact.dernier_contact_a) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-right text-sm space-x-3">
-                                    <Link :href="route('admin.contacts.show', contact.id)" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">Voir</Link>
+                                    <Link :href="route('admin.contacts.show', contact.id)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Voir</Link>
                                     <button v-if="permissionsContacts?.whatsapp_contacter && (contact.whatsapp || contact.telephone)" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300" @click="contactARelancer = contact">
                                         WhatsApp
                                     </button>
@@ -207,7 +207,7 @@ const formatDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
                         :href="link.url ?? '#'"
                         v-html="link.label"
                         class="px-3 py-1 text-sm rounded border"
-                        :class="link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'"
+                        :class="link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'"
                         :disabled="!link.url"
                     />
                 </div>

@@ -70,7 +70,7 @@ const emit = defineEmits(['submit']);
 
         <div>
             <InputLabel for="notes" value="Notes" />
-            <textarea id="notes" v-model="form.notes" rows="3" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+            <textarea id="notes" v-model="form.notes" rows="3" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" />
             <InputError :message="form.errors.notes" class="mt-2" />
         </div>
 

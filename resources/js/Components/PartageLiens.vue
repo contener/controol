@@ -39,7 +39,7 @@ const partagerNatif = () => {
     <div class="flex flex-wrap items-center gap-2">
         <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors duration-150"
             @click="copierLien"
         >
             <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -48,19 +48,19 @@ const partagerNatif = () => {
             {{ copie ? 'Lien copié !' : 'Copier le lien' }}
         </button>
 
-        <a :href="lienWhatsapp()" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md bg-green-600 text-white hover:bg-green-700">
+        <a :href="lienWhatsapp()" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md bg-green-600 text-white shadow-sm hover:bg-green-700 hover:shadow-md transition-all duration-150">
             WhatsApp
         </a>
-        <a :href="lienFacebook()" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700">
+        <a :href="lienFacebook()" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md bg-blue-600 text-white shadow-sm hover:bg-blue-700 hover:shadow-md transition-all duration-150">
             Facebook
         </a>
-        <a :href="lienTelegram()" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md bg-sky-500 text-white hover:bg-sky-600">
+        <a :href="lienTelegram()" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md bg-sky-500 text-white shadow-sm hover:bg-sky-600 hover:shadow-md transition-all duration-150">
             Telegram
         </a>
         <button
             v-if="peutPartageNatif"
             type="button"
-            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors duration-150"
             @click="partagerNatif"
         >
             Autres...

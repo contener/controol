@@ -38,22 +38,22 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Two-factor Confirmation" />
+    <Head title="Vérification en deux étapes" />
 
     <AuthenticationCard>
         <template #logo>
             <AuthenticationCardLogo />
         </template>
 
-        <div class="mb-4 text-sm text-gray-600">
+        <h1 class="text-center text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">Vérification en deux étapes</h1>
+        <p class="text-center text-sm text-slate-500 dark:text-slate-400 mb-6">
             <template v-if="! recovery">
-                Please confirm access to your account by entering the authentication code provided by your authenticator application.
+                Confirmez l'accès à votre compte en saisissant le code fourni par votre application d'authentification.
             </template>
-
             <template v-else>
-                Please confirm access to your account by entering one of your emergency recovery codes.
+                Confirmez l'accès à votre compte en saisissant l'un de vos codes de secours.
             </template>
-        </div>
+        </p>
 
         <form @submit.prevent="submit">
             <div v-if="! recovery">
@@ -72,7 +72,7 @@ const submit = () => {
             </div>
 
             <div v-else>
-                <InputLabel for="recovery_code" value="Recovery Code" />
+                <InputLabel for="recovery_code" value="Code de secours" />
                 <TextInput
                     id="recovery_code"
                     ref="recoveryCodeInput"
@@ -84,19 +84,14 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.recovery_code" />
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <button type="button" class="text-sm text-gray-600 hover:text-gray-900 underline cursor-pointer" @click.prevent="toggleRecovery">
-                    <template v-if="! recovery">
-                        Use a recovery code
-                    </template>
-
-                    <template v-else>
-                        Use an authentication code
-                    </template>
+            <div class="flex items-center justify-between mt-6">
+                <button type="button" class="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 underline cursor-pointer" @click.prevent="toggleRecovery">
+                    <template v-if="! recovery">Utiliser un code de secours</template>
+                    <template v-else>Utiliser un code d'authentification</template>
                 </button>
 
-                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Log in
+                <PrimaryButton class="ms-4" :class="{ 'opacity-50': form.processing }" :disabled="form.processing">
+                    {{ form.processing ? 'Connexion...' : 'Se connecter' }}
                 </PrimaryButton>
             </div>
         </form>

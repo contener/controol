@@ -53,37 +53,37 @@ const heureRelative = (date) => (date ? new Date(date).toLocaleString('fr-FR', {
     <AppLayout title="Messages">
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Messages</h2>
+                <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Messages</h2>
                 <PrimaryButton @click="nouvelleConversationOuverte = true">+ Nouvelle conversation</PrimaryButton>
             </div>
         </template>
 
         <div class="py-8">
             <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg overflow-hidden sm:flex" style="min-height: 32rem;">
-                    <div class="sm:w-96 sm:border-r border-gray-200 dark:border-gray-700 overflow-y-auto" :class="{ 'hidden sm:block': mobileVueThread }">
-                        <div v-if="conversations.data.length === 0" class="p-8 text-center text-gray-400 dark:text-gray-500 text-sm">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg overflow-hidden sm:flex" style="min-height: 32rem;">
+                    <div class="sm:w-96 sm:border-r border-slate-200 dark:border-slate-700 overflow-y-auto" :class="{ 'hidden sm:block': mobileVueThread }">
+                        <div v-if="conversations.data.length === 0" class="p-8 text-center text-slate-400 dark:text-slate-500 text-sm">
                             Aucune conversation pour le moment.
                         </div>
                         <button
                             v-for="conversation in conversations.data"
                             :key="conversation.id"
                             type="button"
-                            class="w-full text-left px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                            :class="conversationActive?.id === conversation.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''"
+                            class="w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                            :class="conversationActive?.id === conversation.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''"
                             @click="ouvrir(conversation)"
                         >
                             <div class="flex items-center justify-between gap-2">
-                                <span class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">{{ conversation.visiteur_nom }}</span>
+                                <span class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate">{{ conversation.visiteur_nom }}</span>
                                 <span v-if="conversation.messages_non_lus_boutique > 0" class="shrink-0 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
                                     {{ conversation.messages_non_lus_boutique }}
                                 </span>
                             </div>
-                            <p v-if="conversation.produit" class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ conversation.produit.nom }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{{ extrait(conversation) }}</p>
+                            <p v-if="conversation.produit" class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ conversation.produit.nom }}</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{{ extrait(conversation) }}</p>
                             <div class="flex items-center justify-between mt-1">
-                                <span class="text-[11px] text-gray-400">{{ heureRelative(conversation.dernier_message_a) }}</span>
-                                <span class="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">{{ statutLabels[conversation.statut] }}</span>
+                                <span class="text-[11px] text-slate-400">{{ heureRelative(conversation.dernier_message_a) }}</span>
+                                <span class="text-[11px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">{{ statutLabels[conversation.statut] }}</span>
                             </div>
                         </button>
 
@@ -94,7 +94,7 @@ const heureRelative = (date) => (date ? new Date(date).toLocaleString('fr-FR', {
                                 :href="link.url ?? '#'"
                                 v-html="link.label"
                                 class="px-2 py-1 text-xs rounded border"
-                                :class="link.active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600'"
+                                :class="link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'"
                                 :disabled="!link.url"
                             />
                         </div>
@@ -102,16 +102,16 @@ const heureRelative = (date) => (date ? new Date(date).toLocaleString('fr-FR', {
 
                     <div class="flex-1 flex flex-col" :class="{ 'hidden sm:flex': !mobileVueThread }">
                         <template v-if="conversationActive">
-                            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2 flex-wrap">
-                                <button type="button" class="sm:hidden text-sm text-indigo-600" @click="mobileVueThread = false">← Retour</button>
+                            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2 flex-wrap">
+                                <button type="button" class="sm:hidden text-sm text-blue-600" @click="mobileVueThread = false">← Retour</button>
                                 <div>
-                                    <p class="font-medium text-gray-900 dark:text-gray-100">{{ conversationActive.visiteur_nom }}</p>
-                                    <p v-if="conversationActive.produit" class="text-xs text-gray-500 dark:text-gray-400">{{ conversationActive.produit.nom }}</p>
+                                    <p class="font-medium text-slate-900 dark:text-slate-100">{{ conversationActive.visiteur_nom }}</p>
+                                    <p v-if="conversationActive.produit" class="text-xs text-slate-500 dark:text-slate-400">{{ conversationActive.produit.nom }}</p>
                                 </div>
                                 <div class="flex gap-2 text-xs">
-                                    <button v-if="conversationActive.statut !== 'archivee'" type="button" class="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300" @click="changerStatut('archivee')">Archiver</button>
-                                    <button v-if="conversationActive.statut !== 'ouverte'" type="button" class="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300" @click="changerStatut('ouverte')">Rouvrir</button>
-                                    <button v-if="conversationActive.statut !== 'fermee'" type="button" class="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300" @click="changerStatut('fermee')">Fermer</button>
+                                    <button v-if="conversationActive.statut !== 'archivee'" type="button" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300" @click="changerStatut('archivee')">Archiver</button>
+                                    <button v-if="conversationActive.statut !== 'ouverte'" type="button" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300" @click="changerStatut('ouverte')">Rouvrir</button>
+                                    <button v-if="conversationActive.statut !== 'fermee'" type="button" class="px-2 py-1 rounded border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300" @click="changerStatut('fermee')">Fermer</button>
                                     <button v-if="conversationActive.statut !== 'bloquee'" type="button" class="px-2 py-1 rounded border border-red-300 text-red-600" @click="changerStatut('bloquee')">Bloquer</button>
                                 </div>
                             </div>
@@ -120,18 +120,18 @@ const heureRelative = (date) => (date ? new Date(date).toLocaleString('fr-FR', {
                                 <ConversationThread :messages="conversationActive.messages" me="boutique" />
                             </div>
 
-                            <div v-if="conversationActive.statut !== 'bloquee'" class="p-3 border-t border-gray-200 dark:border-gray-700">
-                                <textarea v-model="formReponse.contenu" rows="2" class="block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm" placeholder="Écrire une réponse..." />
+                            <div v-if="conversationActive.statut !== 'bloquee'" class="p-3 border-t border-slate-200 dark:border-slate-700">
+                                <textarea v-model="formReponse.contenu" rows="2" class="block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm text-sm" placeholder="Écrire une réponse..." />
                                 <InputError :message="formReponse.errors.contenu" class="mt-1" />
                                 <div class="mt-2 flex justify-end">
                                     <PrimaryButton :class="{ 'opacity-25': formReponse.processing }" :disabled="formReponse.processing" @click="repondre">Envoyer</PrimaryButton>
                                 </div>
                             </div>
-                            <div v-else class="p-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 text-center">
+                            <div v-else class="p-3 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-400 text-center">
                                 Conversation bloquée — ce visiteur ne peut plus vous écrire.
                             </div>
                         </template>
-                        <div v-else class="flex-1 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
+                        <div v-else class="flex-1 flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm">
                             Sélectionnez une conversation pour l'afficher.
                         </div>
                     </div>

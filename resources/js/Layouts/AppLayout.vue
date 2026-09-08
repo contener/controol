@@ -47,8 +47,8 @@ const logout = () => {
 
         <Banner />
 
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+        <div class="min-h-screen bg-slate-100 dark:bg-slate-900">
+            <nav class="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
@@ -107,7 +107,7 @@ const logout = () => {
                                 <Dropdown align="right" width="64">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
-                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700 active:bg-gray-50 dark:active:bg-gray-700 transition ease-in-out duration-150">
+                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-100 focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-700 active:bg-slate-50 dark:active:bg-slate-700 transition ease-in-out duration-150">
                                                 🏪 {{ boutiqueCourante?.nom ?? t('nav.no_shop') }}
 
                                                 <svg class="ms-2 -me-0.5 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -119,7 +119,7 @@ const logout = () => {
 
                                     <template #content>
                                         <div class="w-64">
-                                            <div class="block px-4 py-2 text-xs text-gray-400 dark:text-gray-500">
+                                            <div class="block px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
                                                 {{ t('nav.my_shops') }}
                                             </div>
 
@@ -136,7 +136,7 @@ const logout = () => {
                                                 </form>
                                             </template>
 
-                                            <div class="border-t border-gray-200 dark:border-gray-700" />
+                                            <div class="border-t border-slate-200 dark:border-slate-700" />
 
                                             <DropdownLink :href="route('boutiques.index')">
                                                 {{ t('nav.manage_shops') }}
@@ -153,12 +153,12 @@ const logout = () => {
                             <div class="ms-3 relative">
                                 <Dropdown align="right" width="48">
                                     <template #trigger>
-                                        <button v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-gray-300 transition">
+                                        <button v-if="$page.props.jetstream.managesProfilePhotos" class="flex text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-slate-300 transition">
                                             <img class="size-8 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
                                         </button>
 
                                         <span v-else class="inline-flex rounded-md">
-                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-50 dark:focus:bg-gray-700 active:bg-gray-50 dark:active:bg-gray-700 transition ease-in-out duration-150">
+                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-100 focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-700 active:bg-slate-50 dark:active:bg-slate-700 transition ease-in-out duration-150">
                                                 {{ $page.props.auth.user.name }}
 
                                                 <svg class="ms-2 -me-0.5 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -170,7 +170,7 @@ const logout = () => {
 
                                     <template #content>
                                         <!-- Account Management -->
-                                        <div class="block px-4 py-2 text-xs text-gray-400 dark:text-gray-500">
+                                        <div class="block px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
                                             {{ t('nav.manage_account') }}
                                         </div>
 
@@ -202,7 +202,7 @@ const logout = () => {
                                             {{ t('nav.admin_administrators') }}
                                         </DropdownLink>
 
-                                        <div class="border-t border-gray-200 dark:border-gray-700" />
+                                        <div class="border-t border-slate-200 dark:border-slate-700" />
 
                                         <!-- Authentication -->
                                         <form @submit.prevent="logout">
@@ -217,7 +217,7 @@ const logout = () => {
 
                         <!-- Hamburger -->
                         <div class="-me-2 flex items-center sm:hidden">
-                            <button class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 focus:text-gray-500 dark:focus:text-gray-300 transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
+                            <button class="inline-flex items-center justify-center p-2 rounded-md text-slate-400 dark:text-slate-500 hover:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:bg-slate-100 dark:focus:bg-slate-700 focus:text-slate-500 dark:focus:text-slate-300 transition duration-150 ease-in-out" @click="showingNavigationDropdown = ! showingNavigationDropdown">
                                 <svg
                                     class="size-6"
                                     stroke="currentColor"
@@ -286,17 +286,17 @@ const logout = () => {
                     </div>
 
                     <!-- Responsive Settings Options -->
-                    <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-700">
+                    <div class="pt-4 pb-1 border-t border-slate-200 dark:border-slate-700">
                         <div class="flex items-center px-4">
                             <div v-if="$page.props.jetstream.managesProfilePhotos" class="shrink-0 me-3">
                                 <img class="size-10 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
                             </div>
 
                             <div>
-                                <div class="font-medium text-base text-gray-800 dark:text-gray-100">
+                                <div class="font-medium text-base text-slate-800 dark:text-slate-100">
                                     {{ $page.props.auth.user.name }}
                                 </div>
-                                <div class="font-medium text-sm text-gray-500 dark:text-gray-400">
+                                <div class="font-medium text-sm text-slate-500 dark:text-slate-400">
                                     {{ $page.props.auth.user.email }}
                                 </div>
                             </div>
@@ -319,9 +319,9 @@ const logout = () => {
                             </form>
 
                             <!-- Boutique Switcher -->
-                            <div class="border-t border-gray-200 dark:border-gray-700" />
+                            <div class="border-t border-slate-200 dark:border-slate-700" />
 
-                            <div class="block px-4 py-2 text-xs text-gray-400 dark:text-gray-500">
+                            <div class="block px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
                                 {{ t('nav.my_shops') }}
                             </div>
 
@@ -349,7 +349,7 @@ const logout = () => {
             <FlashMessages />
 
             <!-- Page Heading -->
-            <header v-if="$slots.header" class="bg-white dark:bg-gray-800 shadow">
+            <header v-if="$slots.header" class="bg-white dark:bg-slate-800 shadow">
                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>

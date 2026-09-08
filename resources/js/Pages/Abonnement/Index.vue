@@ -31,7 +31,7 @@ const limiteLabel = (limite) => (limite === null ? 'Illimité' : limite);
 <template>
     <AppLayout title="Abonnement">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Mon abonnement</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Mon abonnement</h2>
         </template>
 
         <div class="py-8">
@@ -40,44 +40,44 @@ const limiteLabel = (limite) => (limite === null ? 'Illimité' : limite);
                     Un paiement de {{ formatMontant(paiementEnAttente.montant, paiementEnAttente.devise) }} est en attente de confirmation pour activer votre nouvel abonnement.
                 </div>
 
-                <div v-if="planActif?.marketplace" class="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white flex flex-wrap items-center justify-between gap-3">
+                <div v-if="planActif?.marketplace" class="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white flex flex-wrap items-center justify-between gap-3">
                     <div>
                         <p class="font-semibold">🎉 Votre abonnement est actif !</p>
-                        <p class="text-sm text-indigo-100 mt-0.5">Vous pouvez maintenant publier vos boutiques sur la Marketplace.</p>
+                        <p class="text-sm text-blue-100 mt-0.5">Vous pouvez maintenant publier vos boutiques sur la Marketplace.</p>
                     </div>
-                    <Link :href="route('boutiques.index')" class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-indigo-700 hover:bg-indigo-50">
+                    <Link :href="route('boutiques.index')" class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">
                         Voir mes boutiques
                     </Link>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Plan actuel : {{ planActif?.nom ?? 'Aucun' }}</h3>
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100 mb-4">Plan actuel : {{ planActif?.nom ?? 'Aucun' }}</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                         <div>
-                            <div class="text-gray-500 dark:text-gray-400">Boutiques</div>
+                            <div class="text-slate-500 dark:text-slate-400">Boutiques</div>
                             <div class="font-semibold">{{ usage.boutiques.utilise }} / {{ limiteLabel(usage.boutiques.limite) }}</div>
                         </div>
                         <div>
-                            <div class="text-gray-500 dark:text-gray-400">Produits/Services</div>
+                            <div class="text-slate-500 dark:text-slate-400">Produits/Services</div>
                             <div class="font-semibold">{{ usage.produits.utilise }} / {{ limiteLabel(usage.produits.limite) }}</div>
                         </div>
                         <div>
-                            <div class="text-gray-500 dark:text-gray-400">Clients</div>
+                            <div class="text-slate-500 dark:text-slate-400">Clients</div>
                             <div class="font-semibold">{{ usage.clients.utilise }} / {{ limiteLabel(usage.clients.limite) }}</div>
                         </div>
                         <div>
-                            <div class="text-gray-500 dark:text-gray-400">Factures</div>
+                            <div class="text-slate-500 dark:text-slate-400">Factures</div>
                             <div class="font-semibold">{{ usage.factures.utilise }} / {{ limiteLabel(usage.factures.limite) }}</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div v-for="plan in plans" :key="plan.id" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6 flex flex-col" :class="plan.code === planActif?.code ? 'ring-2 ring-indigo-500' : ''">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ plan.nom }}</h3>
-                        <div class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ formatMontant(plan.prix, plan.devise) }}</div>
+                    <div v-for="plan in plans" :key="plan.id" class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 flex flex-col" :class="plan.code === planActif?.code ? 'ring-2 ring-blue-500' : ''">
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ plan.nom }}</h3>
+                        <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">{{ formatMontant(plan.prix, plan.devise) }}</div>
 
-                        <ul class="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300 flex-1">
+                        <ul class="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300 flex-1">
                             <li>Boutiques : {{ limiteLabel(plan.limite_boutiques) }}</li>
                             <li>Produits : {{ limiteLabel(plan.limite_produits) }}</li>
                             <li>Clients : {{ limiteLabel(plan.limite_clients) }}</li>

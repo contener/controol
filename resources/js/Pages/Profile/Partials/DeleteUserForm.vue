@@ -48,7 +48,7 @@ const closeModal = () => {
         </template>
 
         <template #content>
-            <div class="max-w-xl text-sm text-gray-600 dark:text-gray-300">
+            <div class="max-w-xl text-sm text-slate-600 dark:text-slate-300">
                 Une fois votre compte supprimé, toutes ses ressources et données seront définitivement effacées. Avant de supprimer votre compte, veuillez télécharger toute donnée ou information que vous souhaitez conserver.
             </div>
 

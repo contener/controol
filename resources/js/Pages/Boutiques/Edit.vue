@@ -48,31 +48,31 @@ const toggleMarketplace = () => {
 <template>
     <AppLayout title="Modifier la boutique">
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">Modifier la boutique</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Modifier la boutique</h2>
         </template>
 
         <div class="py-8">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6">
                     <BoutiqueForm :form="form" :processing="form.processing" :boutique="boutique" @submit="submit" />
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Marketplace</h3>
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Marketplace</h3>
 
                     <div v-if="planAutoriseMarketplace" class="mt-3">
                         <div v-if="formMarketplace.marketplace_visible" class="flex items-center justify-between gap-3">
                             <span class="inline-flex items-center gap-1.5 text-sm font-medium text-green-700 dark:text-green-400">
                                 ✓ Publiée sur la Marketplace
                             </span>
-                            <button type="button" class="text-xs text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400" @click="toggleMarketplace">
+                            <button type="button" class="text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400" @click="toggleMarketplace">
                                 Retirer de la Marketplace
                             </button>
                         </div>
                         <PrimaryButton v-else @click="toggleMarketplace">
                             🌐 Publier sur la Marketplace
                         </PrimaryButton>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Visible par tous les visiteurs de la Marketplace, en plus de votre lien public direct.</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Visible par tous les visiteurs de la Marketplace, en plus de votre lien public direct.</p>
                     </div>
 
                     <div v-else class="mt-3 rounded-md bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-4 py-3 text-sm text-yellow-800 dark:text-yellow-300">
@@ -85,12 +85,12 @@ const toggleMarketplace = () => {
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6 flex items-center justify-between">
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 flex items-center justify-between">
                     <div>
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Partage &amp; publication sociale</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Gérez vos groupes de diffusion et vos campagnes de publication.</p>
+                        <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">Partage &amp; publication sociale</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Gérez vos groupes de diffusion et vos campagnes de publication.</p>
                     </div>
-                    <Link :href="route('partage-social.index')" class="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">
+                    <Link :href="route('partage-social.index')" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                         Ouvrir →
                     </Link>
                 </div>

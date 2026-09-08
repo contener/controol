@@ -83,8 +83,8 @@ const ouvrirWhatsapp = async () => {
     <DialogModal :show="show" @close="$emit('close')">
         <template #title>{{ type === 'contact' ? 'Relancer ce contact' : "Relancer l'utilisateur" }}</template>
         <template #content>
-            <p class="text-sm text-gray-700 dark:text-gray-300">Destinataire : <strong>{{ cible?.nom }}</strong></p>
-            <p v-if="cible?.whatsapp" class="text-sm text-gray-500 dark:text-gray-400">WhatsApp : {{ cible.whatsapp }}</p>
+            <p class="text-sm text-slate-700 dark:text-slate-300">Destinataire : <strong>{{ cible?.nom }}</strong></p>
+            <p v-if="cible?.whatsapp" class="text-sm text-slate-500 dark:text-slate-400">WhatsApp : {{ cible.whatsapp }}</p>
 
             <div v-if="modeles.length > 0" class="mt-4">
                 <InputLabel for="modele_cle" value="Modèle de message (optionnel)" />
@@ -96,11 +96,11 @@ const ouvrirWhatsapp = async () => {
 
             <div class="mt-4">
                 <InputLabel for="message" value="Message" />
-                <textarea id="message" v-model="message" rows="5" class="mt-1 block w-full border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" />
+                <textarea id="message" v-model="message" rows="5" class="mt-1 block w-full border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" />
                 <InputError :message="erreur" class="mt-2" />
             </div>
 
-            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500">
+            <p class="mt-3 text-xs text-slate-400 dark:text-slate-500">
                 WhatsApp s'ouvrira dans un nouvel onglet avec ce message prérempli — vous devrez l'envoyer vous-même depuis WhatsApp.
             </p>
         </template>
