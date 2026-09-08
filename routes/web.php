@@ -134,6 +134,9 @@ Route::middleware([
             Route::patch('/{utilisateur}/basculer', [AdminUtilisateurController::class, 'basculerActivation'])->name('basculer')->middleware('admin.permission:utilisateurs.suspendre');
             Route::delete('/{utilisateur}/boutiques/{boutique}', [AdminUtilisateurController::class, 'destroyBoutique'])->name('boutiques.destroy')->middleware('admin.permission:utilisateurs.supprimer');
             Route::delete('/{utilisateur}', [AdminUtilisateurController::class, 'destroy'])->name('destroy')->middleware('admin.permission:utilisateurs.supprimer');
+
+            Route::post('/{utilisateur}/whatsapp', [AdminUtilisateurController::class, 'whatsappContacter'])->name('whatsapp.contacter')->middleware('admin.permission:whatsapp.contacter');
+            Route::patch('/whatsapp-logs/{log}/confirmer', [AdminUtilisateurController::class, 'whatsappConfirmer'])->name('whatsapp.confirmer')->middleware('admin.permission:whatsapp.contacter');
         });
     });
 });

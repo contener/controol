@@ -66,6 +66,14 @@ class AdminPermissions
                 'notifications.envoyer' => 'Envoyer',
             ],
         ],
+        'whatsapp' => [
+            'label' => 'Relance WhatsApp',
+            'permissions' => [
+                'whatsapp.voir' => 'Voir les numéros',
+                'whatsapp.contacter' => 'Relancer un utilisateur',
+                'whatsapp.historique' => 'Voir l\'historique des relances',
+            ],
+        ],
     ];
 
     /**
@@ -82,14 +90,17 @@ class AdminPermissions
         'utilisateurs.voir',
         'utilisateurs.suspendre',
         'utilisateurs.supprimer',
+        'whatsapp.voir',
+        'whatsapp.contacter',
+        'whatsapp.historique',
     ];
 
     public const PRESETS_PAR_ROLE = [
-        'ADMIN_PAIEMENTS' => ['paiements.voir', 'paiements.valider', 'paiements.refuser', 'utilisateurs.voir'],
+        'ADMIN_PAIEMENTS' => ['paiements.voir', 'paiements.valider', 'paiements.refuser', 'utilisateurs.voir', 'whatsapp.voir', 'whatsapp.contacter'],
         'ADMIN_UTILISATEURS' => ['utilisateurs.voir', 'utilisateurs.creer', 'utilisateurs.modifier', 'utilisateurs.suspendre'],
         'ADMIN_BOUTIQUES' => ['boutiques.voir', 'boutiques.modifier', 'boutiques.suspendre'],
         'ADMIN_MARKETPLACE' => ['marketplace.voir', 'marketplace.modifier', 'marketplace.suspendre'],
-        'ADMIN_SUPPORT' => ['utilisateurs.voir', 'boutiques.voir', 'paiements.voir'],
+        'ADMIN_SUPPORT' => ['utilisateurs.voir', 'boutiques.voir', 'paiements.voir', 'whatsapp.voir', 'whatsapp.contacter', 'whatsapp.historique'],
         'ADMIN' => [],
     ];
 

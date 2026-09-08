@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Jetstream\DeleteUser;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreWhatsappContactRequest;
 use App\Models\AdminAudit;
 use App\Models\Boutique;
 use App\Models\User;
+use App\Models\WhatsappContactLog;
+use App\Support\WhatsappModeles;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,14 +29,22 @@ class UtilisateurController extends Controller
 {
     public function index(Request $request): Response
     {
+        $peutVoirWhatsapp = $request->user()->hasAdminPermission('whatsapp.voir');
+
         $utilisateurs = User::where('role', User::ROLE_USER)
             ->when($request->string('recherche')->toString(), function ($query, $recherche) {
                 $query->where(function ($q) use ($recherche) {
-                    $q->where('name', 'like', "%{$recherche}%")->orWhere('email', 'like', "%{$recherche}%");
+                    $q->where('name', 'like', "%{$recherche}%")
+                        ->orWhere('email', 'like', "%{$recherche}%")
+                        ->orWhere('whatsapp', 'like', "%{$recherche}%")
+                        ->orWhere('telephone', 'like', "%{$recherche}%");
                 });
             })
             ->when($request->string('statut')->toString(), function ($query, $statut) {
                 $query->where('est_actif', $statut === 'actif');
+            })
+            ->when($request->filled('avecWhatsapp'), function ($query) use ($request) {
+                $request->boolean('avecWhatsapp') ? $query->whereNotNull('whatsapp') : $query->whereNull('whatsapp');
             })
             ->withCount('boutiques')
             ->orderBy($request->string('tri', 'created_at')->toString(), $request->string('direction', 'desc')->toString())
@@ -43,6 +55,7 @@ class UtilisateurController extends Controller
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
+            'whatsapp' => $peutVoirWhatsapp ? $u->whatsapp : null,
             'est_actif' => $u->est_actif,
             'boutiques_count' => $u->boutiques_count,
             'plan' => $u->planActif()?->nom,
@@ -51,13 +64,17 @@ class UtilisateurController extends Controller
 
         return Inertia::render('Admin/Utilisateurs/Index', [
             'utilisateurs' => $utilisateurs,
-            'filtres' => $request->only(['recherche', 'statut', 'tri', 'direction']),
+            'filtres' => $request->only(['recherche', 'statut', 'tri', 'direction', 'avecWhatsapp']),
+            'permissionsWhatsapp' => $this->permissionsWhatsapp($request),
+            'modelesWhatsapp' => WhatsappModeles::liste(),
         ]);
     }
 
-    public function show(User $utilisateur): Response
+    public function show(Request $request, User $utilisateur): Response
     {
         $this->assertEstUnUtilisateurGere($utilisateur);
+
+        $permissionsWhatsapp = $this->permissionsWhatsapp($request);
 
         // withoutGlobalScopes() est indispensable ici : Client/Produit/Facture utilisent
         // BelongsToBoutique, dont le scope global fail-closed filtre par la boutique
@@ -79,6 +96,7 @@ class UtilisateurController extends Controller
                 'name' => $utilisateur->name,
                 'email' => $utilisateur->email,
                 'telephone' => $utilisateur->telephone,
+                'whatsapp' => $permissionsWhatsapp['voir'] ? $utilisateur->whatsapp : null,
                 'ville' => $utilisateur->ville,
                 'est_actif' => $utilisateur->est_actif,
                 'created_at' => $utilisateur->created_at,
@@ -91,6 +109,11 @@ class UtilisateurController extends Controller
                 ->latest()
                 ->limit(20)
                 ->get(),
+            'permissionsWhatsapp' => $permissionsWhatsapp,
+            'modelesWhatsapp' => WhatsappModeles::liste(),
+            'logsWhatsapp' => $permissionsWhatsapp['historique']
+                ? WhatsappContactLog::where('user_id', $utilisateur->id)->with('admin:id,name')->latest('ouvert_a')->limit(20)->get()
+                : [],
         ]);
     }
 
@@ -158,6 +181,59 @@ class UtilisateurController extends Controller
         $deleteUser->delete($utilisateur);
 
         return redirect()->route('admin.utilisateurs.index')->with('flash_success', "Le compte de {$nom} ({$email}) a été supprimé définitivement.");
+    }
+
+    /**
+     * Le lien wa.me est construit ici, côté serveur, et jamais en JavaScript : ainsi un
+     * admin disposant de whatsapp.contacter mais pas de whatsapp.voir peut relancer un
+     * utilisateur sans que son navigateur ne reçoive jamais le numéro brut — le serveur le
+     * connaît en interne et ne renvoie que le lien final déjà construit.
+     */
+    public function whatsappContacter(StoreWhatsappContactRequest $request, User $utilisateur): JsonResponse
+    {
+        $this->assertEstUnUtilisateurGere($utilisateur);
+        abort_if(! $utilisateur->whatsapp, 422, "Cet utilisateur n'a pas de numéro WhatsApp renseigné.");
+
+        $message = $request->string('message')->toString();
+
+        $log = WhatsappContactLog::create([
+            'user_id' => $utilisateur->id,
+            'admin_id' => $request->user()->id,
+            'numero_whatsapp' => $utilisateur->whatsapp,
+            'message' => $message,
+            'modele_cle' => $request->string('modele_cle')->toString() ?: null,
+            'ouvert_a' => now(),
+        ]);
+
+        return response()->json([
+            'id' => $log->id,
+            'lien' => $this->lienWhatsapp($utilisateur->whatsapp, $message),
+        ]);
+    }
+
+    public function whatsappConfirmer(Request $request, WhatsappContactLog $log): RedirectResponse
+    {
+        abort_unless($request->user()->hasAdminPermission('whatsapp.contacter'), 403);
+
+        $log->update(['confirme_a' => now()]);
+
+        return back()->with('flash_success', 'Relance marquée comme envoyée.');
+    }
+
+    private function lienWhatsapp(string $numero, string $message): string
+    {
+        $numeroPropre = ltrim(preg_replace('/[^\d+]/', '', $numero), '+');
+
+        return "https://wa.me/{$numeroPropre}?text=".rawurlencode($message);
+    }
+
+    private function permissionsWhatsapp(Request $request): array
+    {
+        return [
+            'voir' => $request->user()->hasAdminPermission('whatsapp.voir'),
+            'contacter' => $request->user()->hasAdminPermission('whatsapp.contacter'),
+            'historique' => $request->user()->hasAdminPermission('whatsapp.historique'),
+        ];
     }
 
     /**
