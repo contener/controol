@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdministrateurController;
+use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\ContactExportController;
+use App\Http\Controllers\Admin\ContactImportController;
 use App\Http\Controllers\Admin\MarketplaceController as AdminMarketplaceController;
 use App\Http\Controllers\Admin\PaiementController as AdminPaiementController;
 use App\Http\Controllers\Admin\UtilisateurController as AdminUtilisateurController;
@@ -137,6 +140,27 @@ Route::middleware([
 
             Route::post('/{utilisateur}/whatsapp', [AdminUtilisateurController::class, 'whatsappContacter'])->name('whatsapp.contacter')->middleware('admin.permission:whatsapp.contacter');
             Route::patch('/whatsapp-logs/{log}/confirmer', [AdminUtilisateurController::class, 'whatsappConfirmer'])->name('whatsapp.confirmer')->middleware('admin.permission:whatsapp.contacter');
+        });
+
+        // Base de contacts de prospection — distincte des utilisateurs CONTROOL ci-dessus,
+        // rapprochée automatiquement par numéro (voir App\Observers\UserObserver).
+        Route::prefix('contacts')->name('contacts.')->group(function () {
+            Route::get('/', [ContactController::class, 'index'])->name('index')->middleware('admin.permission:contacts.voir');
+            Route::post('/', [ContactController::class, 'store'])->name('store')->middleware('admin.permission:contacts.modifier');
+            Route::get('/{contact}', [ContactController::class, 'show'])->name('show')->middleware('admin.permission:contacts.voir');
+            Route::put('/{contact}', [ContactController::class, 'update'])->name('update')->middleware('admin.permission:contacts.modifier');
+            Route::delete('/{contact}', [ContactController::class, 'destroy'])->name('destroy')->middleware('admin.permission:contacts.supprimer');
+            Route::patch('/{contact}/statut-commercial', [ContactController::class, 'updateStatutCommercial'])->name('statut-commercial')->middleware('admin.permission:contacts.modifier');
+            Route::patch('/statut-commercial-groupe', [ContactController::class, 'statutCommercialGroupe'])->name('statut-commercial-groupe')->middleware('admin.permission:contacts.modifier');
+            Route::patch('/{contact}/statut-whatsapp', [ContactController::class, 'updateStatutWhatsapp'])->name('statut-whatsapp')->middleware('admin.permission:contacts.modifier');
+            Route::post('/{contact}/whatsapp', [ContactController::class, 'whatsappContacter'])->name('whatsapp.contacter')->middleware('admin.permission:contacts.whatsapp_contacter');
+
+            Route::get('/import/historique', [ContactImportController::class, 'index'])->name('import.index')->middleware('admin.permission:contacts.importer');
+            Route::post('/import/analyser', [ContactImportController::class, 'analyser'])->name('import.analyser')->middleware('admin.permission:contacts.importer');
+            Route::post('/import/{import}/confirmer', [ContactImportController::class, 'confirmer'])->name('import.confirmer')->middleware('admin.permission:contacts.importer');
+            Route::get('/import/{import}', [ContactImportController::class, 'show'])->name('import.show')->middleware('admin.permission:contacts.importer');
+
+            Route::get('/export/fichier', [ContactExportController::class, 'export'])->name('export')->middleware('admin.permission:contacts.exporter');
         });
     });
 });

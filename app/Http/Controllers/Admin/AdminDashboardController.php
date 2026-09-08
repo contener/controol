@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Abonnement;
 use App\Models\Boutique;
+use App\Models\Contact;
 use App\Models\Paiement;
 use App\Models\User;
 use Inertia\Inertia;
@@ -33,6 +34,8 @@ class AdminDashboardController extends Controller
                 'paiements_approuves' => Paiement::where('statut', Paiement::STATUT_APPROUVE)->count(),
                 'paiements_rejetes' => Paiement::where('statut', Paiement::STATUT_REJETE)->count(),
                 'administrateurs_actifs' => User::where('role', User::ROLE_ADMIN)->where('est_actif', true)->count(),
+                'contacts' => Contact::count(),
+                'contacts_whatsapp_sans_compte' => Contact::where('statut_whatsapp', Contact::STATUT_WHATSAPP_SUR_WHATSAPP)->whereNull('utilisateur_id')->count(),
             ],
         ]);
     }

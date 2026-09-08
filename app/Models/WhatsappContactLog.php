@@ -10,6 +10,7 @@ class WhatsappContactLog extends Model
 {
     protected $fillable = [
         'user_id',
+        'contact_id',
         'admin_id',
         'numero_whatsapp',
         'message',
@@ -31,6 +32,11 @@ class WhatsappContactLog extends Model
     public function admin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'admin_id');
+    }
+
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
     }
 
     protected function confirme(): Attribute

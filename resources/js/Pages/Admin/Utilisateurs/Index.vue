@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import AdminSubNav from '../Partials/AdminSubNav.vue';
@@ -34,6 +34,9 @@ function appliquerFiltres() {
 }
 
 const utilisateurARelancer = ref(null);
+const cibleRelance = computed(() => (utilisateurARelancer.value
+    ? { id: utilisateurARelancer.value.id, nom: utilisateurARelancer.value.name, whatsapp: utilisateurARelancer.value.whatsapp, plan: utilisateurARelancer.value.plan }
+    : null));
 
 const basculer = (utilisateur) => {
     const action = utilisateur.est_actif ? 'désactiver' : 'réactiver';
@@ -115,7 +118,8 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
 
                 <RelanceWhatsappModal
                     :show="utilisateurARelancer !== null"
-                    :utilisateur="utilisateurARelancer"
+                    :cible="cibleRelance"
+                    type="utilisateur"
                     :modeles="modelesWhatsapp"
                     @close="utilisateurARelancer = null"
                     @envoye="utilisateurARelancer = null"

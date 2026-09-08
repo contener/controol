@@ -20,6 +20,7 @@ const props = defineProps({
 });
 
 const relanceOuverte = ref(false);
+const cibleRelance = computed(() => ({ id: props.utilisateur.id, nom: props.utilisateur.name, whatsapp: props.utilisateur.whatsapp, plan: props.utilisateur.plan }));
 const confirmerEnvoi = (log) => {
     router.patch(route('admin.utilisateurs.whatsapp.confirmer', log.id), {}, { preserveScroll: true });
 };
@@ -188,7 +189,8 @@ const actionLabels = {
 
         <RelanceWhatsappModal
             :show="relanceOuverte"
-            :utilisateur="utilisateur"
+            :cible="cibleRelance"
+            type="utilisateur"
             :modeles="modelesWhatsapp"
             @close="relanceOuverte = false"
             @envoye="relanceOuverte = false"

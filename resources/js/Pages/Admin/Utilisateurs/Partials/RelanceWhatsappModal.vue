@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import DialogModal from '@/Components/DialogModal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -8,9 +8,13 @@ import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 
+// Composant partagé entre la relance d'un utilisateur CONTROOL (Utilisateurs/Index|Show.vue)
+// et celle d'un contact de prospection (Contacts/Index|Show.vue) — un seul historique, un
+// seul générateur de lien wa.me côté serveur (voir App\Services\WhatsappRelanceService).
 const props = defineProps({
     show: Boolean,
-    utilisateur: { type: Object, default: null }, // { id, name, whatsapp (nullable si non autorisé/absent), plan }
+    cible: { type: Object, default: null }, // { id, nom, whatsapp (nullable si non autorisé/absent), plan?, entreprise?, ville? }
+    type: { type: String, default: 'utilisateur' }, // 'utilisateur' | 'contact'
     modeles: { type: Array, default: () => [] },
 });
 const emit = defineEmits(['close', 'envoye']);
@@ -20,11 +24,19 @@ const message = ref('');
 const enCours = ref(false);
 const erreur = ref('');
 
+const routeContacter = computed(() => props.type === 'contact'
+    ? route('admin.contacts.whatsapp.contacter', props.cible.id)
+    : route('admin.utilisateurs.whatsapp.contacter', props.cible.id));
+
 const substituer = (texte) => texte
-    .replaceAll('{{nom}}', props.utilisateur?.name ?? '')
-    .replaceAll('{{plan}}', props.utilisateur?.plan ?? '')
-    .replaceAll('{{boutique}}', '')
-    .replaceAll('{{date_expiration}}', '');
+    .replaceAll('{{nom}}', props.cible?.nom ?? '')
+    .replaceAll('{{prenom}}', props.cible?.nom ?? '')
+    .replaceAll('{{plan}}', props.cible?.plan ?? '')
+    .replaceAll('{{entreprise}}', props.cible?.entreprise ?? '')
+    .replaceAll('{{ville}}', props.cible?.ville ?? '')
+    .replaceAll('{{boutique}}', props.cible?.entreprise ?? '')
+    .replaceAll('{{date_expiration}}', '')
+    .replaceAll('{{lien_inscription}}', route('register'));
 
 watch(() => props.show, (visible) => {
     if (visible) {
@@ -53,7 +65,7 @@ const ouvrirWhatsapp = async () => {
     erreur.value = '';
 
     try {
-        const { data } = await axios.post(route('admin.utilisateurs.whatsapp.contacter', props.utilisateur.id), {
+        const { data } = await axios.post(routeContacter.value, {
             message: message.value,
             modele_cle: modeleCle.value || null,
         });
@@ -69,10 +81,10 @@ const ouvrirWhatsapp = async () => {
 
 <template>
     <DialogModal :show="show" @close="$emit('close')">
-        <template #title>Relancer l'utilisateur</template>
+        <template #title>{{ type === 'contact' ? 'Relancer ce contact' : "Relancer l'utilisateur" }}</template>
         <template #content>
-            <p class="text-sm text-gray-700 dark:text-gray-300">Destinataire : <strong>{{ utilisateur?.name }}</strong></p>
-            <p v-if="utilisateur?.whatsapp" class="text-sm text-gray-500 dark:text-gray-400">WhatsApp : {{ utilisateur.whatsapp }}</p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">Destinataire : <strong>{{ cible?.nom }}</strong></p>
+            <p v-if="cible?.whatsapp" class="text-sm text-gray-500 dark:text-gray-400">WhatsApp : {{ cible.whatsapp }}</p>
 
             <div v-if="modeles.length > 0" class="mt-4">
                 <InputLabel for="modele_cle" value="Modèle de message (optionnel)" />

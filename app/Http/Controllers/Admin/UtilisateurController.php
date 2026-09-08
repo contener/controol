@@ -9,6 +9,7 @@ use App\Models\AdminAudit;
 use App\Models\Boutique;
 use App\Models\User;
 use App\Models\WhatsappContactLog;
+use App\Services\WhatsappRelanceService;
 use App\Support\WhatsappModeles;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -189,25 +190,17 @@ class UtilisateurController extends Controller
      * utilisateur sans que son navigateur ne reçoive jamais le numéro brut — le serveur le
      * connaît en interne et ne renvoie que le lien final déjà construit.
      */
-    public function whatsappContacter(StoreWhatsappContactRequest $request, User $utilisateur): JsonResponse
+    public function whatsappContacter(StoreWhatsappContactRequest $request, User $utilisateur, WhatsappRelanceService $relance): JsonResponse
     {
         $this->assertEstUnUtilisateurGere($utilisateur);
         abort_if(! $utilisateur->whatsapp, 422, "Cet utilisateur n'a pas de numéro WhatsApp renseigné.");
 
         $message = $request->string('message')->toString();
-
-        $log = WhatsappContactLog::create([
-            'user_id' => $utilisateur->id,
-            'admin_id' => $request->user()->id,
-            'numero_whatsapp' => $utilisateur->whatsapp,
-            'message' => $message,
-            'modele_cle' => $request->string('modele_cle')->toString() ?: null,
-            'ouvert_a' => now(),
-        ]);
+        $log = $relance->contacter($utilisateur->whatsapp, $message, $request->string('modele_cle')->toString() ?: null, ['user_id' => $utilisateur->id], $request->user());
 
         return response()->json([
             'id' => $log->id,
-            'lien' => $this->lienWhatsapp($utilisateur->whatsapp, $message),
+            'lien' => $relance->lien($utilisateur->whatsapp, $message),
         ]);
     }
 
@@ -218,13 +211,6 @@ class UtilisateurController extends Controller
         $log->update(['confirme_a' => now()]);
 
         return back()->with('flash_success', 'Relance marquée comme envoyée.');
-    }
-
-    private function lienWhatsapp(string $numero, string $message): string
-    {
-        $numeroPropre = ltrim(preg_replace('/[^\d+]/', '', $numero), '+');
-
-        return "https://wa.me/{$numeroPropre}?text=".rawurlencode($message);
     }
 
     private function permissionsWhatsapp(Request $request): array

@@ -74,6 +74,17 @@ class AdminPermissions
                 'whatsapp.historique' => 'Voir l\'historique des relances',
             ],
         ],
+        'contacts' => [
+            'label' => 'Contacts (prospection)',
+            'permissions' => [
+                'contacts.voir' => 'Voir',
+                'contacts.importer' => 'Importer',
+                'contacts.exporter' => 'Exporter',
+                'contacts.modifier' => 'Modifier',
+                'contacts.supprimer' => 'Supprimer',
+                'contacts.whatsapp_contacter' => 'Relancer sur WhatsApp',
+            ],
+        ],
     ];
 
     /**
@@ -93,6 +104,12 @@ class AdminPermissions
         'whatsapp.voir',
         'whatsapp.contacter',
         'whatsapp.historique',
+        'contacts.voir',
+        'contacts.importer',
+        'contacts.exporter',
+        'contacts.modifier',
+        'contacts.supprimer',
+        'contacts.whatsapp_contacter',
     ];
 
     public const PRESETS_PAR_ROLE = [
@@ -100,7 +117,10 @@ class AdminPermissions
         'ADMIN_UTILISATEURS' => ['utilisateurs.voir', 'utilisateurs.creer', 'utilisateurs.modifier', 'utilisateurs.suspendre'],
         'ADMIN_BOUTIQUES' => ['boutiques.voir', 'boutiques.modifier', 'boutiques.suspendre'],
         'ADMIN_MARKETPLACE' => ['marketplace.voir', 'marketplace.modifier', 'marketplace.suspendre'],
-        'ADMIN_SUPPORT' => ['utilisateurs.voir', 'boutiques.voir', 'paiements.voir', 'whatsapp.voir', 'whatsapp.contacter', 'whatsapp.historique'],
+        'ADMIN_SUPPORT' => [
+            'utilisateurs.voir', 'boutiques.voir', 'paiements.voir', 'whatsapp.voir', 'whatsapp.contacter', 'whatsapp.historique',
+            'contacts.voir', 'contacts.importer', 'contacts.exporter', 'contacts.modifier', 'contacts.supprimer', 'contacts.whatsapp_contacter',
+        ],
         'ADMIN' => [],
     ];
 

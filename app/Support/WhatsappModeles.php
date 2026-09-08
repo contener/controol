@@ -20,6 +20,12 @@ class WhatsappModeles
 
     public const OFFRE_PROMOTIONNELLE = 'offre_promotionnelle';
 
+    public const PROSPECTION_INVITATION = 'prospection_invitation';
+
+    public const PROSPECTION_MARKETPLACE = 'prospection_marketplace';
+
+    public const PROSPECTION_RELANCE_INTERET = 'prospection_relance_interet';
+
     private const TEXTES = [
         self::RELANCE_ABONNEMENT => [
             'libelle' => 'Relance abonnement',
@@ -36,6 +42,18 @@ class WhatsappModeles
         self::OFFRE_PROMOTIONNELLE => [
             'libelle' => 'Offre promotionnelle',
             'texte' => "Bonjour {{nom}}, une offre spéciale CONTROOL est actuellement disponible. Contactez-nous pour découvrir les conditions et les avantages.",
+        ],
+        self::PROSPECTION_INVITATION => [
+            'libelle' => 'Prospection — Invitation à créer un compte',
+            'texte' => "Bonjour {{nom}},\n\nDécouvrez CONTROOL, une plateforme tout-en-un qui vous permet de gérer vos produits, vos stocks, vos clients, vos factures et votre activité depuis un seul espace.\n\nCréez gratuitement votre compte et commencez à organiser votre activité plus simplement.\n\nLien d'inscription :\n{{lien_inscription}}",
+        ],
+        self::PROSPECTION_MARKETPLACE => [
+            'libelle' => 'Prospection — Présentation de la Marketplace',
+            'texte' => "Bonjour {{nom}},\n\nCONTROOL vous permet également de créer votre boutique publique et de présenter vos produits à de nouveaux clients grâce à la Marketplace.\n\nVous pouvez commencer gratuitement.\n\nDécouvrez la plateforme :\n{{lien_inscription}}",
+        ],
+        self::PROSPECTION_RELANCE_INTERET => [
+            'libelle' => 'Prospection — Relance après intérêt',
+            'texte' => "Bonjour {{nom}},\n\nNous revenons vers vous concernant CONTROOL.\n\nSi vous souhaitez gérer plus facilement vos ventes, vos stocks, vos clients et vos factures, nous pouvons vous accompagner dans la création de votre compte.\n\nVoici le lien :\n{{lien_inscription}}",
         ],
     ];
 
