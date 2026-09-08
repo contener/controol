@@ -66,7 +66,7 @@ const forceMotDePasse = computed(() => {
 
             <div class="relative z-10 flex flex-col justify-between p-12 xl:p-16 text-white w-full">
                 <Link href="/" class="flex items-center gap-3">
-                    <span class="flex items-center justify-center size-10 rounded-xl bg-white/15 backdrop-blur">
+                    <span class="flex items-center justify-center size-10 rounded-xl bg-white shadow-sm">
                         <ApplicationMark class="h-6 w-auto" />
                     </span>
                     <span class="text-lg font-semibold">Controol</span>
@@ -109,7 +109,7 @@ const forceMotDePasse = computed(() => {
         <div class="flex-1 flex items-center justify-center px-4 py-12 sm:px-8">
             <div class="w-full max-w-md">
                 <div class="lg:hidden flex items-center gap-3 mb-8">
-                    <span class="flex items-center justify-center size-10 rounded-xl bg-blue-600">
+                    <span class="flex items-center justify-center size-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
                         <ApplicationMark class="h-6 w-auto" />
                     </span>
                     <span class="text-lg font-semibold text-slate-900 dark:text-slate-100">Controol</span>
