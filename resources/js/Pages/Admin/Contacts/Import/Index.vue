@@ -15,8 +15,10 @@ defineProps({
 });
 
 const LIBELLES_CHAMPS = {
-    nom: 'Nom', telephone: 'Téléphone', whatsapp: 'WhatsApp', email: 'E-mail',
-    ville: 'Ville', entreprise: 'Entreprise', categorie: 'Catégorie', source: 'Source', notes: 'Notes',
+    nom: 'Nom complet', prenom: 'Prénom', nom_famille: 'Nom de famille',
+    ville: 'Ville', entreprise: 'Entreprise', poste: 'Poste', adresse: 'Adresse', region: 'Région',
+    pays: 'Pays', code_postal: 'Code postal', date_anniversaire: 'Date d\'anniversaire',
+    categorie: 'Catégorie', source: 'Source', notes: 'Notes',
 };
 
 const etape = ref('upload'); // upload | apercu
@@ -106,7 +108,9 @@ const statutLabels = { en_cours: 'En cours', termine: 'Terminé', echoue: 'Écho
                     <input type="file" accept=".xlsx,.xls,.csv" class="mt-2 block w-full text-sm text-gray-600 dark:text-gray-300" @change="selectionnerFichier" />
                     <InputError :message="erreur" class="mt-2" />
                     <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-                        Colonnes reconnues automatiquement (variantes acceptées) : Nom, Téléphone, WhatsApp, E-mail, Ville, Entreprise, Catégorie, Source, Notes.
+                        Formats reconnus automatiquement : export Excel/CSV standard, et export Google Contacts
+                        (colonnes "First Name", "Phone 1 - Value", "E-mail 1 - Value"...). Encodage et séparateur
+                        (virgule ou point-virgule) sont détectés automatiquement.
                     </p>
                     <div class="mt-4">
                         <PrimaryButton :class="{ 'opacity-25': enCours }" :disabled="enCours" @click="analyser">Analyser le fichier</PrimaryButton>
@@ -126,6 +130,21 @@ const statutLabels = { en_cours: 'En cours', termine: 'Terminé', echoue: 'Écho
                                     <option v-for="entete in analyse.en_tetes" :key="entete" :value="entete">{{ entete }}</option>
                                 </SelectInput>
                             </div>
+                        </div>
+
+                        <div class="mt-4 text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                            <p>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Colonnes téléphone détectées :</span>
+                                {{ analyse.colonnes_telephones_detectees.length > 0 ? analyse.colonnes_telephones_detectees.join(', ') : 'aucune' }}
+                            </p>
+                            <p v-if="analyse.colonne_whatsapp_detectee">
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Colonne WhatsApp détectée :</span>
+                                {{ analyse.colonne_whatsapp_detectee }}
+                            </p>
+                            <p>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Colonnes e-mail détectées :</span>
+                                {{ analyse.colonnes_emails_detectees.length > 0 ? analyse.colonnes_emails_detectees.join(', ') : 'aucune' }}
+                            </p>
                         </div>
 
                         <div class="mt-4">
@@ -159,7 +178,10 @@ const statutLabels = { en_cours: 'En cours', termine: 'Terminé', echoue: 'Écho
                                 <tr v-for="ligne in analyse.apercu" :key="ligne.index" :class="lignesIgnorees.has(ligne.index) ? 'opacity-40' : ''">
                                     <td class="px-4 py-2"><input type="checkbox" :checked="lignesIgnorees.has(ligne.index)" @change="basculerIgnoree(ligne.index)" /></td>
                                     <td class="px-4 py-2">{{ ligne.nom ?? '—' }}</td>
-                                    <td class="px-4 py-2">{{ ligne.telephone ?? '—' }}</td>
+                                    <td class="px-4 py-2">
+                                        {{ ligne.telephone ?? '—' }}
+                                        <span v-if="ligne.numeros_secondaires > 0" class="text-xs text-gray-400">(+{{ ligne.numeros_secondaires }} autre{{ ligne.numeros_secondaires > 1 ? 's' : '' }})</span>
+                                    </td>
                                     <td class="px-4 py-2">{{ ligne.whatsapp ?? '—' }}</td>
                                     <td class="px-4 py-2">{{ ligne.numero_normalise ?? '—' }}</td>
                                     <td class="px-4 py-2">

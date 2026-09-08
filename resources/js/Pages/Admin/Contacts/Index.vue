@@ -55,7 +55,7 @@ const toutSelectionner = (e) => {
 
 const contactARelancer = ref(null);
 const cibleRelance = computed(() => (contactARelancer.value
-    ? { id: contactARelancer.value.id, nom: contactARelancer.value.nom, whatsapp: contactARelancer.value.whatsapp, entreprise: contactARelancer.value.entreprise, ville: contactARelancer.value.ville }
+    ? { id: contactARelancer.value.id, nom: contactARelancer.value.nom, prenom: contactARelancer.value.prenom, whatsapp: contactARelancer.value.whatsapp, entreprise: contactARelancer.value.entreprise, ville: contactARelancer.value.ville }
     : null));
 
 const nouveauContactOuvert = ref(false);

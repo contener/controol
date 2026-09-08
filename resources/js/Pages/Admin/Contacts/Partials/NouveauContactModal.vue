@@ -12,7 +12,7 @@ const props = defineProps({ show: Boolean });
 const emit = defineEmits(['close']);
 
 const form = useForm({
-    nom: '', telephone: '', whatsapp: '', email: '', ville: '', entreprise: '', source: '', notes: '',
+    nom: '', prenom: '', telephone: '', whatsapp: '', email: '', ville: '', entreprise: '', poste: '', adresse: '', pays: '', source: '', notes: '',
 });
 
 watch(() => props.show, (visible) => {
@@ -41,6 +41,10 @@ const enregistrer = () => {
                     <InputError :message="form.errors.nom" class="mt-2" />
                 </div>
                 <div>
+                    <InputLabel for="prenom" value="Prénom" />
+                    <TextInput id="prenom" v-model="form.prenom" class="mt-1 block w-full" />
+                </div>
+                <div>
                     <InputLabel for="whatsapp" value="WhatsApp" />
                     <TextInput id="whatsapp" v-model="form.whatsapp" class="mt-1 block w-full" placeholder="+237 6XX XXX XXX" />
                     <InputError :message="form.errors.whatsapp" class="mt-2" />
@@ -61,6 +65,18 @@ const enregistrer = () => {
                 <div>
                     <InputLabel for="entreprise" value="Entreprise" />
                     <TextInput id="entreprise" v-model="form.entreprise" class="mt-1 block w-full" />
+                </div>
+                <div>
+                    <InputLabel for="poste" value="Poste" />
+                    <TextInput id="poste" v-model="form.poste" class="mt-1 block w-full" />
+                </div>
+                <div>
+                    <InputLabel for="adresse" value="Adresse" />
+                    <TextInput id="adresse" v-model="form.adresse" class="mt-1 block w-full" />
+                </div>
+                <div>
+                    <InputLabel for="pays" value="Pays" />
+                    <TextInput id="pays" v-model="form.pays" class="mt-1 block w-full" />
                 </div>
                 <div class="sm:col-span-2">
                     <InputLabel for="source" value="Source" />

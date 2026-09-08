@@ -30,7 +30,7 @@ const routeContacter = computed(() => props.type === 'contact'
 
 const substituer = (texte) => texte
     .replaceAll('{{nom}}', props.cible?.nom ?? '')
-    .replaceAll('{{prenom}}', props.cible?.nom ?? '')
+    .replaceAll('{{prenom}}', props.cible?.prenom ?? props.cible?.nom ?? '')
     .replaceAll('{{plan}}', props.cible?.plan ?? '')
     .replaceAll('{{entreprise}}', props.cible?.entreprise ?? '')
     .replaceAll('{{ville}}', props.cible?.ville ?? '')

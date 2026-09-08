@@ -61,14 +61,24 @@ class Contact extends Model
 
     protected $fillable = [
         'nom',
+        'prenom',
+        'nom_famille',
         'telephone',
         'whatsapp',
+        'telephones_secondaires',
         'numero_normalise',
         'statut_whatsapp',
         'statut_commercial',
         'email',
+        'emails_secondaires',
         'ville',
         'entreprise',
+        'poste',
+        'adresse',
+        'region',
+        'pays',
+        'code_postal',
+        'date_anniversaire',
         'categorie',
         'source',
         'notes',
@@ -86,6 +96,9 @@ class Contact extends Model
         return [
             'dernier_contact_a' => 'datetime',
             'lie_a' => 'datetime',
+            'date_anniversaire' => 'date',
+            'telephones_secondaires' => 'array',
+            'emails_secondaires' => 'array',
         ];
     }
 

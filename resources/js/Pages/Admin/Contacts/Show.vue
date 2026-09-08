@@ -18,7 +18,7 @@ const props = defineProps({
 });
 
 const relanceOuverte = ref(false);
-const cibleRelance = computed(() => ({ id: props.contact.id, nom: props.contact.nom, whatsapp: props.contact.whatsapp || props.contact.telephone, entreprise: props.contact.entreprise, ville: props.contact.ville }));
+const cibleRelance = computed(() => ({ id: props.contact.id, nom: props.contact.nom, prenom: props.contact.prenom, whatsapp: props.contact.whatsapp || props.contact.telephone, entreprise: props.contact.entreprise, ville: props.contact.ville }));
 
 const changerStatutCommercial = (statut) => {
     router.patch(route('admin.contacts.statut-commercial', props.contact.id), { statut_commercial: statut }, { preserveScroll: true });
@@ -68,6 +68,30 @@ const formatDateHeure = (d) => new Date(d).toLocaleString('fr-FR');
                             <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.entreprise ?? '—' }}</div>
                         </div>
                         <div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Poste</div>
+                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.poste ?? '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Adresse</div>
+                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.adresse ?? '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Région</div>
+                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.region ?? '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Pays</div>
+                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.pays ?? '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Code postal</div>
+                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.code_postal ?? '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Anniversaire</div>
+                            <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.date_anniversaire ? formatDate(contact.date_anniversaire) : '—' }}</div>
+                        </div>
+                        <div>
                             <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">Source</div>
                             <div class="mt-1 text-gray-900 dark:text-gray-100">{{ contact.source ?? '—' }}</div>
                         </div>
@@ -84,6 +108,15 @@ const formatDateHeure = (d) => new Date(d).toLocaleString('fr-FR');
                                 <span v-else class="text-gray-400 dark:text-gray-500">Non inscrit</span>
                             </div>
                         </div>
+                    </div>
+
+                    <div v-if="contact.telephones_secondaires?.length || contact.emails_secondaires?.length" class="mt-4 border-t border-gray-100 dark:border-gray-700 pt-4 text-sm space-y-1">
+                        <p v-if="contact.telephones_secondaires?.length" class="text-gray-600 dark:text-gray-300">
+                            Autres numéros : {{ contact.telephones_secondaires.join(', ') }}
+                        </p>
+                        <p v-if="contact.emails_secondaires?.length" class="text-gray-600 dark:text-gray-300">
+                            Autres e-mails : {{ contact.emails_secondaires.join(', ') }}
+                        </p>
                     </div>
 
                     <p v-if="contact.notes" class="mt-4 text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line border-t border-gray-100 dark:border-gray-700 pt-4">{{ contact.notes }}</p>
