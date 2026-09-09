@@ -78,6 +78,7 @@ const fermerMessage = () => { produitMessage.value = null; };
                         <div class="p-2">
                             <div class="text-xs text-slate-500 truncate">{{ produit.boutique.nom }}</div>
                             <div class="text-sm font-medium text-slate-900 truncate">{{ produit.nom }}</div>
+                            <div v-if="produit.mini_characteristics" class="text-xs text-slate-500 truncate">{{ produit.mini_characteristics }}</div>
                             <div class="flex items-center gap-1.5 mt-0.5">
                                 <span class="text-sm font-semibold text-red-600">{{ formatMontant(produit.promotion_prix, produit.boutique.devise) }}</span>
                                 <span class="text-xs text-slate-400 line-through">{{ formatMontant(produit.prix_vente, produit.boutique.devise) }}</span>

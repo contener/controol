@@ -23,6 +23,7 @@ const form = useForm({
     actif: props.produit.actif,
     promotion_prix: props.produit.promotion_prix,
     categorie: props.produit.categorie,
+    mini_characteristics: props.produit.mini_characteristics,
     photo: null,
 });
 

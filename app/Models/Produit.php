@@ -28,6 +28,7 @@ class Produit extends Model
         'actif',
         'promotion_prix',
         'categorie',
+        'mini_characteristics',
     ];
 
     protected function casts(): array

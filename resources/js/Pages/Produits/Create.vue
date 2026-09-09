@@ -18,6 +18,7 @@ const form = useForm({
     actif: true,
     promotion_prix: '',
     categorie: '',
+    mini_characteristics: '',
     photo: null,
 });
 

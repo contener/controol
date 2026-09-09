@@ -155,6 +155,7 @@ const conversationPourModal = computed(() => {
                     </div>
                     <div class="p-3 flex-1 flex flex-col">
                         <h3 class="text-sm font-medium text-slate-900 line-clamp-2">{{ produit.nom }}</h3>
+                        <p v-if="produit.mini_characteristics" class="mt-0.5 text-xs text-slate-500 line-clamp-2">{{ produit.mini_characteristics }}</p>
                         <div class="mt-1 flex items-center gap-2">
                             <span class="text-sm font-semibold text-slate-900">{{ formatMontant(produit.promotion_prix ?? produit.prix_vente) }}</span>
                             <span v-if="produit.promotion_prix" class="text-xs text-slate-400 line-through">{{ formatMontant(produit.prix_vente) }}</span>

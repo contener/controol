@@ -84,6 +84,22 @@ const onPhoto = (event) => {
             </div>
 
             <div>
+                <InputLabel for="mini_characteristics" value="Mini caractéristiques" />
+                <TextInput
+                    id="mini_characteristics"
+                    v-model="form.mini_characteristics"
+                    type="text"
+                    maxlength="250"
+                    class="mt-1 block w-full"
+                    placeholder="RAM 8 Go • SSD 256 Go • Core i5"
+                />
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                    Ajoutez quelques informations essentielles visibles directement dans votre boutique.
+                </p>
+                <InputError :message="form.errors.mini_characteristics" class="mt-2" />
+            </div>
+
+            <div>
                 <InputLabel for="promotion_prix" value="Prix promotionnel (optionnel)" />
                 <TextInput id="promotion_prix" v-model="form.promotion_prix" type="number" step="0.01" min="0" class="mt-1 block w-full" />
                 <InputError :message="form.errors.promotion_prix" class="mt-2" />

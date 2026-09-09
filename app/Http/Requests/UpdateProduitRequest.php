@@ -42,6 +42,7 @@ class UpdateProduitRequest extends FormRequest
             'actif' => ['nullable', 'boolean'],
             'promotion_prix' => ['nullable', 'numeric', 'min:0'],
             'categorie' => ['nullable', 'string', 'max:255'],
+            'mini_characteristics' => ['nullable', 'string', 'max:250'],
             'photo' => ['nullable', 'image', 'max:2048'],
         ];
     }
