@@ -26,6 +26,7 @@ use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\PublicBoutiqueController;
 use App\Http\Controllers\StockController;
+use App\Http\Controllers\WhatsAppAgentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -58,6 +59,7 @@ Route::middleware([
     Route::post('/boutiques/{boutique}/switch', [BoutiqueController::class, 'switch'])->name('boutiques.switch');
     Route::patch('/boutiques/{boutique}/marketplace', [BoutiqueController::class, 'updateMarketplace'])->name('boutiques.marketplace');
     Route::patch('/boutiques/{boutique}/nui', [BoutiqueController::class, 'updateNui'])->name('boutiques.nui');
+    Route::post('/boutiques/{boutique}/whatsapp-ia', [WhatsAppAgentController::class, 'ouvrir'])->name('whatsapp-agent.ouvrir');
 
     // Hors boutique.selected : un utilisateur peut consulter ses conversations en tant que
     // visiteur/acheteur même s'il ne possède lui-même aucune boutique.
@@ -92,6 +94,10 @@ Route::middleware([
         Route::post('/campagnes-sociales', [CampagneSocialeController::class, 'demarrer'])->name('campagnes-sociales.demarrer');
         Route::post('/campagnes-sociales/{campagneSociale}/arreter', [CampagneSocialeController::class, 'arreter'])->name('campagnes-sociales.arreter');
         Route::post('/campagne-destinations/{campagneDestination}/confirmer', [CampagneSocialeController::class, 'confirmerDestination'])->name('campagne-destinations.confirmer');
+
+        Route::get('/whatsapp-ia', [WhatsAppAgentController::class, 'show'])->name('whatsapp-agent.show');
+        Route::patch('/whatsapp-ia', [WhatsAppAgentController::class, 'update'])->name('whatsapp-agent.update');
+        Route::patch('/whatsapp-ia/statut', [WhatsAppAgentController::class, 'toggleStatut'])->name('whatsapp-agent.statut');
     });
 
     Route::get('/abonnement', [AbonnementController::class, 'index'])->name('abonnement.index');

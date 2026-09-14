@@ -24,6 +24,10 @@ const publierMarketplace = (boutique, visible) => {
     router.patch(route('boutiques.marketplace', boutique.id), { marketplace_visible: visible }, { preserveScroll: true });
 };
 
+const ouvrirAgentIa = (boutique) => {
+    router.post(route('whatsapp-agent.ouvrir', boutique.id));
+};
+
 const aUneBoutiqueNonPubliee = computed(() => props.planAutoriseMarketplace && props.boutiques.some((b) => !b.marketplace_visible));
 </script>
 
@@ -85,6 +89,12 @@ const aUneBoutiqueNonPubliee = computed(() => props.planAutoriseMarketplace && p
                                     🌐 Publier sur la Marketplace
                                 </PrimaryButton>
                             </template>
+                        </div>
+
+                        <div class="mt-4">
+                            <SecondaryButton class="w-full justify-center" @click="ouvrirAgentIa(boutique)">
+                                🤖 Agent IA WhatsApp
+                            </SecondaryButton>
                         </div>
 
                         <div class="mt-4 flex flex-wrap items-center gap-3 text-sm">

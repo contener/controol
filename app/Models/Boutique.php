@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Boutique extends Model
 {
@@ -80,9 +81,23 @@ class Boutique extends Model
         return $this->hasMany(CampagneSociale::class);
     }
 
+    public function whatsAppAgent(): HasOne
+    {
+        return $this->hasOne(WhatsAppAgent::class);
+    }
+
     public function estActive(): bool
     {
         return $this->statut === 'active';
+    }
+
+    /**
+     * Même logique que estEligibleMarketplace() : un simple flag booléen du plan actif,
+     * jamais fait confiance à une valeur envoyée par le client (cf. WhatsAppAgentController).
+     */
+    public function agentIaAutorise(): bool
+    {
+        return (bool) $this->proprietaire->planActif()?->chatbot_whatsapp;
     }
 
     /**
