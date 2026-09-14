@@ -42,6 +42,7 @@
     </style>
 </head>
 <body>
+    @include('factures.pdf._watermark')
     @php
         $statutLabels = ['brouillon' => 'Brouillon', 'envoyee' => 'Envoyée', 'payee' => 'Payée', 'annulee' => 'Annulée'];
         $statut = $apercu['meta']['statut'] ?? 'brouillon';

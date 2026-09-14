@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Facture;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Construit la forme de données normalisée consommée à l'identique par les 10 modèles
@@ -28,7 +29,7 @@ class FactureApercuBuilder
             ],
             'boutique' => [
                 'nom' => $boutique->nom,
-                'logo_url' => $boutique->logo_path ? asset('storage/'.$boutique->logo_path) : null,
+                'logo_url' => $this->logoDataUri($boutique->logo_path),
                 'adresse' => $boutique->adresse,
                 'ville' => $boutique->ville,
                 'pays' => $boutique->pays,
@@ -67,5 +68,24 @@ class FactureApercuBuilder
             'notes' => $facture->notes,
             'garantie' => $facture->garantie,
         ];
+    }
+
+    /**
+     * dompdf refuse par défaut les images distantes (enable_remote = false, non modifié
+     * dans cette app) : une URL http(s) vers le logo ne s'affiche donc jamais dans le PDF
+     * généré, même si elle fonctionne très bien dans l'aperçu navigateur. On embarque
+     * directement le fichier en data URI pour que le logo s'affiche de façon fiable, sans
+     * dépendre de cette option ni d'un accès réseau au moment de la génération.
+     */
+    private function logoDataUri(?string $logoPath): ?string
+    {
+        if (! $logoPath || ! Storage::disk('public')->exists($logoPath)) {
+            return null;
+        }
+
+        $mime = Storage::disk('public')->mimeType($logoPath) ?: 'image/png';
+        $contenu = Storage::disk('public')->get($logoPath);
+
+        return 'data:'.$mime.';base64,'.base64_encode($contenu);
     }
 }

@@ -31,6 +31,7 @@
     </style>
 </head>
 <body>
+    @include('factures.pdf._watermark')
     <div class="accent-bar"></div>
     <div class="page">
         <table class="header-std">

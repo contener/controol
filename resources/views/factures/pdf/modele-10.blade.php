@@ -46,6 +46,7 @@
     </style>
 </head>
 <body>
+    @include('factures.pdf._watermark')
     @php
         $statut = $apercu['meta']['statut'] ?? 'brouillon';
         $totalTtc = (float) $apercu['totaux']['total_ttc'];

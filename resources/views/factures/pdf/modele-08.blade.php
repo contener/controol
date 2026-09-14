@@ -34,6 +34,7 @@
     </style>
 </head>
 <body>
+    @include('factures.pdf._watermark')
     <div class="wrap">
         <div class="center">
             @if($apercu['boutique']['logo_url'])

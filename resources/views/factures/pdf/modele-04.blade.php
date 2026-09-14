@@ -35,6 +35,7 @@
     </style>
 </head>
 <body>
+    @include('factures.pdf._watermark')
     <table class="hero">
         <tr>
             <td>

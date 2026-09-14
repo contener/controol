@@ -44,6 +44,7 @@
     </style>
 </head>
 <body>
+    @include('factures.pdf._watermark')
     <div class="wrap">
         @php
             $statutLabels = ['brouillon' => 'Brouillon', 'envoyee' => 'Envoyée', 'payee' => 'Payée', 'annulee' => 'Annulée'];

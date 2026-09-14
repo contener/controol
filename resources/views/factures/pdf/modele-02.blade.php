@@ -32,6 +32,7 @@
     </style>
 </head>
 <body>
+    @include('factures.pdf._watermark')
     <table class="header bandeau">
         <tr>
             <td style="width: 55%;">
