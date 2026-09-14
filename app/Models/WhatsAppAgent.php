@@ -10,6 +10,10 @@ class WhatsAppAgent extends Model
 {
     use BelongsToBoutique, HasFactory;
 
+    // La convention snake_case d'Eloquent découperait "WhatsAppAgent" en "whats_app_agents"
+    // (une majuscule = une coupure) — jamais "whatsapp_agents", d'où ce nom de table explicite.
+    protected $table = 'whatsapp_agents';
+
     protected $fillable = [
         'nom',
         'actif',
