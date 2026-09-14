@@ -64,18 +64,8 @@ class WhatsAppAgentController extends Controller
         return back()->with('flash_success', $agent->actif ? 'Agent IA activé.' : 'Agent IA désactivé.');
     }
 
-    /**
-     * firstOrCreate() ne relit jamais les défauts au niveau colonne (ex. actif) sur
-     * l'instance retournée lors d'une création — ils restent explicitement listés ici
-     * plutôt que de compter sur le défaut de la migration, pour que l'attribut en mémoire
-     * soit toujours un booléen réel (jamais null) dès la première visite.
-     */
     private function agentCourant(): WhatsAppAgent
     {
-        return WhatsAppAgent::firstOrCreate([], [
-            'nom' => 'Assistant',
-            'actif' => false,
-            'langue' => 'fr',
-        ]);
+        return WhatsAppAgent::firstOrCreate();
     }
 }

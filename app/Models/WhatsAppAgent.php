@@ -24,6 +24,15 @@ class WhatsAppAgent extends Model
         'message_hors_horaires',
     ];
 
+    // Reflètent les défauts de la migration en mémoire dès l'instanciation : sans ça,
+    // firstOrCreate()/new WhatsAppAgent() laisse ces attributs à null tant que le modèle
+    // n'a pas été relu depuis la base après un INSERT qui s'appuie sur le défaut SQL.
+    protected $attributes = [
+        'nom' => 'Assistant',
+        'actif' => false,
+        'langue' => 'fr',
+    ];
+
     protected function casts(): array
     {
         return [
