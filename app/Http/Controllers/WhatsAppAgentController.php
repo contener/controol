@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateWhatsAppAgentRequest;
 use App\Models\Boutique;
 use App\Models\WhatsAppAgent;
+use App\Services\WhatsappConnectorClient;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -27,7 +29,7 @@ class WhatsAppAgentController extends Controller
         return redirect()->route('whatsapp-agent.show');
     }
 
-    public function show(Request $request): Response
+    public function show(Request $request, WhatsappConnectorClient $client): Response
     {
         $boutique = $request->user()->currentBoutique;
         $agent = $this->agentCourant();
@@ -36,6 +38,7 @@ class WhatsAppAgentController extends Controller
             'boutique' => $boutique->only(['id', 'nom']),
             'agent' => $agent,
             'autorise' => $boutique->agentIaAutorise(),
+            'connecteurConfigure' => $client->configure(),
         ]);
     }
 
@@ -62,6 +65,67 @@ class WhatsAppAgentController extends Controller
         }
 
         return back()->with('flash_success', $agent->actif ? 'Agent IA activé.' : 'Agent IA désactivé.');
+    }
+
+    public function connecter(WhatsappConnectorClient $client): JsonResponse
+    {
+        $agent = $this->agentCourant();
+
+        if (! $client->configure()) {
+            return response()->json(['statut' => 'indisponible', 'qr' => null, 'numero' => null]);
+        }
+
+        $etat = $client->demarrer($agent->id);
+        $this->synchroniser($agent, $etat);
+
+        return response()->json($etat);
+    }
+
+    public function statutConnexion(WhatsappConnectorClient $client): JsonResponse
+    {
+        $agent = $this->agentCourant();
+
+        if (! $client->configure()) {
+            return response()->json(['statut' => 'indisponible', 'qr' => null, 'numero' => null]);
+        }
+
+        $etat = $client->statut($agent->id);
+        $this->synchroniser($agent, $etat);
+
+        return response()->json($etat);
+    }
+
+    public function deconnecter(WhatsappConnectorClient $client): JsonResponse
+    {
+        $agent = $this->agentCourant();
+
+        if ($client->configure()) {
+            $client->arreter($agent->id);
+        }
+
+        $agent->update(['whatsapp_statut' => 'deconnecte', 'whatsapp_numero' => null, 'whatsapp_connecte_a' => null]);
+
+        return response()->json(['statut' => 'deconnecte', 'qr' => null, 'numero' => null]);
+    }
+
+    /**
+     * Filet de sécurité indépendant du webhook (WhatsappConnectorWebhookController) : si
+     * celui-ci n'est pas encore arrivé (latence réseau, service qui redémarre...), le
+     * prochain sondage de statut depuis la page remet quand même la base à jour.
+     */
+    private function synchroniser(WhatsAppAgent $agent, array $etat): void
+    {
+        $statut = $etat['statut'] ?? null;
+
+        if (! in_array($statut, ['deconnecte', 'connexion', 'qr', 'connecte'], true)) {
+            return;
+        }
+
+        $agent->update([
+            'whatsapp_statut' => $statut,
+            'whatsapp_numero' => $etat['numero'] ?? null,
+            'whatsapp_connecte_a' => $statut === 'connecte' ? ($agent->whatsapp_connecte_a ?? now()) : null,
+        ]);
     }
 
     private function agentCourant(): WhatsAppAgent

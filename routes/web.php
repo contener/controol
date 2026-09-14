@@ -98,6 +98,9 @@ Route::middleware([
         Route::get('/whatsapp-ia', [WhatsAppAgentController::class, 'show'])->name('whatsapp-agent.show');
         Route::patch('/whatsapp-ia', [WhatsAppAgentController::class, 'update'])->name('whatsapp-agent.update');
         Route::patch('/whatsapp-ia/statut', [WhatsAppAgentController::class, 'toggleStatut'])->name('whatsapp-agent.statut');
+        Route::post('/whatsapp-ia/connexion', [WhatsAppAgentController::class, 'connecter'])->name('whatsapp-agent.connecter');
+        Route::get('/whatsapp-ia/connexion/statut', [WhatsAppAgentController::class, 'statutConnexion'])->name('whatsapp-agent.connexion.statut');
+        Route::post('/whatsapp-ia/deconnexion', [WhatsAppAgentController::class, 'deconnecter'])->name('whatsapp-agent.deconnecter');
     });
 
     Route::get('/abonnement', [AbonnementController::class, 'index'])->name('abonnement.index');

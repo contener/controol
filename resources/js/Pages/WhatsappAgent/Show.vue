@@ -1,4 +1,5 @@
 <script setup>
+import { onUnmounted, ref } from 'vue';
 import { Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
@@ -15,6 +16,7 @@ const props = defineProps({
     boutique: Object,
     agent: Object,
     autorise: Boolean,
+    connecteurConfigure: Boolean,
 });
 
 const form = useForm({
@@ -41,6 +43,66 @@ const statistiques = [
     { libelle: 'Clients qualifiés', valeur: 0 },
     { libelle: 'Conversations transférées', valeur: 0 },
 ];
+
+// --- Connexion WhatsApp ---
+const connexionStatut = ref(props.agent.whatsapp_statut ?? 'deconnecte');
+const qrDataUri = ref(null);
+const numeroConnecte = ref(props.agent.whatsapp_numero ?? null);
+const connexionEnCours = ref(false);
+let intervalleSondage = null;
+
+const libellesStatutWhatsapp = {
+    deconnecte: '⚪ Non connecté',
+    connexion: '🟡 Connexion en cours...',
+    qr: '🟡 En attente de scan',
+    connecte: '🟢 Connecté',
+    indisponible: '⚪ Service indisponible',
+};
+
+const appliquerEtat = (etat) => {
+    connexionStatut.value = etat.statut ?? 'deconnecte';
+    qrDataUri.value = etat.qr ?? null;
+    numeroConnecte.value = etat.numero ?? null;
+
+    if (['connexion', 'qr'].includes(connexionStatut.value)) {
+        demarrerSondage();
+    } else {
+        arreterSondage();
+    }
+};
+
+const demarrerSondage = () => {
+    if (intervalleSondage) return;
+    intervalleSondage = setInterval(async () => {
+        const { data } = await window.axios.get(route('whatsapp-agent.connexion.statut'));
+        appliquerEtat(data);
+    }, 2500);
+};
+
+const arreterSondage = () => {
+    if (intervalleSondage) {
+        clearInterval(intervalleSondage);
+        intervalleSondage = null;
+    }
+};
+
+const connecterWhatsapp = async () => {
+    connexionEnCours.value = true;
+    try {
+        const { data } = await window.axios.post(route('whatsapp-agent.connecter'));
+        appliquerEtat(data);
+    } finally {
+        connexionEnCours.value = false;
+    }
+};
+
+const deconnecterWhatsapp = async () => {
+    if (!confirm('Déconnecter WhatsApp de cette boutique ?')) return;
+    const { data } = await window.axios.post(route('whatsapp-agent.deconnecter'));
+    appliquerEtat(data);
+};
+
+onUnmounted(arreterSondage);
 </script>
 
 <template>
@@ -69,7 +131,7 @@ const statistiques = [
                         </div>
                         <div>
                             <div class="text-xs text-slate-500 dark:text-slate-400 uppercase mb-1">WhatsApp</div>
-                            <Badge couleur="slate">⚪ Non connecté</Badge>
+                            <Badge :couleur="connexionStatut === 'connecte' ? 'green' : 'slate'">{{ libellesStatutWhatsapp[connexionStatut] ?? libellesStatutWhatsapp.deconnecte }}</Badge>
                         </div>
                         <div class="ms-auto">
                             <button
@@ -101,9 +163,39 @@ const statistiques = [
                     <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
                         Connectez le numéro WhatsApp de cette boutique pour que l'agent puisse échanger avec vos clients.
                     </p>
-                    <SecondaryButton disabled class="opacity-60 cursor-not-allowed">
-                        Connecter WhatsApp (bientôt disponible)
-                    </SecondaryButton>
+
+                    <template v-if="!connecteurConfigure">
+                        <SecondaryButton disabled class="opacity-60 cursor-not-allowed">
+                            Connecter WhatsApp (bientôt disponible)
+                        </SecondaryButton>
+                    </template>
+
+                    <template v-else-if="connexionStatut === 'connecte'">
+                        <p class="text-sm font-medium text-green-700 dark:text-green-400 mb-3">
+                            ✅ Connecté{{ numeroConnecte ? ` : ${numeroConnecte}` : '' }}
+                        </p>
+                        <SecondaryButton @click="deconnecterWhatsapp">Déconnecter</SecondaryButton>
+                    </template>
+
+                    <template v-else-if="connexionStatut === 'qr'">
+                        <p class="text-sm text-slate-600 dark:text-slate-300 mb-3">
+                            Scannez ce QR code depuis WhatsApp sur votre téléphone (Paramètres → Appareils connectés → Connecter un appareil).
+                        </p>
+                        <img v-if="qrDataUri" :src="qrDataUri" alt="QR code de connexion WhatsApp" class="w-48 h-48 border border-slate-200 dark:border-slate-700 rounded-lg">
+                    </template>
+
+                    <template v-else-if="connexionStatut === 'connexion'">
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Connexion en cours...</p>
+                    </template>
+
+                    <template v-else>
+                        <SecondaryButton :disabled="connexionEnCours" @click="connecterWhatsapp">
+                            {{ connexionEnCours ? 'Connexion...' : 'Connecter WhatsApp' }}
+                        </SecondaryButton>
+                        <p v-if="connexionStatut === 'indisponible'" class="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                            Service de connexion momentanément indisponible — réessayez dans quelques instants.
+                        </p>
+                    </template>
                 </div>
 
                 <!-- Configuration -->

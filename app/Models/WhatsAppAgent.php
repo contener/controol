@@ -22,6 +22,9 @@ class WhatsAppAgent extends Model
         'ton',
         'message_accueil',
         'message_hors_horaires',
+        'whatsapp_statut',
+        'whatsapp_numero',
+        'whatsapp_connecte_a',
     ];
 
     // Reflètent les défauts de la migration en mémoire dès l'instanciation : sans ça,
@@ -31,12 +34,14 @@ class WhatsAppAgent extends Model
         'nom' => 'Assistant',
         'actif' => false,
         'langue' => 'fr',
+        'whatsapp_statut' => 'deconnecte',
     ];
 
     protected function casts(): array
     {
         return [
             'actif' => 'boolean',
+            'whatsapp_connecte_a' => 'datetime',
         ];
     }
 }

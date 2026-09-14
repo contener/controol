@@ -1,0 +1,21 @@
+{
+  "name": "whatsapp-connector",
+  "version": "0.1.0",
+  "description": "Service indépendant : gère les connexions WhatsApp (QR, non-officiel) pour l'Agent IA WhatsApp de Controool. Jamais mélangé au code Laravel/Vue.",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pino": "^9.3.2",
+    "qrcode": "^1.5.4"
+  }
+}

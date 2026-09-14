@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // Service indépendant whatsapp-connector/ (Node.js) — gère les connexions WhatsApp
+    // (QR) des agents IA. Reste vide tant qu'aucun hébergement adapté (processus Node
+    // persistant) n'est en place : WhatsappConnectorClient::configure() pilote alors
+    // l'affichage d'un simple placeholder côté interface, sans rien casser.
+    'whatsapp_connector' => [
+        'url' => env('WHATSAPP_CONNECTOR_URL'),
+        'secret' => env('WHATSAPP_CONNECTOR_SECRET'),
+    ],
+
 ];
