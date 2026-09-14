@@ -30,11 +30,7 @@ class WhatsAppAgentController extends Controller
     public function show(Request $request): Response
     {
         $boutique = $request->user()->currentBoutique;
-
-        $agent = WhatsAppAgent::firstOrCreate([], [
-            'nom' => 'Assistant',
-            'langue' => 'fr',
-        ]);
+        $agent = $this->agentCourant();
 
         return Inertia::render('WhatsappAgent/Show', [
             'boutique' => $boutique->only(['id', 'nom']),
@@ -45,7 +41,7 @@ class WhatsAppAgentController extends Controller
 
     public function update(UpdateWhatsAppAgentRequest $request): RedirectResponse
     {
-        $agent = WhatsAppAgent::firstOrCreate([], ['nom' => 'Assistant', 'langue' => 'fr']);
+        $agent = $this->agentCourant();
         $agent->update($request->validated());
 
         return back()->with('flash_success', 'Configuration de l\'agent mise à jour.');
@@ -56,7 +52,7 @@ class WhatsAppAgentController extends Controller
         $data = $request->validate(['actif' => ['required', 'boolean']]);
 
         $boutique = $request->user()->currentBoutique;
-        $agent = WhatsAppAgent::firstOrCreate([], ['nom' => 'Assistant', 'langue' => 'fr']);
+        $agent = $this->agentCourant();
 
         $autorise = $boutique->agentIaAutorise();
         $agent->update(['actif' => $data['actif'] && $autorise]);
@@ -66,5 +62,20 @@ class WhatsAppAgentController extends Controller
         }
 
         return back()->with('flash_success', $agent->actif ? 'Agent IA activé.' : 'Agent IA désactivé.');
+    }
+
+    /**
+     * firstOrCreate() ne relit jamais les défauts au niveau colonne (ex. actif) sur
+     * l'instance retournée lors d'une création — ils restent explicitement listés ici
+     * plutôt que de compter sur le défaut de la migration, pour que l'attribut en mémoire
+     * soit toujours un booléen réel (jamais null) dès la première visite.
+     */
+    private function agentCourant(): WhatsAppAgent
+    {
+        return WhatsAppAgent::firstOrCreate([], [
+            'nom' => 'Assistant',
+            'actif' => false,
+            'langue' => 'fr',
+        ]);
     }
 }
