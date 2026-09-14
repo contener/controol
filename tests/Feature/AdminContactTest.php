@@ -146,4 +146,43 @@ class AdminContactTest extends TestCase
         $this->assertSame('interesse', $contact1->fresh()->statut_commercial);
         $this->assertSame('interesse', $contact2->fresh()->statut_commercial);
     }
+
+    public function test_bulk_delete_removes_all_selected_contacts(): void
+    {
+        $admin = $this->creerAdminAvecPermissions(['contacts.voir', 'contacts.supprimer']);
+        $contact1 = Contact::create(['nom' => 'A supprimer 1']);
+        $contact2 = Contact::create(['nom' => 'A supprimer 2']);
+        $contact3 = Contact::create(['nom' => 'A conserver']);
+
+        $response = $this->actingAs($admin)->delete('/admin/contacts/supprimer-groupe', [
+            'ids' => [$contact1->id, $contact2->id],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('contacts', ['id' => $contact1->id]);
+        $this->assertDatabaseMissing('contacts', ['id' => $contact2->id]);
+        $this->assertDatabaseHas('contacts', ['id' => $contact3->id]);
+    }
+
+    public function test_bulk_delete_also_deletes_whatsapp_history_of_selected_contacts(): void
+    {
+        $admin = $this->creerAdminAvecPermissions(['contacts.voir', 'contacts.supprimer']);
+        $contact = Contact::create(['nom' => 'A supprimer', 'whatsapp' => '+237690000000']);
+        WhatsappContactLog::create(['contact_id' => $contact->id, 'admin_id' => $admin->id, 'numero_whatsapp' => $contact->whatsapp, 'message' => 'Bonjour', 'ouvert_a' => now()]);
+
+        $this->actingAs($admin)->delete('/admin/contacts/supprimer-groupe', ['ids' => [$contact->id]])->assertRedirect();
+
+        $this->assertDatabaseMissing('contacts', ['id' => $contact->id]);
+        $this->assertDatabaseCount('whatsapp_contact_logs', 0);
+    }
+
+    public function test_admin_without_delete_permission_cannot_bulk_delete_contacts(): void
+    {
+        $admin = $this->creerAdminAvecPermissions(['contacts.voir', 'contacts.modifier']);
+        $contact = Contact::create(['nom' => 'Protégé']);
+
+        $this->actingAs($admin)->delete('/admin/contacts/supprimer-groupe', ['ids' => [$contact->id]])->assertStatus(403);
+
+        $this->assertDatabaseHas('contacts', ['id' => $contact->id]);
+    }
 }

@@ -149,6 +149,7 @@ Route::middleware([
             Route::post('/', [ContactController::class, 'store'])->name('store')->middleware('admin.permission:contacts.modifier');
             Route::get('/{contact}', [ContactController::class, 'show'])->name('show')->middleware('admin.permission:contacts.voir');
             Route::put('/{contact}', [ContactController::class, 'update'])->name('update')->middleware('admin.permission:contacts.modifier');
+            Route::delete('/supprimer-groupe', [ContactController::class, 'destroyGroupe'])->name('destroy-groupe')->middleware('admin.permission:contacts.supprimer');
             Route::delete('/{contact}', [ContactController::class, 'destroy'])->name('destroy')->middleware('admin.permission:contacts.supprimer');
             Route::patch('/{contact}/statut-commercial', [ContactController::class, 'updateStatutCommercial'])->name('statut-commercial')->middleware('admin.permission:contacts.modifier');
             Route::patch('/statut-commercial-groupe', [ContactController::class, 'statutCommercialGroupe'])->name('statut-commercial-groupe')->middleware('admin.permission:contacts.modifier');

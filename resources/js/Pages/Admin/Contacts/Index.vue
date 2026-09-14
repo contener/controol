@@ -74,6 +74,17 @@ const changerStatutSelection = (statut) => {
     });
 };
 
+const supprimerSelection = () => {
+    if (selection.value.length === 0) return;
+    if (confirm(`Supprimer définitivement ${selection.value.length} contact(s) sélectionné(s) ? Cette action est irréversible.`)) {
+        router.delete(route('admin.contacts.destroy-groupe'), {
+            data: { ids: selection.value },
+            preserveScroll: true,
+            onSuccess: () => { selection.value = []; },
+        });
+    }
+};
+
 const lienExportSelection = computed(() => route('admin.contacts.export', { ids: selection.value.join(',') }));
 const lienExportFiltre = computed(() => route('admin.contacts.export', {
     recherche: recherche.value, statutWhatsapp: statutWhatsapp.value, statutCommercial: statutCommercial.value, compteLie: compteLie.value,
@@ -151,6 +162,9 @@ const formatDate = (d) => (d ? new Date(d).toLocaleDateString('fr-FR') : '—');
                         <option v-for="(libelle, cle) in statutsCommerciaux" :key="cle" :value="cle">{{ libelle }}</option>
                     </SelectInput>
                     <a v-if="permissionsContacts?.exporter" :href="lienExportSelection" class="text-blue-700 dark:text-blue-300 underline">Exporter la sélection</a>
+                    <button v-if="permissionsContacts?.supprimer" type="button" class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium" @click="supprimerSelection">
+                        Supprimer la sélection
+                    </button>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg overflow-x-auto">

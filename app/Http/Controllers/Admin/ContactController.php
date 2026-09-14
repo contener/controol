@@ -115,6 +115,20 @@ class ContactController extends Controller
         return back()->with('flash_success', 'Contact supprimé.');
     }
 
+    public function destroyGroupe(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->hasAdminPermission('contacts.supprimer'), 403);
+
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $nombre = Contact::whereIn('id', $data['ids'])->delete();
+
+        return back()->with('flash_success', $nombre.' contact(s) supprimé(s).');
+    }
+
     public function updateStatutCommercial(Request $request, Contact $contact): RedirectResponse
     {
         abort_unless($request->user()->hasAdminPermission('contacts.modifier'), 403);
