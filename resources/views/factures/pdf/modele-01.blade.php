@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         @include('factures.pdf._styles')
         .accent-bar { background: #1d4ed8; height: 6px; width: 100%; }
@@ -57,7 +57,7 @@
                     </div>
                 </td>
                 <td style="width: 45%; text-align: right;">
-                    <div class="label-accent">Facture</div>
+                    <div class="label-accent">{{ $apercu['meta']['type_label'] }}</div>
                     <div class="numero-lg">{{ $apercu['meta']['numero'] }}</div>
                     <div class="muted" style="margin-top: 8px; font-size: 11px;">
                         Émission : {{ $apercu['meta']['date_emission'] ?? '—' }}<br>

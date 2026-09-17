@@ -22,6 +22,10 @@ const props = defineProps({
         type: String,
         default: '(brouillon)',
     },
+    modification: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['submit']);
@@ -101,7 +105,7 @@ const imprimer = () => {
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6" :class="ongletMobile === 'apercu' ? 'hidden lg:block' : ''">
-                <FactureForm :form="form" :clients="clients" :produits="produits" :boutique="boutique" :taux-tva-defaut="tauxTvaDefaut" />
+                <FactureForm :form="form" :clients="clients" :produits="produits" :boutique="boutique" :taux-tva-defaut="tauxTvaDefaut" :modification="modification" />
             </div>
 
             <div class="lg:sticky lg:top-4 self-start" :class="ongletMobile === 'saisie' ? 'hidden lg:block' : ''">

@@ -20,6 +20,7 @@ const today = new Date().toISOString().slice(0, 10);
 
 const form = useForm({
     client_id: null,
+    type: 'facture',
     date_emission: today,
     date_echeance: '',
     remise: 0,

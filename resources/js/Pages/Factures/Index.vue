@@ -11,13 +11,15 @@ const props = defineProps({
     clients: Array,
     filtres: Object,
     modeleLabels: Object,
+    typeLabels: Object,
 });
 
 const statut = ref(props.filtres.statut ?? '');
+const type = ref(props.filtres.type ?? '');
 const clientId = ref(props.filtres.client_id ?? '');
 
-watch([statut, clientId], () => {
-    router.get(route('factures.index'), { statut: statut.value, client_id: clientId.value }, {
+watch([statut, type, clientId], () => {
+    router.get(route('factures.index'), { statut: statut.value, type: type.value, client_id: clientId.value }, {
         preserveState: true,
         replace: true,
     });
@@ -35,6 +37,11 @@ const statutClasses = {
     envoyee: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300',
     payee: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
     annulee: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
+};
+
+const typeClasses = {
+    facture: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300',
+    proforma: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300',
 };
 
 const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(montant);
@@ -60,6 +67,10 @@ const dupliquer = (facture) => {
                 <FacturesSubNav />
 
                 <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-4 flex flex-col sm:flex-row gap-4">
+                    <SelectInput v-model="type" class="sm:w-56">
+                        <option value="">Tous les types</option>
+                        <option v-for="(libelle, cle) in typeLabels" :key="cle" :value="cle">{{ libelle }}</option>
+                    </SelectInput>
                     <SelectInput v-model="statut" class="sm:w-56">
                         <option value="">Tous les statuts</option>
                         <option value="brouillon">Brouillon</option>
@@ -78,6 +89,7 @@ const dupliquer = (facture) => {
                         <thead class="bg-slate-50 dark:bg-slate-900">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Numéro</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Type</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Client</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Date</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Modèle</th>
@@ -88,10 +100,13 @@ const dupliquer = (facture) => {
                         </thead>
                         <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="factures.data.length === 0">
-                                <td colspan="7" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucune facture trouvée.</td>
+                                <td colspan="8" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucune facture trouvée.</td>
                             </tr>
                             <tr v-for="facture in factures.data" :key="facture.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100 cursor-pointer" @click="$inertia.visit(route('factures.show', facture.id))">{{ facture.numero }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full" :class="typeClasses[facture.type]">{{ typeLabels[facture.type] ?? facture.type }}</span>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ facture.client?.nom }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ facture.date_emission }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ modeleLabels[facture.modele_id] ?? '—' }}</td>

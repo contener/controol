@@ -27,6 +27,7 @@ class StoreFactureRequest extends FormRequest
                 'required',
                 Rule::exists('clients', 'id')->where('boutique_id', $boutiqueId),
             ],
+            'type' => ['nullable', 'in:facture,proforma'],
             'date_emission' => ['required', 'date'],
             'date_echeance' => ['nullable', 'date', 'after_or_equal:date_emission'],
             'remise' => ['nullable', 'numeric', 'min:0'],

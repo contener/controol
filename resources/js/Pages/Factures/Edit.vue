@@ -14,6 +14,7 @@ const props = defineProps({
 
 const form = useForm({
     client_id: props.facture.client_id,
+    type: props.facture.type,
     date_emission: props.facture.date_emission,
     date_echeance: props.facture.date_echeance ?? '',
     remise: props.facture.remise,
@@ -35,12 +36,14 @@ const form = useForm({
 const submit = () => {
     form.put(route('factures.update', props.facture.id));
 };
+
+const typeLabel = props.facture.type === 'proforma' ? 'le proforma' : 'la facture';
 </script>
 
 <template>
     <AppLayout title="Modifier la facture">
         <template #header>
-            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Modifier la facture {{ facture.numero }}</h2>
+            <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Modifier {{ typeLabel }} {{ facture.numero }}</h2>
         </template>
 
         <div class="py-8">
@@ -55,6 +58,7 @@ const submit = () => {
                     :boutique="boutique"
                     :modeles="modeles"
                     :numero-previsualise="facture.numero"
+                    modification
                     @submit="submit"
                 />
             </div>

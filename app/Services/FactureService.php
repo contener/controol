@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\TypeFacture;
 use App\Models\Facture;
 use App\Models\Produit;
 use App\Models\User;
@@ -20,11 +21,13 @@ class FactureService
         return DB::transaction(function () use ($data, $user, $boutiqueId) {
             $dateEmission = $data['date_emission'];
             $annee = (int) date('Y', strtotime($dateEmission));
+            $type = TypeFacture::from($data['type'] ?? TypeFacture::Facture->value);
 
             $facture = Facture::create([
                 'boutique_id' => $boutiqueId,
                 'client_id' => $data['client_id'],
-                'numero' => $this->numeroService->prochainNumero($boutiqueId, $annee),
+                'type' => $type->value,
+                'numero' => $this->numeroService->prochainNumero($boutiqueId, $annee, $type),
                 'statut' => $data['statut'] ?? 'brouillon',
                 'modele_id' => $data['modele_id'] ?? 1,
                 'date_emission' => $dateEmission,
@@ -36,7 +39,11 @@ class FactureService
             ]);
 
             $this->enregistrerLignes($facture, $data['lignes']);
-            $this->consommerStockPourLignes($facture, $user->id);
+
+            if ($this->doitGererStock($facture)) {
+                $this->consommerStockPourLignes($facture, $user->id);
+            }
+
             $this->recalculerTotaux($facture);
 
             return $facture->fresh('lignes');
@@ -46,9 +53,17 @@ class FactureService
     public function mettreAJour(Facture $facture, array $data, User $user): Facture
     {
         return DB::transaction(function () use ($facture, $data, $user) {
-            $this->restituerStockPourFacture($facture, $user->id);
+            $gereStock = $this->doitGererStock($facture);
+
+            if ($gereStock) {
+                $this->restituerStockPourFacture($facture, $user->id);
+            }
+
             $facture->lignes()->delete();
 
+            // 'type' est volontairement absent ici : immuable après création (jamais lu
+            // depuis $data même s'il était envoyé), StoreFactureRequest/UpdateFactureRequest
+            // n'exposent d'ailleurs le champ qu'à la création.
             $facture->update([
                 'client_id' => $data['client_id'],
                 'date_emission' => $data['date_emission'],
@@ -60,7 +75,11 @@ class FactureService
             ]);
 
             $this->enregistrerLignes($facture, $data['lignes']);
-            $this->consommerStockPourLignes($facture, $user->id);
+
+            if ($gereStock) {
+                $this->consommerStockPourLignes($facture, $user->id);
+            }
+
             $this->recalculerTotaux($facture);
 
             return $facture->fresh('lignes');
@@ -70,7 +89,7 @@ class FactureService
     public function changerStatut(Facture $facture, string $statut, User $user): Facture
     {
         return DB::transaction(function () use ($facture, $statut, $user) {
-            if ($statut === 'annulee' && $facture->statut !== 'annulee') {
+            if ($statut === 'annulee' && $facture->statut !== 'annulee' && $this->doitGererStock($facture)) {
                 $this->restituerStockPourFacture($facture, $user->id);
             }
 
@@ -83,13 +102,23 @@ class FactureService
     public function supprimer(Facture $facture, User $user): void
     {
         DB::transaction(function () use ($facture, $user) {
-            if ($facture->statut !== 'annulee') {
+            if ($facture->statut !== 'annulee' && $this->doitGererStock($facture)) {
                 $this->restituerStockPourFacture($facture, $user->id);
             }
 
             $facture->lignes()->delete();
             $facture->delete();
         });
+    }
+
+    /**
+     * Un proforma est un document indicatif, jamais un engagement de vente — il ne doit
+     * jamais faire bouger le stock (ni en consommer à la création, ni en restituer à
+     * l'annulation/suppression, puisqu'il n'en a jamais consommé).
+     */
+    private function doitGererStock(Facture $facture): bool
+    {
+        return ! $facture->estProforma();
     }
 
     private function enregistrerLignes(Facture $facture, array $lignes): void

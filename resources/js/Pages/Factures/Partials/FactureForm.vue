@@ -6,6 +6,7 @@ import InputError from '@/Components/InputError.vue';
 import TextInput from '@/Components/TextInput.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
+import Badge from '@/Components/Badge.vue';
 import { calculerLigne } from '@/Composables/useFactureApercu';
 import { useCurrencyFormat } from '@/Composables/useCurrencyFormat';
 
@@ -21,7 +22,18 @@ const props = defineProps({
         type: Number,
         default: 0,
     },
+    modification: {
+        type: Boolean,
+        default: false,
+    },
 });
+
+// Facture / Proforma n'est jamais plan-gated (contrairement aux modèles visuels) — une
+// simple liste statique suffit, pas besoin de la faire transiter depuis le contrôleur.
+const typeOptions = [
+    { value: 'facture', label: 'Facture', description: 'Document de vente final, numéroté FAC-.' },
+    { value: 'proforma', label: 'Proforma', description: 'Devis indicatif, numéroté PRO-, ne touche jamais au stock.' },
+];
 
 // Le NUI est une propriété de la boutique, pas de la facture — le modifier ici met à
 // jour la boutique elle-même (via boutiques.nui) et s'appliquera à toutes ses futures
@@ -79,6 +91,38 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
 
 <template>
     <div class="space-y-8">
+        <section>
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Type de document</h3>
+
+            <div v-if="!modification" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                    v-for="option in typeOptions"
+                    :key="option.value"
+                    type="button"
+                    class="text-left px-4 py-3 rounded-lg border transition-colors"
+                    :class="form.type === option.value
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-500'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600'"
+                    @click="form.type = option.value"
+                >
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ option.label }}</span>
+                        <span v-if="form.type === option.value" class="text-blue-600 dark:text-blue-400">✓</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ option.description }}</p>
+                </button>
+            </div>
+
+            <div v-else class="flex items-center gap-2">
+                <Badge :couleur="form.type === 'proforma' ? 'yellow' : 'blue'">
+                    {{ typeOptions.find((o) => o.value === form.type)?.label ?? 'Facture' }}
+                </Badge>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Le type ne peut plus être modifié après la création du document.</p>
+            </div>
+
+            <InputError :message="form.errors.type" class="mt-2" />
+        </section>
+
         <section>
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Client</h3>
             <InputLabel for="client_id" value="Client *" />

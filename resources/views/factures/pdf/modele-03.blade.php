@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
         .en-tete { width: 100%; border-bottom: 2px solid #047857; padding-bottom: 20px; }
@@ -57,7 +57,7 @@
             </td>
             <td style="width: 40%; vertical-align: top;">
                 <div class="badge-facture">
-                    <div class="label">Facture</div>
+                    <div class="label">{{ $apercu['meta']['type_label'] }}</div>
                     <div class="numero">{{ $apercu['meta']['numero'] }}</div>
                     <div class="muted" style="margin-top: 8px; font-size: 11px;">
                         Émission : {{ $apercu['meta']['date_emission'] ?? '—' }}<br>

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
         .header { width: 100%; margin-bottom: 18px; }
@@ -72,7 +72,7 @@
             <td style="width: 45%; text-align: right;">
                 <span class="statut statut-{{ $statut }}">{{ $statutLabel }}</span>
                 <div class="facture-box">
-                    <div class="lbl">Commande / Facture</div>
+                    <div class="lbl">Commande / {{ $apercu['meta']['type_label'] }}</div>
                     <div class="num">{{ $apercu['meta']['numero'] }}</div>
                     <div class="muted">
                         Émise : {{ $apercu['meta']['date_emission'] }}<br>

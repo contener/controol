@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
         .hero { width: 100%; background: #6d28d9; color: #fff; border-radius: 12px; }
@@ -53,7 +53,7 @@
                     <div class="sub">&#9679; {{ implode(' — ', $localisation) }}</div>
                 @endif
                 <div>
-                    <span class="pill">Facture {{ $apercu['meta']['numero'] }}</span>
+                    <span class="pill">{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</span>
                     @if($apercu['meta']['date_emission'])<span class="pill">Émise le {{ $apercu['meta']['date_emission'] }}</span>@endif
                     @if($apercu['meta']['date_echeance'])<span class="pill">Échéance {{ $apercu['meta']['date_echeance'] }}</span>@endif
                 </div>

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         @include('factures.pdf._styles')
         .bandeau { background: #111827; color: #fff; padding: 22px 26px; border-radius: 0 0 10px 10px; }
@@ -55,7 +55,7 @@
                 </div>
             </td>
             <td style="width: 45%; text-align: right;">
-                <h1 class="facture-title">FACTURE</h1>
+                <h1 class="facture-title">{{ strtoupper($apercu['meta']['type_label']) }}</h1>
                 <div class="rule"></div>
                 <div class="numero-lg">N° {{ $apercu['meta']['numero'] }}</div>
                 <div class="muted" style="margin-top: 6px; font-size: 11px;">

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\FactureModele;
+use App\Enums\TypeFacture;
 use App\Models\Concerns\BelongsToBoutique;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ class Facture extends Model
     protected $fillable = [
         'boutique_id',
         'client_id',
+        'type',
         'numero',
         'statut',
         'modele_id',
@@ -33,6 +35,7 @@ class Facture extends Model
     protected function casts(): array
     {
         return [
+            'type' => TypeFacture::class,
             'modele_id' => FactureModele::class,
             'date_emission' => 'date',
             'date_echeance' => 'date',
@@ -66,5 +69,14 @@ class Facture extends Model
     public function estModifiable(): bool
     {
         return $this->statut === 'brouillon';
+    }
+
+    /**
+     * Un proforma est un document indicatif, jamais un engagement de vente — il ne doit
+     * jamais faire bouger le stock (voir FactureService), contrairement à une facture.
+     */
+    public function estProforma(): bool
+    {
+        return $this->type === TypeFacture::Proforma;
     }
 }

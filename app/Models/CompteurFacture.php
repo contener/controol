@@ -14,6 +14,7 @@ class CompteurFacture extends Model
     protected $fillable = [
         'boutique_id',
         'annee',
+        'type',
         'dernier_numero',
     ];
 }

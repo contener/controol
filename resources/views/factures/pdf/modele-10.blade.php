@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
         .masthead { width: 100%; background: #0f172a; border-bottom: 4px solid #f59e0b; padding: 24px 32px; }
@@ -71,7 +71,7 @@
                 @endif
             </td>
             <td style="width: 35%; text-align: right;">
-                <div class="facture-lbl">Facture</div>
+                <div class="facture-lbl">{{ $apercu['meta']['type_label'] }}</div>
                 <div class="facture-num">{{ $apercu['meta']['numero'] }}</div>
             </td>
         </tr>
@@ -167,7 +167,11 @@
 
         <div class="conditions">
             <strong>Conditions</strong><br>
-            Facture payable selon les modalités convenues. Merci de bien vouloir mentionner le numéro de facture lors de tout règlement.
+            @if($apercu['meta']['type'] === 'proforma')
+                Document proforma fourni à titre indicatif, sans valeur de facture ni d'engagement de paiement.
+            @else
+                Facture payable selon les modalités convenues. Merci de bien vouloir mentionner le numéro de facture lors de tout règlement.
+            @endif
         </div>
 
         @if($apercu['notes'])

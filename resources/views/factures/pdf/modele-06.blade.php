@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1f2937; }
         .topbar { width: 100%; background: #1e293b; color: #fff; border-bottom: 4px solid #f59e0b; }
@@ -53,7 +53,7 @@
             <td style="width: 40%;">
                 <div class="ref-box">
                     <div class="ref-label">Référence</div>
-                    <div class="ref-numero">FACTURE N° {{ $apercu['meta']['numero'] }}</div>
+                    <div class="ref-numero">{{ strtoupper($apercu['meta']['type_label']) }} N° {{ $apercu['meta']['numero'] }}</div>
                 </div>
             </td>
         </tr>
@@ -145,7 +145,11 @@
 
         <div class="conditions">
             <div class="conditions-label">Conditions générales</div>
-            Facture payable sous 30 jours. Tout retard de paiement pourra entraîner des pénalités.
+            @if($apercu['meta']['type'] === 'proforma')
+                Document proforma fourni à titre indicatif, sans valeur de facture ni d'engagement de paiement.
+            @else
+                Facture payable sous 30 jours. Tout retard de paiement pourra entraîner des pénalités.
+            @endif
         </div>
 
         <div class="paiement">

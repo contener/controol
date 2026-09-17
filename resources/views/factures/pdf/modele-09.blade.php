@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1f2937; }
         .wrap { padding: 20px 28px 26px; border-top: 4px solid #1e3a8a; }
@@ -74,10 +74,10 @@
                     </div>
                 </td>
                 <td style="width: 45%; text-align: right;">
-                    <h2>Facture</h2>
+                    <h2>{{ $apercu['meta']['type_label'] }}</h2>
                     <span class="statut statut-{{ $statut }}">{{ $statutLabel }}</span>
                     <table class="meta">
-                        <tr><td class="k">N° facture</td><td class="v">{{ $apercu['meta']['numero'] }}</td></tr>
+                        <tr><td class="k">N° {{ strtolower($apercu['meta']['type_label']) }}</td><td class="v">{{ $apercu['meta']['numero'] }}</td></tr>
                         @if($apercu['client']['numero_fiscal'])
                             <tr><td class="k">Référence client</td><td class="v">{{ $apercu['client']['numero_fiscal'] }}</td></tr>
                         @endif

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\FactureModele;
+use App\Enums\TypeFacture;
 use App\Http\Requests\StoreFactureRequest;
 use App\Http\Requests\UpdateFactureRequest;
 use App\Models\Client;
@@ -31,6 +32,9 @@ class FactureController extends Controller
             ->when($request->string('statut')->toString(), function ($query, $statut) {
                 $query->where('statut', $statut);
             })
+            ->when($request->string('type')->toString(), function ($query, $type) {
+                $query->where('type', $type);
+            })
             ->when($request->integer('client_id'), function ($query, $clientId) {
                 $query->where('client_id', $clientId);
             })
@@ -41,8 +45,9 @@ class FactureController extends Controller
         return Inertia::render('Factures/Index', [
             'factures' => $factures,
             'clients' => Client::orderBy('nom')->get(['id', 'nom']),
-            'filtres' => $request->only(['statut', 'client_id']),
+            'filtres' => $request->only(['statut', 'type', 'client_id']),
             'modeleLabels' => collect(FactureModele::cases())->mapWithKeys(fn (FactureModele $m) => [$m->value => $m->label()]),
+            'typeLabels' => collect(TypeFacture::cases())->mapWithKeys(fn (TypeFacture $t) => [$t->value => $t->label()]),
         ]);
     }
 
@@ -72,7 +77,7 @@ class FactureController extends Controller
             $request->user()->currentBoutique->id,
         );
 
-        return redirect()->route('factures.show', $facture)->with('flash_success', "Facture {$facture->numero} créée avec succès.");
+        return redirect()->route('factures.show', $facture)->with('flash_success', "{$facture->type->label()} {$facture->numero} créée avec succès.");
     }
 
     public function show(Facture $facture, FactureApercuBuilder $apercuBuilder): Response
@@ -159,6 +164,7 @@ class FactureController extends Controller
 
         $copie = $factureService->creer([
             'client_id' => $facture->client_id,
+            'type' => $facture->type->value,
             'date_emission' => now()->toDateString(),
             'date_echeance' => null,
             'remise' => $facture->remise,
@@ -177,8 +183,8 @@ class FactureController extends Controller
         ], $user, $user->currentBoutique->id);
 
         $message = $modeleSubstitue
-            ? "Facture dupliquée en brouillon {$copie->numero} (modèle original indisponible sur votre plan actuel, remplacé par Standard)."
-            : "Facture dupliquée en brouillon {$copie->numero}.";
+            ? "{$copie->type->label()} dupliquée en brouillon {$copie->numero} (modèle original indisponible sur votre plan actuel, remplacé par Standard)."
+            : "{$copie->type->label()} dupliquée en brouillon {$copie->numero}.";
 
         return redirect()->route('factures.edit', $copie)->with('flash_success', $message);
     }

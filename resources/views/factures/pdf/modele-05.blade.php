@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Facture {{ $apercu['meta']['numero'] }}</title>
+    <title>{{ $apercu['meta']['type_label'] }} {{ $apercu['meta']['numero'] }}</title>
     <style>
         body { font-family: "DejaVu Serif", serif; font-size: 12px; color: #1f2937; }
         .page { padding: 10px 20px; }
@@ -62,7 +62,7 @@
                     </div>
                 </td>
                 <td style="width: 40%; text-align: right;">
-                    <div class="label-gold">Facture</div>
+                    <div class="label-gold">{{ $apercu['meta']['type_label'] }}</div>
                     <div class="numero">{{ $apercu['meta']['numero'] }}</div>
                     <div class="muted" style="margin-top: 6px;">
                         Émission : {{ $apercu['meta']['date_emission'] ?? '—' }}<br>

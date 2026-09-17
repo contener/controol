@@ -27,6 +27,12 @@ const statutClasses = {
     annulee: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
 };
 
+const typeLabels = { facture: 'Facture', proforma: 'Proforma' };
+const typeClasses = {
+    facture: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300',
+    proforma: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300',
+};
+
 const changerStatut = (event) => {
     const statut = event.target.value;
     if (!statut || statut === props.facture.statut) {
@@ -36,7 +42,8 @@ const changerStatut = (event) => {
 };
 
 const supprimer = () => {
-    if (confirm(`Supprimer la facture ${props.facture.numero} ?`)) {
+    const libelle = props.facture.type === 'proforma' ? 'le proforma' : 'la facture';
+    if (confirm(`Supprimer ${libelle} ${props.facture.numero} ?`)) {
         router.delete(route('factures.destroy', props.facture.id));
     }
 };
@@ -51,11 +58,12 @@ const imprimer = () => {
 </script>
 
 <template>
-    <AppLayout :title="`Facture ${facture.numero}`">
+    <AppLayout :title="`${typeLabels[facture.type] ?? 'Facture'} ${facture.numero}`">
         <template #header>
             <div class="flex flex-wrap items-center justify-between gap-4 print:hidden">
                 <div class="flex items-center gap-3">
-                    <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">Facture {{ facture.numero }}</h2>
+                    <h2 class="font-semibold text-xl text-slate-800 dark:text-slate-100 leading-tight">{{ typeLabels[facture.type] ?? 'Facture' }} {{ facture.numero }}</h2>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full" :class="typeClasses[facture.type]">{{ typeLabels[facture.type] ?? facture.type }}</span>
                     <span class="px-2 py-1 text-xs font-medium rounded-full" :class="statutClasses[facture.statut]">{{ statutLabels[facture.statut] }}</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">

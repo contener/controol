@@ -22,6 +22,8 @@ class FactureApercuBuilder
         return [
             'meta' => [
                 'numero' => $facture->numero,
+                'type' => $facture->type->value,
+                'type_label' => $facture->type->label(),
                 'statut' => $facture->statut,
                 'date_emission' => optional($facture->date_emission)->format('d/m/Y'),
                 'date_echeance' => optional($facture->date_echeance)->format('d/m/Y'),
