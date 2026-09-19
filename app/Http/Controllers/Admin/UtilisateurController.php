@@ -38,15 +38,27 @@ class UtilisateurController extends Controller
                     $q->where('name', 'like', "%{$recherche}%")
                         ->orWhere('email', 'like', "%{$recherche}%")
                         ->orWhere('whatsapp', 'like', "%{$recherche}%")
-                        ->orWhere('telephone', 'like', "%{$recherche}%");
+                        ->orWhere('telephone', 'like', "%{$recherche}%")
+                        ->orWhereHas('currentBoutique', fn ($qb) => $qb->where('whatsapp', 'like', "%{$recherche}%"));
                 });
             })
             ->when($request->string('statut')->toString(), function ($query, $statut) {
                 $query->where('est_actif', $statut === 'actif');
             })
+            // Le numéro WhatsApp d'un utilisateur vit soit sur son profil, soit sur sa
+            // boutique (cf. User::numeroWhatsapp()) -- le filtre doit tenir compte des
+            // deux, sinon "Avec WhatsApp" ignore silencieusement la majorité des cas
+            // réels (numéro saisi à la création de la boutique, pas du profil).
             ->when($request->filled('avecWhatsapp'), function ($query) use ($request) {
-                $request->boolean('avecWhatsapp') ? $query->whereNotNull('whatsapp') : $query->whereNull('whatsapp');
+                $aUnNumero = fn ($q) => $q->whereNotNull('whatsapp')->orWhereHas('currentBoutique', fn ($qb) => $qb->whereNotNull('whatsapp'));
+
+                if ($request->boolean('avecWhatsapp')) {
+                    $query->where($aUnNumero);
+                } else {
+                    $query->whereNot($aUnNumero);
+                }
             })
+            ->with('currentBoutique:id,whatsapp')
             ->withCount('boutiques')
             ->orderBy($request->string('tri', 'created_at')->toString(), $request->string('direction', 'desc')->toString())
             ->paginate(15)
@@ -56,7 +68,7 @@ class UtilisateurController extends Controller
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
-            'whatsapp' => $peutVoirWhatsapp ? $u->whatsapp : null,
+            'whatsapp' => $peutVoirWhatsapp ? $u->numeroWhatsapp() : null,
             'est_actif' => $u->est_actif,
             'boutiques_count' => $u->boutiques_count,
             'plan' => $u->planActif()?->nom,
@@ -97,7 +109,7 @@ class UtilisateurController extends Controller
                 'name' => $utilisateur->name,
                 'email' => $utilisateur->email,
                 'telephone' => $utilisateur->telephone,
-                'whatsapp' => $permissionsWhatsapp['voir'] ? $utilisateur->whatsapp : null,
+                'whatsapp' => $permissionsWhatsapp['voir'] ? $utilisateur->numeroWhatsapp() : null,
                 'ville' => $utilisateur->ville,
                 'est_actif' => $utilisateur->est_actif,
                 'created_at' => $utilisateur->created_at,
@@ -193,14 +205,15 @@ class UtilisateurController extends Controller
     public function whatsappContacter(StoreWhatsappContactRequest $request, User $utilisateur, WhatsappRelanceService $relance): JsonResponse
     {
         $this->assertEstUnUtilisateurGere($utilisateur);
-        abort_if(! $utilisateur->whatsapp, 422, "Cet utilisateur n'a pas de numéro WhatsApp renseigné.");
+        $numero = $utilisateur->numeroWhatsapp();
+        abort_if(! $numero, 422, "Cet utilisateur n'a pas de numéro WhatsApp renseigné.");
 
         $message = $request->string('message')->toString();
-        $log = $relance->contacter($utilisateur->whatsapp, $message, $request->string('modele_cle')->toString() ?: null, ['user_id' => $utilisateur->id], $request->user());
+        $log = $relance->contacter($numero, $message, $request->string('modele_cle')->toString() ?: null, ['user_id' => $utilisateur->id], $request->user());
 
         return response()->json([
             'id' => $log->id,
-            'lien' => $relance->lien($utilisateur->whatsapp, $message),
+            'lien' => $relance->lien($numero, $message),
         ]);
     }
 

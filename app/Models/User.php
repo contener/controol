@@ -165,6 +165,17 @@ class User extends Authenticatable
         return $this->belongsTo(Boutique::class, 'current_boutique_id');
     }
 
+    /**
+     * Le numéro WhatsApp est saisi soit sur le profil du compte, soit (bien plus
+     * souvent en pratique) sur sa boutique à la création — jamais les deux à la fois.
+     * On ne fait donc jamais confiance à la seule colonne users.whatsapp : à défaut,
+     * on retombe sur celui de la boutique courante.
+     */
+    public function numeroWhatsapp(): ?string
+    {
+        return $this->whatsapp ?: $this->currentBoutique?->whatsapp;
+    }
+
     public function abonnements(): HasMany
     {
         return $this->hasMany(Abonnement::class);
