@@ -110,6 +110,8 @@ class AdminPermissions
         'contacts.modifier',
         'contacts.supprimer',
         'contacts.whatsapp_contacter',
+        'notifications.voir',
+        'notifications.envoyer',
     ];
 
     public const PRESETS_PAR_ROLE = [

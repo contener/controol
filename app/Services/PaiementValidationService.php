@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\EssaiUtilisateur;
 use App\Models\Paiement;
 use App\Models\PaiementAudit;
 use App\Models\User;
@@ -44,6 +45,15 @@ class PaiementValidationService
                     'date_debut' => now(),
                     'date_fin' => now()->addDays($plan->duree_jours),
                 ]);
+
+                // Marque l'essai converti (arrete les rappels quotidiens) sans toucher
+                // a la logique d'abonnement ci-dessus, deja correcte : l'essai a deja
+                // ete bascule "expire" par la boucle "un seul abonnement actif" plus
+                // haut, independamment de ce marqueur.
+                EssaiUtilisateur::where('user_id', $abonnement->user_id)
+                    ->whereNull('converti_a')
+                    ->whereNull('annule_a')
+                    ->update(['converti_a' => now()]);
             }
 
             $this->journaliser($paiement, $admin, 'approbation', $statutAvant, Paiement::STATUT_APPROUVE, null, $request);

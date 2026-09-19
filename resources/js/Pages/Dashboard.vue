@@ -13,7 +13,13 @@ const props = defineProps({
     },
     boutique: Object,
     stats: Object,
+    essaiActif: {
+        type: Object,
+        default: null,
+    },
 });
+
+const formatFcfa = (montant) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(montant);
 
 const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(montant) + ' ' + (props.boutique?.devise ?? 'XAF');
 
@@ -32,6 +38,22 @@ const statutClasses = {
                 {{ t('dashboard.title') }} — {{ boutique?.nom }}
             </h2>
         </template>
+
+        <div v-if="essaiActif" class="pt-6 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 text-white flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="font-semibold">
+                        🎁 Essai Basique — encore {{ essaiActif.jours_restants }} jour{{ essaiActif.jours_restants > 1 ? 's' : '' }} (fin le {{ essaiActif.date_fin }})
+                    </p>
+                    <p class="text-sm text-blue-100 mt-0.5">
+                        Abonnez-vous pendant votre essai à {{ formatFcfa(essaiActif.prix_promo) }} FCFA au lieu de {{ formatFcfa(essaiActif.prix_normal) }} FCFA.
+                    </p>
+                </div>
+                <Link :href="route('abonnement.index')" class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 shrink-0">
+                    Voir l'offre
+                </Link>
+            </div>
+        </div>
 
         <div v-if="aucuneBoutique" class="py-8">
             <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 text-center bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-10">

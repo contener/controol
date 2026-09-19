@@ -8,17 +8,27 @@ const props = defineProps({
     usage: Object,
     plans: Array,
     paiementEnAttente: Object,
+    essaiActif: {
+        type: Object,
+        default: null,
+    },
 });
 
 const formatMontant = (montant, devise = 'XAF') => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(montant) + ' ' + devise;
 
+// Pendant un essai, planActif.code vaut "basique" mais aucun paiement n'a encore ete
+// effectue -- le plan Basique ne doit donc jamais etre traite comme "deja actif"
+// (bouton desactive) : c'est justement le plan que l'essai invite a payer.
+const dejaSurCePlan = (plan) => plan.code === props.planActif?.code && !(props.essaiActif && plan.code === 'basique');
+
 const choisirPlan = (plan) => {
-    if (plan.code === props.planActif?.code) {
+    if (dejaSurCePlan(plan)) {
         return;
     }
+    const prix = (props.essaiActif && plan.code === 'basique') ? props.essaiActif.prix_promo : plan.prix;
     const message = plan.lien_paiement
-        ? `Passer au plan ${plan.nom} (${formatMontant(plan.prix, plan.devise)}) ? Vous allez être redirigé vers la page de paiement. Votre abonnement sera activé dès vérification du paiement.`
-        : `Passer au plan ${plan.nom} (${formatMontant(plan.prix, plan.devise)}) ?`;
+        ? `Passer au plan ${plan.nom} (${formatMontant(prix, plan.devise)}) ? Vous allez être redirigé vers la page de paiement. Votre abonnement sera activé dès vérification du paiement.`
+        : `Passer au plan ${plan.nom} (${formatMontant(prix, plan.devise)}) ?`;
 
     if (confirm(message)) {
         router.post(route('abonnement.changer', plan.id));
@@ -38,6 +48,15 @@ const limiteLabel = (limite) => (limite === null ? 'Illimité' : limite);
             <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 <div v-if="paiementEnAttente" class="rounded-md bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 px-4 py-3 text-sm text-yellow-800 dark:text-yellow-300">
                     Un paiement de {{ formatMontant(paiementEnAttente.montant, paiementEnAttente.devise) }} est en attente de confirmation pour activer votre nouvel abonnement.
+                </div>
+
+                <div v-if="essaiActif" class="rounded-lg bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 text-white">
+                    <p class="font-semibold">
+                        🎁 Essai Basique en cours — encore {{ essaiActif.jours_restants }} jour{{ essaiActif.jours_restants > 1 ? 's' : '' }} (fin le {{ essaiActif.date_fin }})
+                    </p>
+                    <p class="text-sm text-blue-100 mt-0.5">
+                        Abonnez-vous avant la fin de votre essai et payez {{ formatMontant(essaiActif.prix_promo) }} au lieu de {{ formatMontant(essaiActif.prix_normal) }} pour le plan Basique.
+                    </p>
                 </div>
 
                 <div v-if="planActif?.marketplace" class="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white flex flex-wrap items-center justify-between gap-3">
@@ -75,7 +94,14 @@ const limiteLabel = (limite) => (limite === null ? 'Illimité' : limite);
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div v-for="plan in plans" :key="plan.id" class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6 flex flex-col" :class="plan.code === planActif?.code ? 'ring-2 ring-blue-500' : ''">
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">{{ plan.nom }}</h3>
-                        <div class="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">{{ formatMontant(plan.prix, plan.devise) }}</div>
+                        <template v-if="essaiActif && plan.code === 'basique'">
+                            <div class="mt-1 flex items-baseline gap-2">
+                                <span class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ formatMontant(essaiActif.prix_promo, plan.devise) }}</span>
+                                <span class="text-sm text-slate-400 line-through">{{ formatMontant(plan.prix, plan.devise) }}</span>
+                            </div>
+                            <p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Offre essai — encore {{ essaiActif.jours_restants }} jour{{ essaiActif.jours_restants > 1 ? 's' : '' }}</p>
+                        </template>
+                        <div v-else class="mt-1 text-2xl font-bold text-slate-900 dark:text-slate-100">{{ formatMontant(plan.prix, plan.devise) }}</div>
 
                         <ul class="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300 flex-1">
                             <li>Boutiques : {{ limiteLabel(plan.limite_boutiques) }}</li>
@@ -88,8 +114,8 @@ const limiteLabel = (limite) => (limite === null ? 'Illimité' : limite);
                             <li>Chatbot WhatsApp : {{ plan.chatbot_whatsapp ? 'Prévu' : 'Non' }}</li>
                         </ul>
 
-                        <PrimaryButton class="mt-6 justify-center" :disabled="plan.code === planActif?.code" @click="choisirPlan(plan)">
-                            {{ plan.code === planActif?.code ? 'Plan actif' : 'Choisir ce plan' }}
+                        <PrimaryButton class="mt-6 justify-center" :disabled="dejaSurCePlan(plan)" @click="choisirPlan(plan)">
+                            {{ dejaSurCePlan(plan) ? 'Plan actif' : (essaiActif && plan.code === 'basique' ? "S'abonner (offre essai)" : 'Choisir ce plan') }}
                         </PrimaryButton>
                     </div>
                 </div>

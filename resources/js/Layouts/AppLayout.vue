@@ -9,6 +9,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
+import NotificationBell from '@/Components/NotificationBell.vue';
 
 defineProps({
     title: String,
@@ -213,6 +214,11 @@ const logout = () => {
                                     </template>
                                 </Dropdown>
                             </div>
+                        </div>
+
+                        <!-- Notifications (visible sur tous les écrans, pas seulement le menu desktop) -->
+                        <div class="flex items-center">
+                            <NotificationBell />
                         </div>
 
                         <!-- Hamburger -->

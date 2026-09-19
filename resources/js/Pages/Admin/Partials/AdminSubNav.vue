@@ -18,6 +18,7 @@ const liens = computed(() => [
     { route: 'admin.marketplace.index', pattern: 'admin.marketplace.*', label: 'Marketplace', visible: a('marketplace.voir') },
     { route: 'admin.administrateurs.index', pattern: 'admin.administrateurs.*', label: 'Administrateurs', visible: estSuperAdmin.value },
     { route: 'admin.contacts.index', pattern: 'admin.contacts.*', label: 'Contacts', visible: a('contacts.voir') },
+    { route: 'admin.notifications.index', pattern: 'admin.notifications.*', label: '🔔 Notifications', visible: a('notifications.voir') },
 ].filter((lien) => lien.visible));
 </script>
 

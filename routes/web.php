@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\ContactExportController;
 use App\Http\Controllers\Admin\ContactImportController;
 use App\Http\Controllers\Admin\MarketplaceController as AdminMarketplaceController;
+use App\Http\Controllers\Admin\NotificationEssaiController;
 use App\Http\Controllers\Admin\PaiementController as AdminPaiementController;
 use App\Http\Controllers\Admin\UtilisateurController as AdminUtilisateurController;
 use App\Http\Controllers\AbonnementController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\GuestConversationController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MesConversationsController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationUtilisateurController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\PublicBoutiqueController;
@@ -65,6 +67,10 @@ Route::middleware([
     // visiteur/acheteur même s'il ne possède lui-même aucune boutique.
     Route::get('/mes-conversations', [MesConversationsController::class, 'index'])->name('mes-conversations.index');
     Route::post('/mes-conversations/{conversation}/repondre', [MesConversationsController::class, 'repondre'])->name('mes-conversations.repondre');
+
+    Route::get('/mes-notifications', [NotificationUtilisateurController::class, 'index'])->name('mes-notifications.index');
+    Route::patch('/mes-notifications/{notification}/lu', [NotificationUtilisateurController::class, 'marquerLu'])->name('mes-notifications.lu');
+    Route::patch('/mes-notifications/tout-lu', [NotificationUtilisateurController::class, 'toutMarquerLu'])->name('mes-notifications.tout-lu');
 
     Route::middleware('boutique.selected')->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -171,6 +177,12 @@ Route::middleware([
             Route::get('/import/{import}', [ContactImportController::class, 'show'])->name('import.show')->middleware('admin.permission:contacts.importer');
 
             Route::get('/export/fichier', [ContactExportController::class, 'export'])->name('export')->middleware('admin.permission:contacts.exporter');
+        });
+
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [NotificationEssaiController::class, 'index'])->name('index')->middleware('admin.permission:notifications.voir');
+            Route::patch('/modeles/{modele}', [NotificationEssaiController::class, 'updateModele'])->name('modeles.update')->middleware('admin.permission:notifications.envoyer');
+            Route::patch('/parametres', [NotificationEssaiController::class, 'updateParametres'])->name('parametres.update')->middleware('admin.permission:notifications.envoyer');
         });
     });
 });

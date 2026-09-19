@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Conversation;
+use App\Models\NotificationUtilisateur;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -75,6 +76,15 @@ class HandleInertiaRequests extends Middleware
                     ->where('visiteur_user_id', $user->id)
                     ->where('messages_non_lus_visiteur', '>', 0)
                     ->count();
+            },
+            'notificationsNonLuesCount' => function () use ($request) {
+                $user = $request->user();
+
+                if (! $user) {
+                    return 0;
+                }
+
+                return NotificationUtilisateur::where('user_id', $user->id)->whereNull('lu_a')->count();
             },
         ];
     }
