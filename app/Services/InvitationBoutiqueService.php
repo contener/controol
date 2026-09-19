@@ -9,11 +9,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 /**
- * Fait traverser la boutique d'origine d'une invitation (?boutique=slug&suivre=0|1,
- * capturée en session par CaptureInvitationBoutique) à travers l'inscription puis,
- * le cas échéant, la création de boutique -- ces deux étapes sont séparées par une
- * redirection (EnsureBoutiqueSelected) qui ne préserve pas la query string, d'où le
- * passage par la session plutôt qu'un champ de formulaire.
+ * Fait traverser la boutique d'origine d'une invitation (?boutique=slug, capturée en
+ * session par CaptureInvitationBoutique) à travers l'inscription puis, le cas échéant,
+ * la création de boutique -- ces deux étapes sont séparées par une redirection
+ * (EnsureBoutiqueSelected) qui ne préserve pas la query string, d'où le passage par la
+ * session plutôt qu'un champ de formulaire.
+ *
+ * Dès qu'une boutique d'origine est présente en session, la création de compte (ou de
+ * boutique) qui en résulte crée automatiquement l'abonnement : peu importe le bouton
+ * cliqué sur la page boutique publique, une inscription qui en découle doit toujours
+ * compter comme un nouvel abonné pour la boutique partagée.
  */
 class InvitationBoutiqueService
 {
@@ -26,10 +31,7 @@ class InvitationBoutiqueService
         }
 
         $this->journaliser($boutique, $user->id, 'compte_cree');
-
-        if (Session::get('invitation_boutique_suivre')) {
-            $this->creerSuivi($boutique, $user);
-        }
+        $this->creerSuivi($boutique, $user);
     }
 
     public function apresCreationBoutique(User $user, Boutique $boutiqueCreee): void
@@ -38,13 +40,10 @@ class InvitationBoutiqueService
 
         if ($boutique) {
             $this->journaliser($boutique, $user->id, 'boutique_creee');
-
-            if (Session::get('invitation_boutique_suivre')) {
-                $this->creerSuivi($boutique, $user);
-            }
+            $this->creerSuivi($boutique, $user);
         }
 
-        Session::forget(['invitation_boutique_slug', 'invitation_boutique_suivre']);
+        Session::forget('invitation_boutique_slug');
     }
 
     private function resoudreBoutiqueOrigine(User $user, ?Boutique $exclure = null): ?Boutique

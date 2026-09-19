@@ -154,19 +154,19 @@ class SuiviBoutiqueTest extends TestCase
     {
         $vendeur = $this->creerUtilisateurAvecBoutique();
 
-        $response = $this->get('/register?boutique='.$vendeur->currentBoutique->slug.'&suivre=1');
+        $response = $this->get('/register?boutique='.$vendeur->currentBoutique->slug);
 
         $response->assertSessionHas('invitation_boutique_slug', $vendeur->currentBoutique->slug);
-        $response->assertSessionHas('invitation_boutique_suivre', true);
     }
 
-    public function test_registration_creates_the_follow_relationship_when_consent_was_given(): void
+    public function test_registration_creates_the_follow_relationship_regardless_of_which_button_was_used(): void
     {
         $vendeur = $this->creerUtilisateurAvecBoutique();
 
+        // Peu importe le bouton cliqué sur la page boutique (popup, bandeau du bas...) :
+        // seule la présence de la boutique d'origine en session compte.
         $response = $this->withSession([
             'invitation_boutique_slug' => $vendeur->currentBoutique->slug,
-            'invitation_boutique_suivre' => true,
         ])->post('/register', [
             'name' => 'Nouveau Fan',
             'email' => 'fan@example.com',
@@ -194,28 +194,18 @@ class SuiviBoutiqueTest extends TestCase
         ]);
     }
 
-    public function test_registration_does_not_create_the_follow_relationship_without_consent(): void
+    public function test_registration_without_any_invitation_never_creates_a_follow_relationship(): void
     {
-        $vendeur = $this->creerUtilisateurAvecBoutique();
-
-        $this->withSession([
-            'invitation_boutique_slug' => $vendeur->currentBoutique->slug,
-            'invitation_boutique_suivre' => false,
-        ])->post('/register', [
-            'name' => 'Visiteur Neutre',
-            'email' => 'neutre@example.com',
+        $this->post('/register', [
+            'name' => 'Inscription Organique',
+            'email' => 'organique@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
         ]);
 
-        $nouvelUtilisateur = User::where('email', 'neutre@example.com')->firstOrFail();
         $this->assertDatabaseCount('suivis_boutique', 0);
-        $this->assertDatabaseHas('evenements_invitation_boutique', [
-            'boutique_id' => $vendeur->currentBoutique->id,
-            'user_id' => $nouvelUtilisateur->id,
-            'type_evenement' => 'compte_cree',
-        ]);
+        $this->assertDatabaseCount('evenements_invitation_boutique', 0);
     }
 
     public function test_creating_a_boutique_from_an_invitation_creates_the_follow_relationship(): void
@@ -226,9 +216,10 @@ class SuiviBoutiqueTest extends TestCase
         $planGratuit = Plan::firstOrCreate(['code' => 'gratuit'], ['nom' => 'Gratuit', 'prix' => 0]);
         $nouveauVendeur->abonnements()->create(['plan_id' => $planGratuit->id, 'statut' => 'actif', 'date_debut' => now()]);
 
+        // Simule le bandeau "Créer ma boutique gratuitement" (pas le popup) : la
+        // boutique d'origine doit quand même recevoir son abonné.
         $response = $this->actingAs($nouveauVendeur)->withSession([
             'invitation_boutique_slug' => $vendeurOrigine->currentBoutique->slug,
-            'invitation_boutique_suivre' => true,
         ])->post('/boutiques', [
             'nom' => 'Ma Nouvelle Boutique',
             'devise' => 'XAF',

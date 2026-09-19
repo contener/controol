@@ -57,17 +57,16 @@ onMounted(() => {
 
 onUnmounted(() => clearTimeout(timer));
 
-const lien = (suivre) => (props.connecte
-    ? route('boutiques.create', { boutique: props.boutique.slug, suivre: suivre ? 1 : 0 })
-    : route('register', { boutique: props.boutique.slug, suivre: suivre ? 1 : 0 }));
+// Toute inscription/création de boutique issue de ce lien (?boutique=slug) compte comme
+// un abonnement à cette boutique, quel que soit le bouton cliqué sur la page -- inutile
+// de proposer un choix "sans suivre" qui n'existe plus.
+const lienCTA = computed(() => (props.connecte
+    ? route('boutiques.create', { boutique: props.boutique.slug })
+    : route('register', { boutique: props.boutique.slug })));
 
-const texteCTAPrincipal = computed(() => (props.connecte
-    ? `Créer ma boutique et suivre ${props.boutique.nom}`
+const texteCTA = computed(() => (props.connecte
+    ? 'Créer ma boutique gratuitement'
     : `Créer mon compte et suivre ${props.boutique.nom}`));
-
-const texteCTASecondaire = computed(() => (props.connecte
-    ? 'Créer ma boutique sans suivre'
-    : 'Créer un compte sans suivre'));
 </script>
 
 <template>
@@ -90,11 +89,8 @@ const texteCTASecondaire = computed(() => (props.connecte
                 <li>✅ Vendez vos produits en quelques minutes</li>
             </ul>
 
-            <Link :href="lien(true)" class="mt-4 block text-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
-                {{ texteCTAPrincipal }}
-            </Link>
-            <Link :href="lien(false)" class="mt-2 block text-center text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400">
-                {{ texteCTASecondaire }}
+            <Link :href="lienCTA" class="mt-4 block text-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+                {{ texteCTA }}
             </Link>
             <button type="button" class="mt-2 block w-full text-center text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" @click="fermer">
                 Plus tard

@@ -26,7 +26,7 @@ const utilisateur = computed(() => page.props.auth?.user ?? null);
 const lienCreerBoutique = computed(() => (utilisateur.value
     ? route('boutiques.create', { boutique: props.boutique.slug })
     : route('register', { boutique: props.boutique.slug })));
-const lienSuivreInscription = computed(() => route('register', { boutique: props.boutique.slug, suivre: 1 }));
+const lienSuivreInscription = computed(() => route('register', { boutique: props.boutique.slug }));
 
 const suivre = () => {
     router.post(route('public.boutique.suivre', props.boutique.slug), {}, { preserveScroll: true });
