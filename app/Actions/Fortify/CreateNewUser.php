@@ -6,6 +6,7 @@ use App\Models\Abonnement;
 use App\Models\EssaiUtilisateur;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\InvitationBoutiqueService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -37,6 +38,7 @@ class CreateNewUser implements CreatesNewUsers
                 'password' => Hash::make($input['password']),
             ]), function (User $user) {
                 $this->demarrerEssaiOuGratuit($user);
+                app(InvitationBoutiqueService::class)->apresInscription($user);
             });
         });
     }

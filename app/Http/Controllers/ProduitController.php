@@ -8,6 +8,7 @@ use App\Models\Produit;
 use App\Services\LimiteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,9 +66,53 @@ class ProduitController extends Controller
             $data['photo_path'] = $request->file('photo')->store('produits', 'public');
         }
 
-        Produit::create($data);
+        $produit = Produit::create($data);
+
+        if ($data['actif']) {
+            $this->notifierAbonnes($produit);
+        }
 
         return redirect()->route('produits.index')->with('flash_success', 'Produit/service créé avec succès.');
+    }
+
+    /**
+     * Insertion en masse (une seule requête) : jamais N notifications Eloquent
+     * individuelles pour une boutique à forte audience. Ne part jamais vers un
+     * abonné désactivé (notifications_actives = false) ou désabonné.
+     */
+    private function notifierAbonnes(Produit $produit): void
+    {
+        $destinataires = DB::table('suivis_boutique')
+            ->where('boutique_id', $produit->boutique_id)
+            ->where('notifications_actives', true)
+            ->whereNull('desabonne_a')
+            ->pluck('user_id');
+
+        if ($destinataires->isEmpty()) {
+            return;
+        }
+
+        $boutique = $produit->boutique;
+        $prix = $produit->promotion_prix ?? $produit->prix_vente;
+
+        $message = "{$boutique->nom} vient de publier « {$produit->nom} »";
+        if ($produit->mini_characteristics) {
+            $message .= " — {$produit->mini_characteristics}";
+        }
+        $message .= ' à '.number_format((float) $prix, 0, ',', ' ')." {$boutique->devise}.";
+
+        $maintenant = now();
+
+        DB::table('notifications_utilisateurs')->insert(
+            $destinataires->map(fn ($userId) => [
+                'user_id' => $userId,
+                'type' => 'nouveau_produit',
+                'titre' => "Nouveau produit chez {$boutique->nom}",
+                'message' => $message,
+                'est_promotionnelle' => false,
+                'created_at' => $maintenant,
+            ])->all()
+        );
     }
 
     public function edit(Produit $produit): Response

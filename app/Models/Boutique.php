@@ -86,6 +86,16 @@ class Boutique extends Model
         return $this->hasOne(WhatsAppAgent::class);
     }
 
+    public function suivis(): HasMany
+    {
+        return $this->hasMany(Suivi::class);
+    }
+
+    public function nombreAbonnes(): int
+    {
+        return $this->suivis()->actifs()->count();
+    }
+
     public function estActive(): bool
     {
         return $this->statut === 'active';

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBoutiqueRequest;
 use App\Http\Requests\UpdateBoutiqueRequest;
 use App\Models\Boutique;
+use App\Services\InvitationBoutiqueService;
 use App\Services\LimiteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,8 @@ class BoutiqueController extends Controller
         }
 
         $boutique = Boutique::create($data);
+
+        app(InvitationBoutiqueService::class)->apresCreationBoutique($user, $boutique);
 
         if (! $user->current_boutique_id) {
             $user->switchBoutique($boutique);

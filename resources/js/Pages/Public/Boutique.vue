@@ -5,6 +5,7 @@ import ApplicationMark from '@/Components/ApplicationMark.vue';
 import PartageLiens from '@/Components/PartageLiens.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
 import ContactVendeurModal from '@/Components/ContactVendeurModal.vue';
+import PopupInvitationBoutique from '@/Components/PopupInvitationBoutique.vue';
 
 const props = defineProps({
     boutique: Object,
@@ -14,11 +15,26 @@ const props = defineProps({
     meta: Object,
     mesConversations: { type: Array, default: () => [] },
     conversationActive: { type: Object, default: null },
+    nombreAbonnes: { type: Number, default: 0 },
+    estAbonne: { type: Boolean, default: false },
+    visiteurABoutique: { type: Boolean, default: false },
+    estProprietaire: { type: Boolean, default: false },
 });
 
 const page = usePage();
 const utilisateur = computed(() => page.props.auth?.user ?? null);
-const lienCreerBoutique = computed(() => (utilisateur.value ? route('boutiques.create') : route('register')));
+const lienCreerBoutique = computed(() => (utilisateur.value
+    ? route('boutiques.create', { boutique: props.boutique.slug })
+    : route('register', { boutique: props.boutique.slug })));
+const lienSuivreInscription = computed(() => route('register', { boutique: props.boutique.slug, suivre: 1 }));
+
+const suivre = () => {
+    router.post(route('public.boutique.suivre', props.boutique.slug), {}, { preserveScroll: true });
+};
+
+const neplusSuivre = () => {
+    router.delete(route('public.boutique.suivre.annuler', props.boutique.slug), { preserveScroll: true });
+};
 
 const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(montant) + ' ' + props.boutique.devise;
 
@@ -115,9 +131,32 @@ const conversationPourModal = computed(() => {
                     <p v-if="boutique.description" class="mt-2 text-sm text-slate-600">{{ boutique.description }}</p>
                 </div>
 
-                <a v-if="lienContact" :href="lienContact" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 shrink-0">
-                    Contacter sur WhatsApp
-                </a>
+                <div class="flex flex-col items-stretch sm:items-end gap-2 shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-slate-500">{{ nombreAbonnes }} abonné{{ nombreAbonnes > 1 ? 's' : '' }}</span>
+                        <template v-if="!estProprietaire">
+                            <button
+                                v-if="utilisateur"
+                                type="button"
+                                class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-md border"
+                                :class="estAbonne ? 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50' : 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700'"
+                                @click="estAbonne ? neplusSuivre() : suivre()"
+                            >
+                                {{ estAbonne ? 'Abonné ✓' : '+ Suivre' }}
+                            </button>
+                            <Link
+                                v-else
+                                :href="lienSuivreInscription"
+                                class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-md border border-blue-600 bg-blue-600 text-white hover:bg-blue-700"
+                            >
+                                + Suivre
+                            </Link>
+                        </template>
+                    </div>
+                    <a v-if="lienContact" :href="lienContact" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700">
+                        Contacter sur WhatsApp
+                    </a>
+                </div>
             </div>
 
             <div class="mt-4 bg-white rounded-xl shadow-sm p-4">
@@ -194,5 +233,11 @@ const conversationPourModal = computed(() => {
             Boutique propulsée par la plateforme —
             <Link :href="route('marketplace.index')" class="underline">Découvrir la Marketplace</Link>
         </footer>
+
+        <PopupInvitationBoutique
+            v-if="!visiteurABoutique"
+            :boutique="{ nom: boutique.nom, slug: boutique.slug }"
+            :connecte="!!utilisateur"
+        />
     </div>
 </template>

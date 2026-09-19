@@ -7,10 +7,12 @@ use App\Models\Boutique;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\Produit;
+use App\Models\Suivi;
 use App\Services\VisiteurIdentiteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -32,6 +34,14 @@ class PublicBoutiqueController extends Controller
     public function show(string $slug, Request $request, VisiteurIdentiteService $identite): Response
     {
         $boutique = $this->resoudreBoutique($slug);
+        $utilisateur = Auth::user();
+
+        // Un événement "lien_visite" ne compte qu'une arrivée propre sur la page (pas un
+        // filtrage par catégorie ni l'ouverture d'une conversation via la même route) --
+        // évite de gonfler artificiellement les statistiques de visite du propriétaire.
+        if (! $request->anyFilled(['categorie', 'conversation'])) {
+            $this->journaliserEvenement($boutique, $request, $identite, 'lien_visite');
+        }
 
         $produits = $boutique->produits()
             ->withoutGlobalScopes()
@@ -57,7 +67,43 @@ class PublicBoutiqueController extends Controller
             'meta' => $this->meta($boutique),
             'mesConversations' => $this->mesConversations($boutique, $request),
             'conversationActive' => $this->conversationActive($boutique, $request, $identite),
+            'nombreAbonnes' => $boutique->nombreAbonnes(),
+            'estAbonne' => $utilisateur
+                ? Suivi::where('boutique_id', $boutique->id)->where('user_id', $utilisateur->id)->whereNull('desabonne_a')->exists()
+                : false,
+            'visiteurABoutique' => $utilisateur ? $utilisateur->boutiques()->exists() : false,
+            'estProprietaire' => $utilisateur ? $utilisateur->id === $boutique->user_id : false,
         ]);
+    }
+
+    public function suivre(string $slug, Request $request): RedirectResponse
+    {
+        $boutique = $this->resoudreBoutique($slug);
+        $user = $request->user();
+
+        if ($boutique->user_id === $user->id) {
+            return back()->with('flash_error', 'Vous ne pouvez pas suivre votre propre boutique.');
+        }
+
+        $suivi = Suivi::firstOrNew(['boutique_id' => $boutique->id, 'user_id' => $user->id]);
+        $suivi->notifications_actives = true;
+        $suivi->abonne_a = now();
+        $suivi->desabonne_a = null;
+        $suivi->save();
+
+        return back()->with('flash_success', "Vous suivez désormais {$boutique->nom}.");
+    }
+
+    public function neplusSuivre(string $slug, Request $request): RedirectResponse
+    {
+        $boutique = $this->resoudreBoutique($slug);
+        $user = $request->user();
+
+        Suivi::where('boutique_id', $boutique->id)
+            ->where('user_id', $user->id)
+            ->update(['desabonne_a' => now()]);
+
+        return back()->with('flash_success', "Vous ne suivez plus {$boutique->nom}.");
     }
 
     public function envoyerMessage(StoreConversationMessageRequest $request, string $slug, VisiteurIdentiteService $identite): RedirectResponse
@@ -119,6 +165,25 @@ class PublicBoutiqueController extends Controller
         }
 
         return $reponse;
+    }
+
+    /**
+     * Journalisation best-effort : ne doit jamais faire échouer le rendu de la page
+     * boutique publique, même si la table est temporairement indisponible.
+     */
+    private function journaliserEvenement(Boutique $boutique, Request $request, VisiteurIdentiteService $identite, string $type): void
+    {
+        try {
+            DB::table('evenements_invitation_boutique')->insert([
+                'boutique_id' => $boutique->id,
+                'user_id' => Auth::id(),
+                'visiteur_token' => Auth::check() ? null : $identite->resoudreOuCreerJeton($request),
+                'type_evenement' => $type,
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            // Ignoré volontairement.
+        }
     }
 
     private function mesConversations(Boutique $boutique, Request $request)

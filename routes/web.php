@@ -40,6 +40,12 @@ Route::get('/boutique/{slug}', [PublicBoutiqueController::class, 'show'])->name(
 Route::post('/boutique/{slug}/messages', [PublicBoutiqueController::class, 'envoyerMessage'])
     ->middleware('throttle:5,1')
     ->name('public.boutique.messages.store');
+Route::post('/boutique/{slug}/suivre', [PublicBoutiqueController::class, 'suivre'])
+    ->middleware('auth:sanctum')
+    ->name('public.boutique.suivre');
+Route::delete('/boutique/{slug}/suivre', [PublicBoutiqueController::class, 'neplusSuivre'])
+    ->middleware('auth:sanctum')
+    ->name('public.boutique.suivre.annuler');
 
 Route::get('/conversations/{conversation}', [GuestConversationController::class, 'show'])
     ->middleware('signed')
