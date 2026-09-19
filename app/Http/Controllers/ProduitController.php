@@ -101,6 +101,9 @@ class ProduitController extends Controller
         }
         $message .= ' à '.number_format((float) $prix, 0, ',', ' ')." {$boutique->devise}.";
 
+        // URL absolue construite ici, une seule fois, plutôt que devinée côté client à
+        // partir d'un slug -- reste valide même si la structure des routes change.
+        $lien = route('public.boutique', $boutique->slug);
         $maintenant = now();
 
         DB::table('notifications_utilisateurs')->insert(
@@ -109,6 +112,7 @@ class ProduitController extends Controller
                 'type' => 'nouveau_produit',
                 'titre' => "Nouveau produit chez {$boutique->nom}",
                 'message' => $message,
+                'lien' => $lien,
                 'est_promotionnelle' => false,
                 'created_at' => $maintenant,
             ])->all()

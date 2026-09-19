@@ -72,11 +72,12 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeri
                 <EmptyState v-else-if="notifications.length === 0" titre="Aucune notification" description="Vous serez averti ici des informations importantes." />
 
                 <div v-else>
-                    <button
+                    <component
+                        :is="notification.lien ? Link : 'button'"
                         v-for="notification in notifications"
                         :key="notification.id"
-                        type="button"
-                        class="w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        v-bind="notification.lien ? { href: notification.lien } : { type: 'button' }"
+                        class="block w-full text-left px-4 py-3 border-b border-slate-100 dark:border-slate-700 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                         :class="!notification.lu_a ? 'bg-blue-50/60 dark:bg-blue-900/10' : ''"
                         @click="marquerLu(notification)"
                     >
@@ -86,8 +87,11 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeri
                             <span v-if="!notification.lu_a" class="size-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0"></span>
                         </div>
                         <p class="text-xs text-slate-500 dark:text-slate-400 whitespace-pre-line line-clamp-3">{{ notification.message }}</p>
-                        <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{{ formatDate(notification.created_at) }}</p>
-                    </button>
+                        <div class="flex items-center justify-between mt-1">
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500">{{ formatDate(notification.created_at) }}</p>
+                            <span v-if="notification.lien" class="text-xs font-medium text-blue-600 dark:text-blue-400">Voir la boutique →</span>
+                        </div>
+                    </component>
                 </div>
 
                 <div class="border-t border-slate-200 dark:border-slate-700">

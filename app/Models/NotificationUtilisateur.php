@@ -18,6 +18,7 @@ class NotificationUtilisateur extends Model
         'type',
         'titre',
         'message',
+        'lien',
         'est_promotionnelle',
         'lu_a',
     ];

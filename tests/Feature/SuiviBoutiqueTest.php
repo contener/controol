@@ -130,6 +130,7 @@ class SuiviBoutiqueTest extends TestCase
         $this->assertSame('nouveau_produit', $notification->type);
         $this->assertStringContainsString('Nouveau produit', $notification->message);
         $this->assertStringContainsString('Rouge, taille M', $notification->message);
+        $this->assertSame(route('public.boutique', $boutique->slug), $notification->lien);
     }
 
     public function test_inactive_product_does_not_notify_followers(): void
