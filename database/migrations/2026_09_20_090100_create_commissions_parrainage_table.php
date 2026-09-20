@@ -10,11 +10,14 @@ return new class extends Migration
     {
         Schema::create('commissions_parrainage', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('parrain_id')->constrained('users')->nullOnDelete();
-            $table->foreignId('filleul_id')->constrained('users')->nullOnDelete();
+            // cascadeOnDelete (comme paiements.user_id) : une commission n'a de sens que
+            // rattachée à un parrain/filleul/paiement bien réels -- si l'un des trois est
+            // supprimé, la ligne de commission qui en dépend entièrement l'est aussi.
+            $table->foreignId('parrain_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('filleul_id')->constrained('users')->cascadeOnDelete();
             // Unique : un paiement ne peut jamais générer deux commissions, garanti au
             // niveau base même en cas de double-appel accidentel du service.
-            $table->foreignId('paiement_id')->unique()->constrained('paiements')->nullOnDelete();
+            $table->foreignId('paiement_id')->unique()->constrained('paiements')->cascadeOnDelete();
             // Copies au moment de la création -- jamais recalculées après coup, même si
             // le taux change un jour (cohérent avec l'historique affiché).
             $table->decimal('montant_eligible', 10, 2);

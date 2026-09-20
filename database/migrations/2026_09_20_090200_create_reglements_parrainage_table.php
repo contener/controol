@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('reglements_parrainage', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('parrain_id')->constrained('users')->nullOnDelete();
+            $table->foreignId('parrain_id')->constrained('users')->cascadeOnDelete();
             $table->decimal('montant', 10, 2);
             $table->string('methode_paiement')->nullable();
             $table->string('reference_transaction')->nullable();
