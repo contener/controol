@@ -56,6 +56,8 @@ class PaiementValidationService
                     ->update(['converti_a' => now()]);
             }
 
+            app(ParrainageService::class)->creerCommissionSiEligible($paiement);
+
             $this->journaliser($paiement, $admin, 'approbation', $statutAvant, Paiement::STATUT_APPROUVE, null, $request);
 
             return $paiement->fresh(['abonnement.plan', 'user']);

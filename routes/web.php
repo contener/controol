@@ -8,12 +8,14 @@ use App\Http\Controllers\Admin\ContactImportController;
 use App\Http\Controllers\Admin\MarketplaceController as AdminMarketplaceController;
 use App\Http\Controllers\Admin\NotificationEssaiController;
 use App\Http\Controllers\Admin\PaiementController as AdminPaiementController;
+use App\Http\Controllers\Admin\ParrainageController as AdminParrainageController;
 use App\Http\Controllers\Admin\UtilisateurController as AdminUtilisateurController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CampagneSocialeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompteDashboardController;
+use App\Http\Controllers\CompteParrainageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\DestinationSocialeController;
@@ -61,6 +63,7 @@ Route::middleware([
     'account.active',
 ])->group(function () {
     Route::get('/compte/dashboard', CompteDashboardController::class)->name('compte.dashboard');
+    Route::get('/compte/parrainage', [CompteParrainageController::class, 'index'])->name('compte.parrainage');
     Route::patch('/preferences', [PreferenceController::class, 'update'])->name('preferences.update');
 
     Route::resource('boutiques', BoutiqueController::class)->except(['show']);
@@ -134,6 +137,13 @@ Route::middleware([
 
         Route::get('/marketplace', [AdminMarketplaceController::class, 'index'])->name('marketplace.index')->middleware('admin.permission:marketplace.voir');
         Route::patch('/marketplace/{boutique}/basculer', [AdminMarketplaceController::class, 'basculer'])->name('marketplace.basculer')->middleware('admin.permission:marketplace.suspendre');
+
+        Route::prefix('parrainage')->name('parrainage.')->group(function () {
+            Route::get('/', [AdminParrainageController::class, 'index'])->name('index')->middleware('admin.permission:parrainage.voir');
+            Route::get('/{utilisateur}', [AdminParrainageController::class, 'show'])->name('show')->middleware('admin.permission:parrainage.voir');
+            Route::post('/{utilisateur}/reglements', [AdminParrainageController::class, 'enregistrerReglement'])->name('reglements.store')->middleware('admin.permission:parrainage.gerer');
+            Route::post('/commissions/{commission}/annuler', [AdminParrainageController::class, 'annulerCommission'])->name('commissions.annuler')->middleware('admin.permission:parrainage.gerer');
+        });
 
         // Gérer les administrateurs eux-mêmes reste un privilège non-délégable : aucune
         // permission granulaire n'y donne accès, uniquement le rôle super_admin exact

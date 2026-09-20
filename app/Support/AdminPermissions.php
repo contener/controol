@@ -85,6 +85,13 @@ class AdminPermissions
                 'contacts.whatsapp_contacter' => 'Relancer sur WhatsApp',
             ],
         ],
+        'parrainage' => [
+            'label' => 'Parrainage',
+            'permissions' => [
+                'parrainage.voir' => 'Voir',
+                'parrainage.gerer' => 'Gérer (règlements, annulations)',
+            ],
+        ],
     ];
 
     /**
@@ -112,6 +119,8 @@ class AdminPermissions
         'contacts.whatsapp_contacter',
         'notifications.voir',
         'notifications.envoyer',
+        'parrainage.voir',
+        'parrainage.gerer',
     ];
 
     public const PRESETS_PAR_ROLE = [

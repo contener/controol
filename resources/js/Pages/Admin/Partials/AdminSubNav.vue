@@ -16,6 +16,7 @@ const liens = computed(() => [
     { route: 'admin.utilisateurs.index', pattern: 'admin.utilisateurs.*', label: 'Utilisateurs', visible: a('utilisateurs.voir') },
     { route: 'admin.paiements.index', pattern: 'admin.paiements.*', label: 'Paiements', visible: a('paiements.voir') },
     { route: 'admin.marketplace.index', pattern: 'admin.marketplace.*', label: 'Marketplace', visible: a('marketplace.voir') },
+    { route: 'admin.parrainage.index', pattern: 'admin.parrainage.*', label: '🤝 Parrainage', visible: a('parrainage.voir') },
     { route: 'admin.administrateurs.index', pattern: 'admin.administrateurs.*', label: 'Administrateurs', visible: estSuperAdmin.value },
     { route: 'admin.contacts.index', pattern: 'admin.contacts.*', label: 'Contacts', visible: a('contacts.voir') },
     { route: 'admin.notifications.index', pattern: 'admin.notifications.*', label: '🔔 Notifications', visible: a('notifications.voir') },

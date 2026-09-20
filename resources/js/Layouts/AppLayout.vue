@@ -183,6 +183,10 @@ const logout = () => {
                                             {{ t('nav.subscription') }}
                                         </DropdownLink>
 
+                                        <DropdownLink :href="route('compte.parrainage')">
+                                            {{ t('nav.referral') }}
+                                        </DropdownLink>
+
                                         <DropdownLink v-if="boutiqueCourante" :href="route('public.boutique', boutiqueCourante.slug)" target="_blank">
                                             {{ t('nav.view_public_shop') }}
                                         </DropdownLink>
@@ -197,6 +201,10 @@ const logout = () => {
 
                                         <DropdownLink v-if="aPermissionAdmin('marketplace.voir')" :href="route('admin.marketplace.index')">
                                             {{ t('nav.admin_marketplace') }}
+                                        </DropdownLink>
+
+                                        <DropdownLink v-if="aPermissionAdmin('parrainage.voir')" :href="route('admin.parrainage.index')">
+                                            {{ t('nav.admin_referral') }}
                                         </DropdownLink>
 
                                         <DropdownLink v-if="estSuperAdmin" :href="route('admin.administrateurs.index')">
@@ -315,6 +323,10 @@ const logout = () => {
 
                             <ResponsiveNavLink :href="route('abonnement.index')" :active="route().current('abonnement.*')">
                                 {{ t('nav.subscription') }}
+                            </ResponsiveNavLink>
+
+                            <ResponsiveNavLink :href="route('compte.parrainage')" :active="route().current('compte.parrainage')">
+                                {{ t('nav.referral') }}
                             </ResponsiveNavLink>
 
                             <!-- Authentication -->

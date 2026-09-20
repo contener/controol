@@ -181,6 +181,26 @@ class User extends Authenticatable
         return $this->hasMany(Abonnement::class);
     }
 
+    public function parrain(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parrain_id');
+    }
+
+    public function filleuls(): HasMany
+    {
+        return $this->hasMany(User::class, 'parrain_id');
+    }
+
+    public function commissionsGagnees(): HasMany
+    {
+        return $this->hasMany(CommissionParrainage::class, 'parrain_id');
+    }
+
+    public function reglementsParrainage(): HasMany
+    {
+        return $this->hasMany(ReglementParrainage::class, 'parrain_id');
+    }
+
     public function abonnementActif(): ?Abonnement
     {
         return $this->abonnements()->actuellementActif()->latest('date_debut')->first();

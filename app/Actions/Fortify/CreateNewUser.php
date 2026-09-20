@@ -7,6 +7,7 @@ use App\Models\EssaiUtilisateur;
 use App\Models\Plan;
 use App\Models\User;
 use App\Services\InvitationBoutiqueService;
+use App\Services\ParrainageService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -39,6 +40,7 @@ class CreateNewUser implements CreatesNewUsers
             ]), function (User $user) {
                 $this->demarrerEssaiOuGratuit($user);
                 app(InvitationBoutiqueService::class)->apresInscription($user);
+                app(ParrainageService::class)->apresInscription($user);
             });
         });
     }
