@@ -38,6 +38,11 @@ const formatMontant = (montant, devise) => new Intl.NumberFormat('fr-FR', { maxi
 
 const produitMessage = ref(null);
 const fermerMessage = () => { produitMessage.value = null; };
+
+// Repliées par défaut : sinon la grille de promotions repousse les boutiques loin en
+// bas de page à l'ouverture. On garde juste leur présence visible (titre + compteur),
+// un clic sur la flèche les déplie.
+const promotionsOuvertes = ref(false);
 </script>
 
 <template>
@@ -63,8 +68,25 @@ const fermerMessage = () => { produitMessage.value = null; };
         </div>
 
         <div v-if="promotions.length > 0">
-            <h2 class="text-lg font-semibold text-slate-900 mb-3">Promotions en ce moment</h2>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button
+                type="button"
+                class="w-full flex items-center justify-between gap-2 mb-3 group"
+                @click="promotionsOuvertes = !promotionsOuvertes"
+            >
+                <h2 class="text-lg font-semibold text-slate-900">
+                    🔥 Promotions en ce moment
+                    <span class="text-sm font-normal text-slate-400">({{ promotions.length }})</span>
+                </h2>
+                <svg
+                    class="size-5 text-slate-400 transition-transform duration-200 group-hover:text-slate-600"
+                    :class="{ 'rotate-180': promotionsOuvertes }"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+            </button>
+
+            <div v-if="promotionsOuvertes" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div
                     v-for="produit in promotions"
                     :key="produit.id"
