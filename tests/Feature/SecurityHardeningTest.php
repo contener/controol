@@ -13,7 +13,11 @@ class SecurityHardeningTest extends TestCase
 
     public function test_remember_me_cookie_duration_is_thirty_days(): void
     {
-        $this->assertSame(60 * 24 * 30, Auth::guard('web')->getRememberDuration());
+        // getRememberDuration() est protected sur SessionGuard : lecture par reflection.
+        $reflection = new \ReflectionProperty(Auth::guard('web'), 'rememberDuration');
+        $reflection->setAccessible(true);
+
+        $this->assertSame(60 * 24 * 30, $reflection->getValue(Auth::guard('web')));
     }
 
     public function test_security_headers_are_present_on_every_response(): void
