@@ -100,7 +100,7 @@ const conversationPourModal = computed(() => {
     </Head>
 
     <div class="min-h-screen bg-slate-50">
-        <header class="bg-white border-b border-slate-100">
+        <header class="sticky top-0 z-30 bg-white border-b border-slate-100">
             <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
                 <Link href="/" class="flex items-center gap-2">
                     <ApplicationMark class="h-6 w-auto" />

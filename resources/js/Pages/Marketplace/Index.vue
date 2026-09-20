@@ -59,7 +59,7 @@ const utilisateur = computed(() => page.props.auth?.user ?? null);
     </AppLayout>
 
     <div v-else class="min-h-screen bg-slate-50">
-        <header class="bg-white border-b border-slate-100">
+        <header class="sticky top-0 z-30 bg-white border-b border-slate-100">
             <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 <Link href="/" class="flex items-center gap-2">
                     <ApplicationMark class="h-7 w-auto" />

@@ -49,7 +49,7 @@ const logout = () => {
         <Banner />
 
         <div class="min-h-screen bg-slate-100 dark:bg-slate-900">
-            <nav class="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
+            <nav class="sticky top-0 z-30 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
