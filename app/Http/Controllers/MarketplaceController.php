@@ -19,13 +19,13 @@ class MarketplaceController extends Controller
                 $query->where(function ($q) use ($recherche) {
                     $q->where('nom', 'like', "%{$recherche}%")
                         ->orWhereHas('produits', function ($pq) use ($recherche) {
-                            $pq->withoutGlobalScopes()->where('actif', true)->where('nom', 'like', "%{$recherche}%");
+                            $pq->withoutGlobalScopes()->where('actif', true)->where('marketplace_visible', true)->where('nom', 'like', "%{$recherche}%");
                         });
                 });
             })
             ->when($request->string('categorie')->toString(), fn ($q, $c) => $q->where('categorie', $c))
             ->when($request->string('ville')->toString(), fn ($q, $v) => $q->where('ville', $v))
-            ->withCount(['produits' => fn ($q) => $q->withoutGlobalScopes()->where('actif', true)])
+            ->withCount(['produits' => fn ($q) => $q->withoutGlobalScopes()->where('actif', true)->where('marketplace_visible', true)])
             ->latest()
             ->paginate(12)
             ->withQueryString()
@@ -41,6 +41,7 @@ class MarketplaceController extends Controller
         $promotions = Produit::withoutGlobalScopes()
             ->whereIn('boutique_id', $boutiqueIdsEligibles)
             ->where('actif', true)
+            ->where('marketplace_visible', true)
             ->whereNotNull('promotion_prix')
             ->with('boutique:id,nom,slug,devise')
             ->latest()

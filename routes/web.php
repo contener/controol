@@ -83,6 +83,7 @@ Route::middleware([
 
         Route::resource('clients', ClientController::class)->except(['show']);
         Route::resource('produits', ProduitController::class)->except(['show']);
+        Route::patch('/produits/{produit}/marketplace', [ProduitController::class, 'updateMarketplace'])->name('produits.marketplace');
         Route::resource('depenses', DepenseController::class)->except(['show']);
 
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');

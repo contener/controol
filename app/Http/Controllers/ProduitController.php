@@ -128,6 +128,24 @@ class ProduitController extends Controller
         ]);
     }
 
+    /**
+     * Bascule rapide depuis la liste Produits & Services -- distincte de update() pour
+     * ne jamais faire dépendre la visibilité Marketplace d'une soumission du formulaire
+     * complet (mêmes principes que Boutique::updateMarketplace()).
+     */
+    public function updateMarketplace(Request $request, Produit $produit): RedirectResponse
+    {
+        $this->authorize('update', $produit);
+
+        $data = $request->validate(['marketplace_visible' => ['required', 'boolean']]);
+
+        $produit->update(['marketplace_visible' => $data['marketplace_visible']]);
+
+        return back()->with('flash_success', $data['marketplace_visible']
+            ? "« {$produit->nom} » est désormais visible dans la Marketplace."
+            : "« {$produit->nom} » a été retiré de la Marketplace.");
+    }
+
     public function update(UpdateProduitRequest $request, Produit $produit, LimiteService $limiteService): RedirectResponse
     {
         $data = $request->validated();

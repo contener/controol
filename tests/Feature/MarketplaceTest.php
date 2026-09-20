@@ -392,4 +392,92 @@ class MarketplaceTest extends TestCase
         $response->assertStatus(403);
         $this->assertFalse($proprietaire->currentBoutique->fresh()->marketplace_visible);
     }
+
+    // TEST 22 — un produit nouvellement créé n'est jamais visible dans la Marketplace par
+    // défaut : le propriétaire doit l'activer explicitement (changement de comportement
+    // demandé — auparavant tout produit actif apparaissait automatiquement).
+    public function test_newly_created_product_is_not_marketplace_visible_by_default(): void
+    {
+        $planPro = $this->creerPlan('pro', marketplace: true);
+        $user = $this->creerUtilisateurAvecPlanEtBoutique($planPro, ['marketplace_visible' => true]);
+
+        $this->actingAs($user)->post('/produits', [
+            'type' => 'produit', 'nom' => 'Produit par défaut', 'prix_vente' => 1000, 'unite' => 'pièce', 'gere_stock' => false,
+        ])->assertRedirect();
+
+        $produit = Produit::first();
+        $this->assertFalse($produit->marketplace_visible);
+    }
+
+    // TEST 23 — le propriétaire active la visibilité Marketplace d'un produit précis, et
+    // celui-ci apparaît alors dans le compteur de produits ET dans les promotions.
+    public function test_owner_can_toggle_a_specific_products_marketplace_visibility(): void
+    {
+        $planPro = $this->creerPlan('pro', marketplace: true);
+        $user = $this->creerUtilisateurAvecPlanEtBoutique($planPro, ['nom' => 'Boutique Visible', 'marketplace_visible' => true]);
+
+        $visible = Produit::create([
+            'boutique_id' => $user->current_boutique_id, 'type' => 'produit', 'nom' => 'Produit visible',
+            'prix_vente' => 2000, 'promotion_prix' => 1500, 'unite' => 'pièce', 'actif' => true,
+        ]);
+        $cache = Produit::create([
+            'boutique_id' => $user->current_boutique_id, 'type' => 'produit', 'nom' => 'Produit caché',
+            'prix_vente' => 3000, 'promotion_prix' => 2500, 'unite' => 'pièce', 'actif' => true,
+        ]);
+
+        // Avant activation : aucun des deux ne compte, aucune promotion n'apparaît.
+        $reponse = $this->get('/marketplace');
+        $reponse->assertInertia(fn ($page) => $page
+            ->where('boutiques.data.0.produits_count', 0)
+            ->has('promotions', 0));
+
+        $this->actingAs($user)->patch(route('produits.marketplace', $visible), ['marketplace_visible' => true])->assertRedirect();
+
+        $this->assertTrue($visible->fresh()->marketplace_visible);
+        $this->assertFalse($cache->fresh()->marketplace_visible);
+
+        $reponse = $this->get('/marketplace');
+        $reponse->assertInertia(fn ($page) => $page
+            ->where('boutiques.data.0.produits_count', 1)
+            ->has('promotions', 1)
+            ->where('promotions.0.nom', 'Produit visible'));
+    }
+
+    // TEST 24 — sécurité : un utilisateur ne peut jamais changer la visibilité Marketplace
+    // du produit d'un autre utilisateur.
+    public function test_user_cannot_toggle_marketplace_visibility_of_another_users_product(): void
+    {
+        $planPro = $this->creerPlan('pro', marketplace: true);
+        $proprietaire = $this->creerUtilisateurAvecPlanEtBoutique($planPro);
+        $intrus = $this->creerUtilisateurAvecPlanEtBoutique($planPro);
+
+        $produit = Produit::create([
+            'boutique_id' => $proprietaire->current_boutique_id, 'type' => 'produit', 'nom' => 'Produit protégé',
+            'prix_vente' => 1000, 'unite' => 'pièce', 'actif' => true,
+        ]);
+
+        $response = $this->actingAs($intrus)->patch(route('produits.marketplace', $produit), ['marketplace_visible' => true]);
+
+        $response->assertStatus(403);
+        $this->assertFalse($produit->fresh()->marketplace_visible);
+    }
+
+    // TEST 25 — le lien public direct de la boutique continue de montrer TOUS les produits
+    // actifs, qu'ils soient marketplace_visible ou non ("Marketplace ≠ boutique publique").
+    public function test_direct_public_boutique_link_still_shows_all_active_products_regardless_of_marketplace_flag(): void
+    {
+        $planGratuit = $this->creerPlan('gratuit', marketplace: false);
+        $user = $this->creerUtilisateurAvecPlanEtBoutique($planGratuit, ['slug' => 'boutique-lien-direct']);
+
+        Produit::create([
+            'boutique_id' => $user->current_boutique_id, 'type' => 'produit', 'nom' => 'Produit non marketplace',
+            'prix_vente' => 1000, 'unite' => 'pièce', 'actif' => true, 'marketplace_visible' => false,
+        ]);
+
+        $response = $this->get('/boutique/boutique-lien-direct');
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('produits', 1)
+            ->where('produits.0.nom', 'Produit non marketplace'));
+    }
 }

@@ -34,6 +34,12 @@ const supprimer = (produit) => {
     }
 };
 
+const basculerMarketplace = (produit) => {
+    router.patch(route('produits.marketplace', produit.id), {
+        marketplace_visible: !produit.marketplace_visible,
+    }, { preserveScroll: true });
+};
+
 const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(montant);
 </script>
 
@@ -68,12 +74,13 @@ const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFract
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Référence</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Prix de vente</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Stock</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Marketplace</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="produits.data.length === 0">
-                                <td colspan="6" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun produit ou service trouvé.</td>
+                                <td colspan="7" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun produit ou service trouvé.</td>
                             </tr>
                             <tr v-for="produit in produits.data" :key="produit.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{{ produit.nom }}</td>
@@ -89,6 +96,19 @@ const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFract
                                         {{ produit.quantite_stock }}
                                     </span>
                                     <span v-else class="text-slate-400 dark:text-slate-500">—</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <button
+                                        type="button"
+                                        role="switch"
+                                        :aria-checked="produit.marketplace_visible"
+                                        :title="produit.marketplace_visible ? 'Visible dans la Marketplace — cliquer pour retirer' : 'Non visible dans la Marketplace — cliquer pour publier'"
+                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
+                                        :class="produit.marketplace_visible ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'"
+                                        @click="basculerMarketplace(produit)"
+                                    >
+                                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform" :class="produit.marketplace_visible ? 'translate-x-6' : 'translate-x-1'" />
+                                    </button>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
                                     <Link :href="route('produits.edit', produit.id)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Modifier</Link>

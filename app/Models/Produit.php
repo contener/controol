@@ -26,6 +26,7 @@ class Produit extends Model
         'seuil_alerte',
         'photo_path',
         'actif',
+        'marketplace_visible',
         'promotion_prix',
         'categorie',
         'mini_characteristics',
@@ -36,6 +37,7 @@ class Produit extends Model
         return [
             'gere_stock' => 'boolean',
             'actif' => 'boolean',
+            'marketplace_visible' => 'boolean',
             'prix_achat' => 'decimal:2',
             'prix_vente' => 'decimal:2',
             'tva_taux' => 'decimal:2',
