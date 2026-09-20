@@ -160,7 +160,11 @@ const conversationPourModal = computed(() => {
             </div>
 
             <div class="mt-4 bg-white rounded-xl shadow-sm p-4">
-                <PartageLiens :url="meta.url" :texte="`Découvrez ${boutique.nom} !`" />
+                <PartageLiens
+                    :url="meta.url"
+                    :texte="`Découvrez ${boutique.nom} !`"
+                    :phrase-qr-code="`Scannez ce code avec la caméra de votre téléphone pour voir tous nos produits`"
+                />
             </div>
 
             <div v-if="categories.length > 0" class="mt-6 flex flex-wrap gap-2">

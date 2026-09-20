@@ -11,6 +11,12 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    // Phrase affichée au-dessus du code QR sur l'affiche téléchargeable (jamais dans
+    // les boutons de partage WhatsApp/Facebook/Telegram, qui utilisent `texte`).
+    phraseQrCode: {
+        type: String,
+        default: 'Scannez ce code avec l\'appareil photo de votre téléphone',
+    },
 });
 
 const copie = ref(false);
@@ -40,6 +46,7 @@ const partagerNatif = () => {
 // visiteur avant d'être encodé.
 const qrCodeUrl = ref(null);
 const genereEnCours = ref(false);
+const telechargementEnCours = ref(false);
 const erreurQrCode = ref(false);
 
 const afficherQrCode = async () => {
@@ -56,6 +63,108 @@ const afficherQrCode = async () => {
         erreurQrCode.value = true;
     } finally {
         genereEnCours.value = false;
+    }
+};
+
+const chargerImage = (src) => new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+});
+
+const decouperTexte = (ctx, texte, largeurMax) => {
+    const mots = texte.split(' ');
+    const lignes = [];
+    let ligneActuelle = '';
+
+    for (const mot of mots) {
+        const essai = ligneActuelle ? `${ligneActuelle} ${mot}` : mot;
+        if (ctx.measureText(essai).width > largeurMax && ligneActuelle) {
+            lignes.push(ligneActuelle);
+            ligneActuelle = mot;
+        } else {
+            ligneActuelle = essai;
+        }
+    }
+    if (ligneActuelle) lignes.push(ligneActuelle);
+
+    return lignes;
+};
+
+/**
+ * Affiche imprimable au format A4 (210×297mm, ~150 DPI) : phrase accrocheuse en
+ * haut, code QR en haute résolution centré, marge de sécurité constante autour de
+ * tout le contenu pour ne jamais rien faire déborder à l'impression.
+ */
+const construireAfficheA4 = async () => {
+    const largeurPage = 1240;
+    const hauteurPage = 1754;
+    const marge = 110;
+    const largeurZoneTexte = largeurPage - marge * 2 - 60;
+    const hauteurLigneTexte = 68;
+    const tailleQr = 760;
+    const espaceApresTexte = 70;
+    const espaceApresQr = 50;
+    const hauteurPied = 40;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = largeurPage;
+    canvas.height = hauteurPage;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, largeurPage, hauteurPage);
+
+    // Cadre matérialisant la marge de sécurité d'impression -- jamais de contenu
+    // dessiné hors de ce cadre.
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(marge, marge, largeurPage - marge * 2, hauteurPage - marge * 2);
+
+    ctx.font = 'bold 54px "Segoe UI", Arial, sans-serif';
+    const lignesTexte = decouperTexte(ctx, props.phraseQrCode, largeurZoneTexte);
+
+    // Bloc entier (texte + QR + pied de page) centré verticalement dans la page,
+    // quelle que soit la longueur de la phrase.
+    const hauteurBlocTexte = lignesTexte.length * hauteurLigneTexte;
+    const hauteurContenu = hauteurBlocTexte + espaceApresTexte + tailleQr + espaceApresQr + hauteurPied;
+    let y = marge + Math.max(0, (hauteurPage - marge * 2 - hauteurContenu) / 2);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (const ligne of lignesTexte) {
+        ctx.fillText(ligne, largeurPage / 2, y);
+        y += hauteurLigneTexte;
+    }
+
+    y += espaceApresTexte;
+    const qrHauteResolution = await QRCode.toDataURL(props.url, { width: 900, margin: 1 });
+    const qrImage = await chargerImage(qrHauteResolution);
+    ctx.drawImage(qrImage, (largeurPage - tailleQr) / 2, y, tailleQr, tailleQr);
+
+    y += tailleQr + espaceApresQr;
+    ctx.font = '32px "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText('controol.fr', largeurPage / 2, y);
+
+    return canvas.toDataURL('image/png');
+};
+
+const telechargerAffiche = async () => {
+    telechargementEnCours.value = true;
+    erreurQrCode.value = false;
+    try {
+        const affiche = await construireAfficheA4();
+        const lien = document.createElement('a');
+        lien.href = affiche;
+        lien.download = 'controool-qr-code.png';
+        lien.click();
+    } catch (e) {
+        erreurQrCode.value = true;
+    } finally {
+        telechargementEnCours.value = false;
     }
 };
 </script>
@@ -109,12 +218,13 @@ const afficherQrCode = async () => {
 
     <div v-if="qrCodeUrl" class="mt-3 inline-flex flex-col items-center gap-2 p-4 bg-white rounded-lg border border-slate-200 dark:border-slate-600">
         <img :src="qrCodeUrl" alt="Code QR du lien" class="size-40 sm:size-48">
-        <a
-            :href="qrCodeUrl"
-            download="controool-qr-code.png"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150"
+        <button
+            type="button"
+            :disabled="telechargementEnCours"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors duration-150 disabled:opacity-60"
+            @click="telechargerAffiche"
         >
-            Télécharger le code QR
-        </a>
+            {{ telechargementEnCours ? 'Préparation de l\'affiche...' : 'Télécharger (affiche A4)' }}
+        </button>
     </div>
 </template>

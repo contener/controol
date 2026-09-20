@@ -146,7 +146,11 @@ const fermerMessage = () => { produitMessage.value = null; };
 
         <div class="bg-white shadow-sm rounded-lg p-6">
             <h3 class="text-sm font-semibold text-slate-900 mb-3">Partager la Marketplace</h3>
-            <PartageLiens :url="marketplaceUrl" texte="Découvrez cette marketplace de boutiques locales !" />
+            <PartageLiens
+                :url="marketplaceUrl"
+                texte="Découvrez cette marketplace de boutiques locales !"
+                phrase-qr-code="Scannez ce code pour découvrir des boutiques locales sur Controool"
+            />
         </div>
     </div>
 </template>

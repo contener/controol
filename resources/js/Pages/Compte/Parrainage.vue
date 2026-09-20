@@ -44,6 +44,7 @@ const statutCommissionLabels = {
                     <PartageLiens
                         :url="lienParrainage"
                         texte="🚀 Rejoins CONTROOL pour gérer ton activité, tes produits, tes clients et tes factures. Inscris-toi avec mon lien :"
+                        phrase-qr-code="Scannez ce code pour gagner de l'argent grâce à Controool"
                     />
                 </div>
 
