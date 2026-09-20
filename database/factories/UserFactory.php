@@ -33,6 +33,10 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
+            // "Déjà activée" par défaut : seule EnsureAdminAccess lit cette colonne (pour
+            // exiger la 2FA en admin), donc ça n'affecte aucun autre test -- les tests qui
+            // vérifient spécifiquement le blocage 2FA la remettent à null explicitement.
+            'two_factor_confirmed_at' => now(),
             'remember_token' => Str::random(10),
             'profile_photo_path' => null,
             'current_team_id' => null,
