@@ -96,6 +96,7 @@ class ProduitMiniCaracteristiquesTest extends TestCase
             'prix_vente' => 1000,
             'unite' => 'pièce',
             'actif' => true,
+            'marketplace_visible' => true,
             'mini_characteristics' => 'Écran 6,5 pouces • 128 Go • Double SIM',
         ]);
 
@@ -118,6 +119,7 @@ class ProduitMiniCaracteristiquesTest extends TestCase
             'prix_vente' => 1000,
             'unite' => 'pièce',
             'actif' => true,
+            'marketplace_visible' => true,
         ]);
 
         $response = $this->get('/boutique/boutique-sans-mini-carac');

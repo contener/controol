@@ -101,7 +101,8 @@ class MarketplaceTest extends TestCase
 
         Produit::create([
             'boutique_id' => $user->current_boutique_id,
-            'type' => 'produit', 'nom' => 'Produit public', 'prix_vente' => 1000, 'unite' => 'pièce', 'actif' => true,
+            'type' => 'produit', 'nom' => 'Produit public', 'prix_vente' => 1000, 'unite' => 'pièce',
+            'actif' => true, 'marketplace_visible' => true,
         ]);
 
         $response = $this->get('/boutique/ma-petite-boutique');
@@ -462,22 +463,28 @@ class MarketplaceTest extends TestCase
         $this->assertFalse($produit->fresh()->marketplace_visible);
     }
 
-    // TEST 25 — le lien public direct de la boutique continue de montrer TOUS les produits
-    // actifs, qu'ils soient marketplace_visible ou non ("Marketplace ≠ boutique publique").
-    public function test_direct_public_boutique_link_still_shows_all_active_products_regardless_of_marketplace_flag(): void
+    // TEST 25 — le lien public direct de la boutique n'affiche jamais un produit dont la
+    // visibilité n'a pas été activée par le propriétaire, même en visitant directement
+    // le lien de la boutique (marketplace_visible gouverne toute visibilité publique,
+    // pas seulement /marketplace).
+    public function test_direct_public_boutique_link_hides_products_not_marked_visible(): void
     {
         $planGratuit = $this->creerPlan('gratuit', marketplace: false);
         $user = $this->creerUtilisateurAvecPlanEtBoutique($planGratuit, ['slug' => 'boutique-lien-direct']);
 
         Produit::create([
-            'boutique_id' => $user->current_boutique_id, 'type' => 'produit', 'nom' => 'Produit non marketplace',
+            'boutique_id' => $user->current_boutique_id, 'type' => 'produit', 'nom' => 'Produit caché',
             'prix_vente' => 1000, 'unite' => 'pièce', 'actif' => true, 'marketplace_visible' => false,
+        ]);
+        Produit::create([
+            'boutique_id' => $user->current_boutique_id, 'type' => 'produit', 'nom' => 'Produit publié',
+            'prix_vente' => 1000, 'unite' => 'pièce', 'actif' => true, 'marketplace_visible' => true,
         ]);
 
         $response = $this->get('/boutique/boutique-lien-direct');
 
         $response->assertInertia(fn ($page) => $page
             ->has('produits', 1)
-            ->where('produits.0.nom', 'Produit non marketplace'));
+            ->where('produits.0.nom', 'Produit publié'));
     }
 }

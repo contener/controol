@@ -66,11 +66,10 @@ class ProduitController extends Controller
             $data['photo_path'] = $request->file('photo')->store('produits', 'public');
         }
 
-        $produit = Produit::create($data);
-
-        if ($data['actif']) {
-            $this->notifierAbonnes($produit);
-        }
+        // Jamais de notification ici : marketplace_visible vaut toujours false à la
+        // création (pas dans les règles de StoreProduitRequest), donc le produit n'est
+        // encore visible nulle part -- voir updateMarketplace() pour le vrai déclencheur.
+        Produit::create($data);
 
         return redirect()->route('produits.index')->with('flash_success', 'Produit/service créé avec succès.');
     }
@@ -130,7 +129,7 @@ class ProduitController extends Controller
 
     /**
      * Bascule rapide depuis la liste Produits & Services -- distincte de update() pour
-     * ne jamais faire dépendre la visibilité Marketplace d'une soumission du formulaire
+     * ne jamais faire dépendre la visibilité publique d'une soumission du formulaire
      * complet (mêmes principes que Boutique::updateMarketplace()).
      */
     public function updateMarketplace(Request $request, Produit $produit): RedirectResponse
@@ -139,11 +138,20 @@ class ProduitController extends Controller
 
         $data = $request->validate(['marketplace_visible' => ['required', 'boolean']]);
 
+        // Le vrai moment de "publication" : un produit créé est invisible par défaut, donc
+        // c'est ici -- et seulement au passage false -> true -- qu'on notifie les abonnés,
+        // jamais à sa simple création (voir store()) ni en rejouant le même état.
+        $devientVisible = $data['marketplace_visible'] && ! $produit->marketplace_visible;
+
         $produit->update(['marketplace_visible' => $data['marketplace_visible']]);
 
+        if ($devientVisible && $produit->actif) {
+            $this->notifierAbonnes($produit);
+        }
+
         return back()->with('flash_success', $data['marketplace_visible']
-            ? "« {$produit->nom} » est désormais visible dans la Marketplace."
-            : "« {$produit->nom} » a été retiré de la Marketplace.");
+            ? "« {$produit->nom} » est désormais visible dans la boutique et la Marketplace."
+            : "« {$produit->nom} » n'est plus visible publiquement.");
     }
 
     public function update(UpdateProduitRequest $request, Produit $produit, LimiteService $limiteService): RedirectResponse

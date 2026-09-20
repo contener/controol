@@ -102,7 +102,7 @@ const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFract
                                         type="button"
                                         role="switch"
                                         :aria-checked="produit.marketplace_visible"
-                                        :title="produit.marketplace_visible ? 'Visible dans la Marketplace — cliquer pour retirer' : 'Non visible dans la Marketplace — cliquer pour publier'"
+                                        :title="produit.marketplace_visible ? 'Visible dans la boutique et la Marketplace — cliquer pour masquer' : 'Non visible (ni boutique, ni Marketplace) — cliquer pour publier'"
                                         class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors"
                                         :class="produit.marketplace_visible ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-600'"
                                         @click="basculerMarketplace(produit)"

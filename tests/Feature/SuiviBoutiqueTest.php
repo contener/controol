@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\NotificationUtilisateur;
 use App\Models\Plan;
+use App\Models\Produit;
 use App\Models\Suivi;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -99,7 +100,7 @@ class SuiviBoutiqueTest extends TestCase
         $response->assertInertia(fn ($page) => $page->where('visiteurABoutique', false));
     }
 
-    public function test_new_product_notifies_active_followers_with_notifications_enabled(): void
+    public function test_new_product_notifies_active_followers_once_made_marketplace_visible(): void
     {
         $vendeur = $this->creerUtilisateurAvecBoutique();
         $boutique = $vendeur->currentBoutique;
@@ -124,6 +125,13 @@ class SuiviBoutiqueTest extends TestCase
             'mini_characteristics' => 'Rouge, taille M',
         ])->assertRedirect();
 
+        // Un produit fraîchement créé est invisible par défaut (marketplace_visible=false) :
+        // aucune notification tant qu'il n'est pas réellement publié.
+        $this->assertDatabaseCount('notifications_utilisateurs', 0);
+
+        $produit = Produit::where('nom', 'Nouveau produit')->firstOrFail();
+        $this->actingAs($vendeur)->patch(route('produits.marketplace', $produit), ['marketplace_visible' => true])->assertRedirect();
+
         $this->assertDatabaseCount('notifications_utilisateurs', 1);
 
         $notification = NotificationUtilisateur::where('user_id', $abonneActif->id)->firstOrFail();
@@ -131,22 +139,28 @@ class SuiviBoutiqueTest extends TestCase
         $this->assertStringContainsString('Nouveau produit', $notification->message);
         $this->assertStringContainsString('Rouge, taille M', $notification->message);
         $this->assertSame(route('public.boutique', $boutique->slug), $notification->lien);
+
+        // Rejouer la même publication (déjà visible) ne doit jamais dupliquer la notification.
+        $this->actingAs($vendeur)->patch(route('produits.marketplace', $produit), ['marketplace_visible' => true]);
+        $this->assertDatabaseCount('notifications_utilisateurs', 1);
     }
 
-    public function test_inactive_product_does_not_notify_followers(): void
+    public function test_inactive_product_does_not_notify_followers_even_when_made_visible(): void
     {
         $vendeur = $this->creerUtilisateurAvecBoutique();
         $abonne = $this->creerUtilisateurAvecBoutique();
         $this->actingAs($abonne)->post("/boutique/{$vendeur->currentBoutique->slug}/suivre");
 
-        $this->actingAs($vendeur)->post('/produits', [
+        $produit = Produit::create([
+            'boutique_id' => $vendeur->currentBoutique->id,
             'type' => 'produit',
             'nom' => 'Produit inactif',
             'prix_vente' => 1000,
             'unite' => 'unité',
-            'gere_stock' => false,
             'actif' => false,
         ]);
+
+        $this->actingAs($vendeur)->patch(route('produits.marketplace', $produit), ['marketplace_visible' => true]);
 
         $this->assertDatabaseCount('notifications_utilisateurs', 0);
     }

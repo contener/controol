@@ -43,10 +43,15 @@ class PublicBoutiqueController extends Controller
             $this->journaliserEvenement($boutique, $request, $identite, 'lien_visite');
         }
 
+        // marketplace_visible gouverne désormais toute visibilité publique du produit,
+        // y compris sur le lien direct de la boutique -- pas seulement /marketplace : le
+        // propriétaire décide produit par produit, depuis Produits & Services, de ce qui
+        // est montré à un visiteur, où qu'il arrive.
         $produits = $boutique->produits()
             ->withoutGlobalScopes()
             ->where('boutique_id', $boutique->id)
             ->where('actif', true)
+            ->where('marketplace_visible', true)
             ->when($request->string('categorie')->toString(), fn ($q, $c) => $q->where('categorie', $c))
             ->orderBy('nom')
             ->get();
@@ -55,6 +60,7 @@ class PublicBoutiqueController extends Controller
             ->withoutGlobalScopes()
             ->where('boutique_id', $boutique->id)
             ->where('actif', true)
+            ->where('marketplace_visible', true)
             ->whereNotNull('categorie')
             ->distinct()
             ->pluck('categorie');
