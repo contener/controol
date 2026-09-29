@@ -63,7 +63,7 @@ class FactureController extends Controller
         $this->authorize('create', Facture::class);
 
         return Inertia::render('Factures/Create', [
-            'clients' => Client::orderBy('nom')->get(['id', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'numero_fiscal', 'etiquette']),
+            'clients' => Client::orderBy('nom')->get(['id', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'code_postal', 'numero_fiscal', 'rccm', 'etiquette']),
             'produits' => Produit::orderBy('nom')->get(['id', 'nom', 'type', 'prix_vente', 'tva_taux', 'unite', 'gere_stock', 'quantite_stock']),
             'tauxTvaDefaut' => $this->tauxTvaDefaut($request),
             'boutique' => $request->user()->currentBoutique->only(['nom', 'logo_path', 'adresse', 'ville', 'pays', 'telephone', 'whatsapp', 'email', 'devise', 'nui', 'note_pied_facture']),
@@ -107,7 +107,7 @@ class FactureController extends Controller
 
         return Inertia::render('Factures/Edit', [
             'facture' => $facture->load('lignes'),
-            'clients' => Client::orderBy('nom')->get(['id', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'numero_fiscal', 'etiquette']),
+            'clients' => Client::orderBy('nom')->get(['id', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'code_postal', 'numero_fiscal', 'rccm', 'etiquette']),
             'produits' => Produit::orderBy('nom')->get(['id', 'nom', 'type', 'prix_vente', 'tva_taux', 'unite', 'gere_stock', 'quantite_stock']),
             'boutique' => $request->user()->currentBoutique->only(['nom', 'logo_path', 'adresse', 'ville', 'pays', 'telephone', 'whatsapp', 'email', 'devise', 'nui', 'note_pied_facture']),
             'modeles' => $this->modelesDisponibles($request->user()),

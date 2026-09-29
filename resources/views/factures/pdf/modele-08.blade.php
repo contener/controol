@@ -64,8 +64,11 @@
                     <div class="nom">{{ $apercu['client']['nom'] }}</div>
                     <div class="muted" style="margin-top: 4px;">
                         @if($apercu['client']['adresse']) {{ $apercu['client']['adresse'] }}<br>@endif
-                        @if($apercu['client']['ville']) {{ $apercu['client']['ville'] }} {{ $apercu['client']['pays'] }}<br>@endif
-                        @if($apercu['client']['email']) {{ $apercu['client']['email'] }}@endif
+                        @if($apercu['client']['ville'] || $apercu['client']['code_postal']) {{ $apercu['client']['code_postal'] }} {{ $apercu['client']['ville'] }} {{ $apercu['client']['pays'] }}<br>@endif
+                        @if($apercu['client']['email']) {{ $apercu['client']['email'] }}<br>@endif
+                        @if($apercu['client']['telephone']) {{ $apercu['client']['telephone'] }}<br>@endif
+                        @if($apercu['client']['numero_fiscal']) NUI : {{ $apercu['client']['numero_fiscal'] }}<br>@endif
+                        @if($apercu['client']['rccm']) RCCM : {{ $apercu['client']['rccm'] }}@endif
                     </div>
                 </td>
                 <td class="text-right">

@@ -48,7 +48,9 @@ class FactureApercuBuilder
                 'adresse' => $client->adresse,
                 'ville' => $client->ville,
                 'pays' => $client->pays,
+                'code_postal' => $client->code_postal,
                 'numero_fiscal' => $client->numero_fiscal,
+                'rccm' => $client->rccm,
             ],
             'lignes' => $facture->lignes->map(fn ($ligne) => [
                 'designation' => $ligne->designation,

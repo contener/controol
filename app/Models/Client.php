@@ -19,7 +19,9 @@ class Client extends Model
         'adresse',
         'ville',
         'pays',
+        'code_postal',
         'numero_fiscal',
+        'rccm',
         'notes',
         'etiquette',
     ];

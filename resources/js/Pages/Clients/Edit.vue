@@ -14,7 +14,9 @@ const form = useForm({
     adresse: props.client.adresse,
     ville: props.client.ville,
     pays: props.client.pays,
+    code_postal: props.client.code_postal,
     numero_fiscal: props.client.numero_fiscal,
+    rccm: props.client.rccm,
     notes: props.client.notes,
     etiquette: props.client.etiquette,
 });

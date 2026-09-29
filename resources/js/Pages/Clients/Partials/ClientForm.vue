@@ -62,9 +62,21 @@ const emit = defineEmits(['submit']);
             </div>
 
             <div>
-                <InputLabel for="numero_fiscal" value="Numéro fiscal / RCCM" />
+                <InputLabel for="code_postal" value="Code postal" />
+                <TextInput id="code_postal" v-model="form.code_postal" type="text" class="mt-1 block w-full" />
+                <InputError :message="form.errors.code_postal" class="mt-2" />
+            </div>
+
+            <div>
+                <InputLabel for="numero_fiscal" value="NUI" />
                 <TextInput id="numero_fiscal" v-model="form.numero_fiscal" type="text" class="mt-1 block w-full" />
                 <InputError :message="form.errors.numero_fiscal" class="mt-2" />
+            </div>
+
+            <div>
+                <InputLabel for="rccm" value="RCCM" />
+                <TextInput id="rccm" v-model="form.rccm" type="text" class="mt-1 block w-full" />
+                <InputError :message="form.errors.rccm" class="mt-2" />
             </div>
         </div>
 

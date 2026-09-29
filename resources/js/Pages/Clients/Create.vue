@@ -10,7 +10,9 @@ const form = useForm({
     adresse: '',
     ville: '',
     pays: '',
+    code_postal: '',
     numero_fiscal: '',
+    rccm: '',
     notes: '',
     etiquette: 'prospect',
 });

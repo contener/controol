@@ -25,7 +25,9 @@ const clientVide = {
     adresse: null,
     ville: null,
     pays: null,
+    code_postal: null,
     numero_fiscal: null,
+    rccm: null,
 };
 
 /**

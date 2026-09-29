@@ -20,7 +20,9 @@ class UpdateClientRequest extends FormRequest
             'adresse' => ['nullable', 'string', 'max:255'],
             'ville' => ['nullable', 'string', 'max:255'],
             'pays' => ['nullable', 'string', 'max:255'],
+            'code_postal' => ['nullable', 'string', 'max:20'],
             'numero_fiscal' => ['nullable', 'string', 'max:100'],
+            'rccm' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string'],
             'etiquette' => ['required', 'in:prospect,client'],
         ];

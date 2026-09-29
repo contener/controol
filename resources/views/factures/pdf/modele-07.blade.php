@@ -90,9 +90,11 @@
                     <div class="lbl">Facturé à</div>
                     <strong>{{ $apercu['client']['nom'] }}</strong><br>
                     @if($apercu['client']['adresse']) {{ $apercu['client']['adresse'] }}<br>@endif
-                    @if($apercu['client']['ville']) {{ $apercu['client']['ville'] }} {{ $apercu['client']['pays'] }}<br>@endif
+                    @if($apercu['client']['ville'] || $apercu['client']['code_postal']) {{ $apercu['client']['code_postal'] }} {{ $apercu['client']['ville'] }} {{ $apercu['client']['pays'] }}<br>@endif
                     @if($apercu['client']['email']) {{ $apercu['client']['email'] }}<br>@endif
-                    @if($apercu['client']['telephone']) {{ $apercu['client']['telephone'] }}@endif
+                    @if($apercu['client']['telephone']) {{ $apercu['client']['telephone'] }}<br>@endif
+                    @if($apercu['client']['numero_fiscal']) NUI : {{ $apercu['client']['numero_fiscal'] }}<br>@endif
+                    @if($apercu['client']['rccm']) RCCM : {{ $apercu['client']['rccm'] }}@endif
                 </div>
             </td>
             <td style="padding-left: 8px;">

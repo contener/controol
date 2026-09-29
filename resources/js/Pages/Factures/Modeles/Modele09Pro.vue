@@ -50,7 +50,7 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
                 <table class="mt-2 ml-auto text-xs">
                     <tbody>
                         <tr><td class="text-slate-400 pr-3 text-right">N° facture</td><td class="font-medium">{{ apercu.meta.numero }}</td></tr>
-                        <tr v-if="apercu.client.numero_fiscal"><td class="text-slate-400 pr-3 text-right">Référence client</td><td class="font-medium">{{ apercu.client.numero_fiscal }}</td></tr>
+                        <tr v-if="apercu.client.numero_fiscal"><td class="text-slate-400 pr-3 text-right">NUI client</td><td class="font-medium">{{ apercu.client.numero_fiscal }}</td></tr>
                         <tr><td class="text-slate-400 pr-3 text-right">Émission</td><td class="font-medium">{{ apercu.meta.date_emission || '—' }}</td></tr>
                         <tr v-if="apercu.meta.date_echeance"><td class="text-slate-400 pr-3 text-right">Échéance</td><td class="font-medium">{{ apercu.meta.date_echeance }}</td></tr>
                     </tbody>
@@ -72,9 +72,10 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
                 <div class="font-medium">{{ apercu.client.nom }}</div>
                 <div class="text-slate-500 text-xs space-y-0.5 mt-0.5">
                     <div v-if="apercu.client.adresse">{{ apercu.client.adresse }}</div>
-                    <div v-if="apercu.client.ville">{{ apercu.client.ville }} {{ apercu.client.pays }}</div>
+                    <div v-if="apercu.client.ville || apercu.client.code_postal">{{ apercu.client.code_postal }} {{ apercu.client.ville }} {{ apercu.client.pays }}</div>
                     <div v-if="apercu.client.email">{{ apercu.client.email }}</div>
                     <div v-if="apercu.client.telephone">{{ apercu.client.telephone }}</div>
+                    <div v-if="apercu.client.rccm">RCCM : {{ apercu.client.rccm }}</div>
                 </div>
             </div>
         </div>

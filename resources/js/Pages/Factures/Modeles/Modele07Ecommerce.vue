@@ -64,9 +64,11 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
                 <div class="font-medium">{{ apercu.client.nom }}</div>
                 <div class="text-slate-500 space-y-0.5 mt-1">
                     <div v-if="apercu.client.adresse">{{ apercu.client.adresse }}</div>
-                    <div v-if="apercu.client.ville">{{ apercu.client.ville }} {{ apercu.client.pays }}</div>
+                    <div v-if="apercu.client.ville || apercu.client.code_postal">{{ apercu.client.code_postal }} {{ apercu.client.ville }} {{ apercu.client.pays }}</div>
                     <div v-if="apercu.client.email">{{ apercu.client.email }}</div>
                     <div v-if="apercu.client.telephone">{{ apercu.client.telephone }}</div>
+                    <div v-if="apercu.client.numero_fiscal">NUI : {{ apercu.client.numero_fiscal }}</div>
+                    <div v-if="apercu.client.rccm">RCCM : {{ apercu.client.rccm }}</div>
                 </div>
             </div>
             <div class="border border-slate-200 rounded-lg p-4">

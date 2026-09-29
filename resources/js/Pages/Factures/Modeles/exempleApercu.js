@@ -27,7 +27,9 @@ export const exempleApercu = {
         adresse: null,
         ville: 'Douala',
         pays: 'Cameroun',
-        numero_fiscal: null,
+        code_postal: null,
+        numero_fiscal: 'M022312345678B',
+        rccm: 'RC/DLA/2024/B/1234',
     },
     lignes: [
         { designation: 'Ordinateur portable 15"', description: null, quantite: 2, prix_unitaire: 350000, tva_taux: 19.25, remise_ligne: 0, montant_ht: 700000, montant_tva: 134750, montant_ttc: 834750 },
