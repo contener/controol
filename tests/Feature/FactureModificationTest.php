@@ -164,6 +164,54 @@ class FactureModificationTest extends TestCase
         $this->assertSame(10, $produit->fresh()->quantite_stock);
     }
 
+    // Régression : restituerStockPourFacture() (appelée avant la suppression des
+    // lignes) mettait en cache l'ancienne collection lignes sur l'instance -- sans
+    // rechargement explicite, consommerStockPourLignes() et recalculerTotaux()
+    // opéraient ensuite sur ces lignes obsolètes (déjà supprimées en base), au lieu
+    // des nouvelles. Le stock ne reflétait jamais la quantité modifiée, et le total
+    // affiché restait l'ancien montant.
+    public function test_editing_line_quantities_correctly_adjusts_stock_and_totals(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique();
+        $boutiqueId = $user->current_boutique_id;
+        $produit = Produit::create([
+            'boutique_id' => $boutiqueId, 'type' => 'produit', 'nom' => 'Widget',
+            'prix_vente' => 1000, 'unite' => 'pièce', 'gere_stock' => true, 'quantite_stock' => 10,
+        ]);
+        $client = Client::create(['boutique_id' => $boutiqueId, 'nom' => 'Client Test', 'etiquette' => 'client']);
+
+        $this->actingAs($user);
+        $this->post('/factures', [
+            'client_id' => $client->id,
+            'date_emission' => now()->toDateString(),
+            'remise' => 0,
+            'lignes' => [
+                ['produit_id' => $produit->id, 'designation' => 'Widget', 'quantite' => 3, 'prix_unitaire' => 1000, 'tva_taux' => 0, 'remise_ligne' => 0],
+            ],
+        ]);
+        $facture = Facture::withoutGlobalScopes()->where('boutique_id', $boutiqueId)->latest('id')->firstOrFail();
+        $this->assertSame(7, $produit->fresh()->quantite_stock);
+        $this->assertSame('3000.00', (string) $facture->fresh()->total_ttc);
+
+        $facture->update(['statut' => 'envoyee']);
+
+        // 3 -> 5 : doit restituer les 3 initiales puis n'en consommer que 5 (net -5
+        // depuis le stock d'origine de 10), jamais -3 (bug) ni -8 (double comptage).
+        $this->put(route('factures.update', $facture), [
+            'client_id' => $client->id,
+            'date_emission' => now()->toDateString(),
+            'remise' => 0,
+            'lignes' => [
+                ['produit_id' => $produit->id, 'designation' => 'Widget', 'quantite' => 5, 'prix_unitaire' => 1000, 'tva_taux' => 0, 'remise_ligne' => 0],
+            ],
+        ])->assertRedirect();
+
+        $this->assertSame(5, $produit->fresh()->quantite_stock);
+        $this->assertSame('5000.00', (string) $facture->fresh()->total_ttc);
+        $this->assertSame(1, $facture->fresh()->lignes()->count());
+        $this->assertSame('5.00', (string) $facture->fresh()->lignes->first()->quantite);
+    }
+
     public function test_index_and_show_expose_the_computed_flags(): void
     {
         $user = $this->creerUtilisateurAvecBoutique();

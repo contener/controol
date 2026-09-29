@@ -147,6 +147,14 @@ class FactureService
                 'ordre' => $index,
             ]);
         }
+
+        // Lors d'une modification, restituerStockPourFacture() a déjà itéré
+        // $facture->lignes plus haut (avant leur suppression) -- Eloquent met alors en
+        // cache cette collection désormais périmée sur l'instance. Sans ce rechargement
+        // explicite, tout code qui lit encore $facture->lignes après cet appel (la
+        // consommation de stock, le recalcul des totaux) verrait encore les anciennes
+        // lignes supprimées, jamais celles qu'on vient de créer.
+        $facture->load('lignes');
     }
 
     private function consommerStockPourLignes(Facture $facture, int $userId): void
@@ -195,7 +203,10 @@ class FactureService
 
     private function recalculerTotaux(Facture $facture): void
     {
-        $facture->loadMissing('lignes');
+        // load() (jamais loadMissing()) : les totaux doivent toujours refléter l'état
+        // actuel en base, jamais une collection potentiellement mise en cache plus tôt
+        // dans le même appel (voir le commentaire dans enregistrerLignes()).
+        $facture->load('lignes');
 
         $sousTotal = $facture->lignes->sum('montant_ht');
         $totalTva = $facture->lignes->sum('montant_tva');
