@@ -267,4 +267,34 @@ class FactureModeleTest extends TestCase
         $secondeFacture = Facture::latest('id')->first();
         $this->assertNull($secondeFacture->garantie);
     }
+
+    // Le NUI, le RCCM et le code postal du client doivent apparaître dans l'aperçu
+    // (Show) et se télécharger sans erreur sur les 10 modèles de facture (PDF).
+    public function test_client_nui_rccm_and_postal_code_appear_in_preview_and_all_pdf_templates(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $user->planActif()->update(['modeles_facture_avances' => true]);
+        $client = Client::create([
+            'boutique_id' => $user->current_boutique_id,
+            'nom' => 'Société Alpha SARL',
+            'etiquette' => 'client',
+            'code_postal' => '01BP',
+            'numero_fiscal' => 'M012312345678A',
+            'rccm' => 'RC/DLA/2024/B/1234',
+        ]);
+        $this->actingAs($user);
+
+        foreach (range(1, 10) as $modeleId) {
+            $this->post('/factures', $this->payloadFacture($client->id, ['modele_id' => $modeleId]))->assertRedirect();
+            $facture = Facture::latest('id')->first();
+
+            $this->get(route('factures.show', $facture))->assertInertia(fn ($page) => $page
+                ->where('apercu.client.code_postal', '01BP')
+                ->where('apercu.client.numero_fiscal', 'M012312345678A')
+                ->where('apercu.client.rccm', 'RC/DLA/2024/B/1234')
+            );
+
+            $this->get(route('factures.pdf', $facture))->assertOk();
+        }
+    }
 }

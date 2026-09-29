@@ -32,6 +32,28 @@ class ClientManagementTest extends TestCase
         ]);
     }
 
+    public function test_client_can_be_created_with_nui_rccm_and_postal_code(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique();
+        $this->actingAs($user);
+
+        $response = $this->post('/clients', [
+            'nom' => 'Société Alpha SARL',
+            'etiquette' => 'client',
+            'code_postal' => '01BP',
+            'numero_fiscal' => 'M012312345678A',
+            'rccm' => 'RC/DLA/2024/B/1234',
+        ]);
+
+        $response->assertRedirect('/clients');
+        $this->assertDatabaseHas('clients', [
+            'nom' => 'Société Alpha SARL',
+            'code_postal' => '01BP',
+            'numero_fiscal' => 'M012312345678A',
+            'rccm' => 'RC/DLA/2024/B/1234',
+        ]);
+    }
+
     public function test_client_requires_a_valid_etiquette(): void
     {
         $user = $this->creerUtilisateurAvecBoutique();
