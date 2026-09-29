@@ -408,6 +408,15 @@ en plus de marquer comme lu.
   par admin (heure, fuseau, 7 templates de message par jour d'essai). Expiration gérée
   par une commande planifiée qui repasse l'utilisateur au plan Gratuit sans jamais
   supprimer ses données.
+- **Lien de paiement externe hébergé** (Zahletup) : `plans.lien_paiement` (prix
+  normal) + `plans.lien_paiement_promo` (nullable, prix promo essai). Le fournisseur
+  a un montant fixe par lien — un même lien ne peut donc jamais servir à la fois le
+  prix promo et le prix normal d'un plan. `AbonnementController::demanderChangement()`
+  choisit `lien_paiement_promo` uniquement si un essai est réellement en cours en
+  base pour ce plan (jamais une valeur envoyée par le client), avec repli sur
+  `lien_paiement` s'il est absent. Gérées via `PlanSeeder` (`updateOrCreate`, pas
+  d'écran d'admin dédié) — pour changer un lien, modifier le seeder puis
+  `php artisan db:seed --class=PlanSeeder --force` en production.
 
 ### 5.12 Parrainage & commissions
 Chaque utilisateur génère un code de parrainage à la demande (différent de son id
@@ -570,6 +579,13 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-09-29** — Fournisseur de paiement externe changé pour Zahletup ; nouveau
+  champ `plans.lien_paiement_promo` pour séparer le lien du prix promo essai (3500
+  FCFA) de celui du prix normal (5000 FCFA) sur le plan Basique, un lien hébergé
+  n'ayant qu'un montant fixe. Barre de navigation (logo) rendue fixe au défilement.
+  Code QR téléchargeable (affiche A4 avec phrase d'accroche contextuelle) ajouté au
+  partage de lien (boutique, marketplace, parrainage). Promotions de la Marketplace
+  repliées par défaut pour ne plus repousser la liste des boutiques.
 - **2026-09-20** — Création de ce fichier de reconstruction, après un audit complet
   du projet existant (34 modèles, 33 contrôleurs, 61 migrations, 95 pages Vue, 42
   fichiers de test). Durcissement sécurité (2FA admin obligatoire, remember-me 30j,
