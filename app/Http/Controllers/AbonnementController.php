@@ -58,9 +58,8 @@ class AbonnementController extends Controller
         // Prix promotionnel controle cote serveur : jamais une valeur envoyee par le
         // client. On ne fait confiance qu'a un essai reellement en cours en base.
         $essai = EssaiUtilisateur::where('user_id', $user->id)->latest('id')->first();
-        $montant = ($plan->code === 'basique' && $essai?->statut() === EssaiStatut::EnCours)
-            ? $essai->prix_promo
-            : $plan->prix;
+        $enPromo = $plan->code === 'basique' && $essai?->statut() === EssaiStatut::EnCours;
+        $montant = $enPromo ? $essai->prix_promo : $plan->prix;
 
         Paiement::create([
             'user_id' => $user->id,
@@ -71,12 +70,18 @@ class AbonnementController extends Controller
             'statut' => 'en_attente',
         ]);
 
+        // Le fournisseur de paiement hébergé a un montant fixe par lien : un essai en
+        // cours (prix promo) et un abonnement classique (prix normal) ne peuvent donc
+        // jamais partager le même lien pour le plan Basique. Repli sur lien_paiement si
+        // aucun lien promo n'est configuré.
+        $lienPaiement = ($enPromo && $plan->lien_paiement_promo) ? $plan->lien_paiement_promo : $plan->lien_paiement;
+
         // L'abonnement reste "en_attente" tant qu'un Super Admin n'a pas vérifié et
         // approuvé le paiement (PaiementValidationService::approuver) — ce lien externe
         // ne fait qu'orienter l'utilisateur vers la page de paiement hébergée, il n'active
         // jamais l'abonnement lui-même (RULE 5).
-        if ($plan->lien_paiement) {
-            return Inertia::location($plan->lien_paiement);
+        if ($lienPaiement) {
+            return Inertia::location($lienPaiement);
         }
 
         return back()->with('flash_success', "Demande envoyée pour le plan {$plan->nom}. Votre abonnement sera activé dès confirmation du paiement ({$montant} {$plan->devise}).");

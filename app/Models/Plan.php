@@ -11,6 +11,7 @@ class Plan extends Model
         'nom',
         'prix',
         'lien_paiement',
+        'lien_paiement_promo',
         'devise',
         'duree_jours',
         'limite_boutiques',
