@@ -319,6 +319,19 @@ explicitement depuis la liste Produits & Services (colonne dédiée avec interru
 Activer la visibilité déclenche, si le produit est actif, une notification en masse
 (insertion unique, pas de boucle) à tous les abonnés actifs de la boutique.
 
+**Ajout rapide depuis la boutique publique** : bouton flottant `+` (bas droite de
+`/boutique/{slug}`), visible uniquement si `estProprietaire` (jamais pour un visiteur,
+même connecté). Contrairement au flux normal ci-dessus, un produit créé par ce biais
+(`ProduitController::storeDepuisBoutique()`, formulaire allégé sans suivi de stock) est
+`actif = true` ET `marketplace_visible = true` dès sa création — immédiatement visible,
+car l'intention de publier est déjà explicite quand on l'ajoute en regardant sa
+boutique en direct. La visibilité reste ensuite modifiable comme n'importe quel autre
+produit (interrupteur de la liste Produits & Services). La boutique cible est résolue
+depuis le **slug de l'URL** (`StoreProduitDepuisBoutiqueRequest::boutique()`), jamais
+depuis `currentBoutique` — un propriétaire de plusieurs boutiques ajoutant un produit
+depuis la page publique d'une boutique qui n'est pas sa boutique "courante" en session
+ne doit jamais voir le produit atterrir dans la mauvaise boutique.
+
 ### 5.4 Clients
 CRUD simple avec étiquette `prospect`/`client` stockée, plus un **segment calculé**
 (jamais persisté) à l'affichage : `prospect` (étiquette), sinon `regulier` (≥3
@@ -606,6 +619,12 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-09-29** — Bouton flottant `+` sur la page boutique publique (visible du seul
+  propriétaire) pour ajouter un produit sans passer par Produits & Services ; produit
+  ainsi créé immédiatement visible (`marketplace_visible = true` par défaut, au lieu de
+  `false` pour le flux normal, inchangé). Nouvelle route/FormRequest résolvant la
+  boutique par son slug plutôt que par `currentBoutique`, pour rester correcte même si
+  le propriétaire possède plusieurs boutiques (voir §5.3).
 - **2026-09-29** — Ajout de trois champs client : `code_postal` (nouveau), `rccm`
   (nouveau), `numero_fiscal` relabellisé "NUI" (existait déjà, mal étiqueté "Numéro
   fiscal / RCCM" dans un seul champ). Visibles dans le formulaire client, puis dans le
