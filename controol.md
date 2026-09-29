@@ -179,7 +179,10 @@ plus le même projet.
   true), marketplace_visible (bool défaut FALSE — opt-in explicite), promotion_prix,
   categorie, mini_characteristics (250 car. max)`.
 - **`clients`** : `boutique_id, nom, email, telephone, adresse, ville, pays,
-  numero_fiscal, notes, etiquette (prospect|client, défaut prospect)`.
+  code_postal, numero_fiscal (affiché "NUI"), rccm, notes, etiquette (prospect|client,
+  défaut prospect)`. Les trois champs `code_postal`/`numero_fiscal`/`rccm` sont
+  affichés dans le bloc "Facturé à" des 10 modèles de facture (PDF Blade ET aperçu
+  live Vue — voir §5.5).
 
 ### Facturation
 - **`factures`** : `boutique_id, client_id, type (facture|proforma, immuable après
@@ -365,6 +368,12 @@ sinon `nouveau`.
   Blade, jamais divergents).
 - Duplication d'une facture → nouveau brouillon, dates réinitialisées, modèle
   substitué silencieusement par le modèle standard si le plan ne l'autorise plus.
+- **Bloc "Facturé à"** : affiche nom, adresse, ville/pays (+ `code_postal` s'il est
+  renseigné), email, téléphone, NUI (`client.numero_fiscal`) et RCCM
+  (`client.rccm`) — tous conditionnels (`v-if`/`@if`), jamais affichés vides. Aucun
+  des 10 modèles PDF ni des 10 modèles Vue ne partage de sous-composant "client" commun
+  (seuls modele-01/02 côté Blade réutilisent `_client.blade.php`) : toute évolution de
+  ce bloc doit être répétée manuellement dans les 20 fichiers (10 Blade + 10 Vue).
 
 ### 5.6 Dépenses
 CRUD simple, catégories suggérées en dur côté UI (Loyer, Salaires, Achat marchandise,
@@ -597,6 +606,11 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-09-29** — Ajout de trois champs client : `code_postal` (nouveau), `rccm`
+  (nouveau), `numero_fiscal` relabellisé "NUI" (existait déjà, mal étiqueté "Numéro
+  fiscal / RCCM" dans un seul champ). Visibles dans le formulaire client, puis dans le
+  bloc "Facturé à" des 10 modèles de facture (PDF ET aperçu live) et de la galerie de
+  miniatures (voir §5.5).
 - **2026-09-29** — Facture modifiable pour tous les statuts sauf Annulée (avant :
   brouillon uniquement), suppression manuelle après 14 jours même pour une facture
   payée. Corrige au passage un bug préexistant de cache de relation dans
