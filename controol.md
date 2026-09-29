@@ -322,7 +322,8 @@ Activer la visibilité déclenche, si le produit est actif, une notification en 
 **Ajout rapide depuis la boutique publique** : bouton flottant `+` (bas droite de
 `/boutique/{slug}`), visible uniquement si `estProprietaire` (jamais pour un visiteur,
 même connecté). Contrairement au flux normal ci-dessus, un produit créé par ce biais
-(`ProduitController::storeDepuisBoutique()`, formulaire allégé sans suivi de stock) est
+(`ProduitController::storeDepuisBoutique()`, formulaire allégé : type, nom, prix de
+vente, unité, catégorie, mini caractéristiques, photo — sans suivi de stock) est
 `actif = true` ET `marketplace_visible = true` dès sa création — immédiatement visible,
 car l'intention de publier est déjà explicite quand on l'ajoute en regardant sa
 boutique en direct. La visibilité reste ensuite modifiable comme n'importe quel autre
@@ -624,7 +625,8 @@ changement de comportement significatif)*
   ainsi créé immédiatement visible (`marketplace_visible = true` par défaut, au lieu de
   `false` pour le flux normal, inchangé). Nouvelle route/FormRequest résolvant la
   boutique par son slug plutôt que par `currentBoutique`, pour rester correcte même si
-  le propriétaire possède plusieurs boutiques (voir §5.3).
+  le propriétaire possède plusieurs boutiques (voir §5.3). Champ mini caractéristiques
+  ajouté au formulaire allégé (manquait à la première version).
 - **2026-09-29** — Ajout de trois champs client : `code_postal` (nouveau), `rccm`
   (nouveau), `numero_fiscal` relabellisé "NUI" (existait déjà, mal étiqueté "Numéro
   fiscal / RCCM" dans un seul champ). Visibles dans le formulaire client, puis dans le
