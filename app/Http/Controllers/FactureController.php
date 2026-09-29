@@ -42,6 +42,13 @@ class FactureController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $factures->getCollection()->transform(function (Facture $facture) {
+            $facture->est_modifiable = $facture->estModifiable();
+            $facture->est_supprimable = $facture->estSupprimable();
+
+            return $facture;
+        });
+
         return Inertia::render('Factures/Index', [
             'factures' => $factures,
             'clients' => Client::orderBy('nom')->get(['id', 'nom']),
@@ -84,8 +91,12 @@ class FactureController extends Controller
     {
         $this->authorize('view', $facture);
 
+        $facture->load(['client', 'lignes.produit', 'createur:id,name']);
+        $facture->est_modifiable = $facture->estModifiable();
+        $facture->est_supprimable = $facture->estSupprimable();
+
         return Inertia::render('Factures/Show', [
-            'facture' => $facture->load(['client', 'lignes.produit', 'createur:id,name']),
+            'facture' => $facture,
             'apercu' => $apercuBuilder->construire($facture),
         ]);
     }

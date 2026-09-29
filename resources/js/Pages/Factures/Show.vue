@@ -78,10 +78,16 @@ const imprimer = () => {
                         <SecondaryButton>Télécharger PDF</SecondaryButton>
                     </a>
                     <SecondaryButton @click="dupliquer">Dupliquer</SecondaryButton>
-                    <Link v-if="facture.statut === 'brouillon'" :href="route('factures.edit', facture.id)">
+                    <Link v-if="facture.est_modifiable" :href="route('factures.edit', facture.id)">
                         <PrimaryButton>Modifier</PrimaryButton>
                     </Link>
-                    <DangerButton v-if="facture.statut === 'brouillon'" @click="supprimer">Supprimer</DangerButton>
+                    <DangerButton
+                        v-if="facture.est_supprimable"
+                        title="Disponible 14 jours après la création"
+                        @click="supprimer"
+                    >
+                        Supprimer
+                    </DangerButton>
                 </div>
             </div>
         </template>

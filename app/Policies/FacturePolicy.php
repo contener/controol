@@ -25,12 +25,12 @@ class FacturePolicy
 
     public function update(User $user, Facture $facture): bool
     {
-        return $user->id === $facture->boutique->user_id;
+        return $user->id === $facture->boutique->user_id && $facture->estModifiable();
     }
 
     public function delete(User $user, Facture $facture): bool
     {
-        return $user->id === $facture->boutique->user_id && $facture->estModifiable();
+        return $user->id === $facture->boutique->user_id && $facture->estSupprimable();
     }
 
     /**

@@ -49,6 +49,12 @@ const formatMontant = (montant) => new Intl.NumberFormat('fr-FR', { maximumFract
 const dupliquer = (facture) => {
     router.post(route('factures.dupliquer', facture.id));
 };
+
+const supprimer = (facture) => {
+    if (confirm(`Supprimer définitivement la facture ${facture.numero} ? Cette action est irréversible.`)) {
+        router.delete(route('factures.destroy', facture.id));
+    }
+};
 </script>
 
 <template>
@@ -116,9 +122,17 @@ const dupliquer = (facture) => {
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-slate-900 dark:text-slate-100">{{ formatMontant(facture.total_ttc) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
                                     <Link :href="route('factures.show', facture.id)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Voir</Link>
-                                    <Link v-if="facture.statut === 'brouillon'" :href="route('factures.edit', facture.id)" class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-200">Modifier</Link>
+                                    <Link v-if="facture.est_modifiable" :href="route('factures.edit', facture.id)" class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-200">Modifier</Link>
                                     <button class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-200" @click="dupliquer(facture)">Dupliquer</button>
                                     <a :href="route('factures.pdf', facture.id)" target="_blank" class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-200">Télécharger</a>
+                                    <button
+                                        v-if="facture.est_supprimable"
+                                        class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                                        title="Disponible 14 jours après la création"
+                                        @click="supprimer(facture)"
+                                    >
+                                        Supprimer
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>

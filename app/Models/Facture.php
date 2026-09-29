@@ -66,9 +66,26 @@ class Facture extends Model
         return $this->hasMany(MouvementStock::class);
     }
 
+    /**
+     * Une facture Annulée reste verrouillée (la rouvrir n'aurait pas de sens) ; tous
+     * les autres statuts (brouillon/envoyée/payée) sont modifiables -- corriger une
+     * erreur après envoi ou paiement reste possible, à la différence du numéro et du
+     * type (Facture/Proforma), toujours immuables une fois la facture créée.
+     */
     public function estModifiable(): bool
     {
-        return $this->statut === 'brouillon';
+        return $this->statut !== 'annulee';
+    }
+
+    /**
+     * Suppression manuelle disponible pour tous les statuts (y compris Payée) dès
+     * qu'au moins 14 jours se sont écoulés depuis la création -- laisse le temps de
+     * repérer une erreur/un doublon avant que la facture ne devienne définitive,
+     * sans jamais permettre un nettoyage impulsif du jour même.
+     */
+    public function estSupprimable(): bool
+    {
+        return $this->created_at !== null && $this->created_at->lte(now()->subDays(14));
     }
 
     /**
