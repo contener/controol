@@ -334,8 +334,26 @@ sinon `nouveau`.
   Totaux facture : `sous_total = Σ HT`, `total_tva = Σ TVA`, `total_ttc = sous_total +
   total_tva − remise_facture` (remise facture appliquée uniquement au total, jamais
   distribuée aux lignes).
-- Statuts : `brouillon` (seul état modifiable/supprimable), `envoyee`, `payee`,
-  `annulee` (restitue le stock si géré).
+- Statuts : `brouillon`, `envoyee`, `payee`, `annulee` (restitue le stock si géré au
+  passage vers ce statut). **Modification** (`Facture::estModifiable()`) : autorisée
+  pour tous les statuts sauf `annulee` (rouvrir une facture annulée n'a pas de sens) —
+  numéro et type restent immuables même en modifiant une facture envoyée/payée.
+  **Suppression** (`Facture::estSupprimable()`) : autorisée pour tous les statuts, y
+  compris `payee`, mais seulement à partir de 14 jours après `created_at` — jamais le
+  jour même, pour laisser le temps de repérer une erreur/un doublon avant que la
+  suppression ne devienne possible. Les deux règles sont calculées (jamais un champ
+  persisté) et exposées au frontend via des attributs ad-hoc (`est_modifiable`,
+  `est_supprimable`) ajoutés sur le modèle avant sérialisation Inertia, jamais une
+  condition de statut dupliquée côté Vue.
+- **Piège résolu (2026-09-29)** : `FactureService::mettreAJour()` appelle
+  `restituerStockPourFacture()` (qui itère `$facture->lignes`) AVANT de supprimer les
+  anciennes lignes — Eloquent met alors cette collection en cache sur l'instance. Sans
+  rechargement explicite (`load('lignes')`, jamais `loadMissing()`) juste après avoir
+  recréé les nouvelles lignes, la consommation de stock et le recalcul des totaux
+  opéraient silencieusement sur les anciennes lignes déjà supprimées en base. À
+  reproduire correctement si `FactureService` est reconstruit : toute méthode qui lit
+  `$facture->lignes` après une suppression+recréation de lignes dans le même appel
+  doit forcer un rechargement, ne jamais faire confiance à un `loadMissing()`.
 - **10 modèles PDF** (`modele_id` 1-10, noms Standard/Classique/Business/Modern/
   Premium/Corporate/Ecommerce/Elegant/Pro/Executive) : les modèles 1-2 sont gratuits,
   3-10 nécessitent `plan.modeles_facture_avances`. L'autorisation est toujours
@@ -579,10 +597,15 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
-- **2026-09-29** — Fournisseur de paiement externe changé pour Zahletup ; nouveau
-  champ `plans.lien_paiement_promo` pour séparer le lien du prix promo essai (3500
-  FCFA) de celui du prix normal (5000 FCFA) sur le plan Basique, un lien hébergé
-  n'ayant qu'un montant fixe. Barre de navigation (logo) rendue fixe au défilement.
+- **2026-09-29** — Facture modifiable pour tous les statuts sauf Annulée (avant :
+  brouillon uniquement), suppression manuelle après 14 jours même pour une facture
+  payée. Corrige au passage un bug préexistant de cache de relation dans
+  `FactureService::mettreAJour()` qui faussait silencieusement le stock et les totaux
+  de toute facture modifiée (voir §5.5). Fournisseur de paiement externe changé pour
+  Zahletup ; nouveau champ `plans.lien_paiement_promo` pour séparer le lien du prix
+  promo essai (3500 FCFA) de celui du prix normal (5000 FCFA) sur le plan Basique, un
+  lien hébergé n'ayant qu'un montant fixe. Barre de navigation (logo) rendue fixe au
+  défilement.
   Code QR téléchargeable (affiche A4 avec phrase d'accroche contextuelle) ajouté au
   partage de lien (boutique, marketplace, parrainage). Promotions de la Marketplace
   repliées par défaut pour ne plus repousser la liste des boutiques.
