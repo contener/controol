@@ -48,6 +48,9 @@ Route::post('/boutique/{slug}/suivre', [PublicBoutiqueController::class, 'suivre
 Route::delete('/boutique/{slug}/suivre', [PublicBoutiqueController::class, 'neplusSuivre'])
     ->middleware('auth:sanctum')
     ->name('public.boutique.suivre.annuler');
+Route::post('/boutique/{slug}/produits', [ProduitController::class, 'storeDepuisBoutique'])
+    ->middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'account.active'])
+    ->name('public.boutique.produits.store');
 
 Route::get('/conversations/{conversation}', [GuestConversationController::class, 'show'])
     ->middleware('signed')

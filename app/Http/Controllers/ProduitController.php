@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProduitDepuisBoutiqueRequest;
 use App\Http\Requests\StoreProduitRequest;
 use App\Http\Requests\UpdateProduitRequest;
 use App\Models\Produit;
@@ -72,6 +73,42 @@ class ProduitController extends Controller
         Produit::create($data);
 
         return redirect()->route('produits.index')->with('flash_success', 'Produit/service créé avec succès.');
+    }
+
+    /**
+     * Ajout rapide depuis le bouton flottant de la page boutique publique -- à la
+     * différence de store(), le produit est immédiatement visible (actif +
+     * marketplace_visible tous deux à true) puisque le propriétaire l'ajoute en
+     * regardant sa boutique en direct : son intention de le publier est déjà explicite,
+     * contrairement au flux normal (Produits & Services) qui reste invisible par défaut
+     * jusqu'à activation manuelle (voir store() -- comportement volontairement inchangé
+     * là-bas). Reste sans suivi de stock (gere_stock toujours false) pour rester rapide ;
+     * modifiable ensuite comme n'importe quel autre produit depuis Produits & Services.
+     */
+    public function storeDepuisBoutique(StoreProduitDepuisBoutiqueRequest $request, LimiteService $limiteService): RedirectResponse
+    {
+        $boutique = $request->boutique();
+
+        if (! $limiteService->peutCreerProduit($request->user())) {
+            return back()->with('flash_error', "Limite de produits/services atteinte pour votre plan ({$request->user()->planActif()?->nom}). Passez à un plan supérieur pour en ajouter davantage.");
+        }
+
+        $data = $request->validated();
+        $data['boutique_id'] = $boutique->id;
+        $data['gere_stock'] = false;
+        $data['actif'] = true;
+        $data['marketplace_visible'] = true;
+
+        if ($request->hasFile('photo')) {
+            $data['photo_path'] = $request->file('photo')->store('produits', 'public');
+        }
+
+        $produit = Produit::create($data);
+
+        $this->notifierAbonnes($produit);
+
+        return redirect()->route('public.boutique', $boutique->slug)
+            ->with('flash_success', "« {$produit->nom} » a été ajouté et est déjà visible dans votre boutique.");
     }
 
     /**

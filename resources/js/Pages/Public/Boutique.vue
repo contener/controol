@@ -6,6 +6,7 @@ import PartageLiens from '@/Components/PartageLiens.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
 import ContactVendeurModal from '@/Components/ContactVendeurModal.vue';
 import PopupInvitationBoutique from '@/Components/PopupInvitationBoutique.vue';
+import AjouterProduitModal from '@/Pages/Public/Partials/AjouterProduitModal.vue';
 
 const props = defineProps({
     boutique: Object,
@@ -76,6 +77,8 @@ const ouvrirMessage = (produit) => {
 const fermerMessage = () => {
     produitActif.value = null;
 };
+
+const ajoutProduitOuvert = ref(false);
 
 // Garde-fou : après un changement de produit sans rechargement (nouveau produit sans
 // conversation existante), `conversationActive` peut encore contenir le fil du produit
@@ -222,6 +225,13 @@ const conversationPourModal = computed(() => {
                 @sent="fermerMessage"
             />
 
+            <AjouterProduitModal
+                v-if="estProprietaire"
+                :show="ajoutProduitOuvert"
+                :boutique-slug="boutique.slug"
+                @close="ajoutProduitOuvert = false"
+            />
+
             <div class="mt-10 mb-16 bg-gradient-to-br from-blue-600 to-purple-700 rounded-2xl p-8 text-center text-white">
                 <h2 class="text-xl font-bold">Vous souhaitez vous aussi vendre vos produits en ligne ?</h2>
                 <p class="mt-2 text-blue-100 max-w-md mx-auto text-sm">
@@ -243,5 +253,17 @@ const conversationPourModal = computed(() => {
             :boutique="{ nom: boutique.nom, slug: boutique.slug }"
             :connecte="!!utilisateur"
         />
+
+        <button
+            v-if="estProprietaire"
+            type="button"
+            title="Ajouter un nouveau produit"
+            aria-label="Ajouter un nouveau produit"
+            class="group fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4"
+            @click="ajoutProduitOuvert = true"
+        >
+            <span class="text-2xl leading-none">+</span>
+            <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Ajouter un nouveau produit</span>
+        </button>
     </div>
 </template>
