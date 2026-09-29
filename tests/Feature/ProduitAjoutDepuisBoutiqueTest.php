@@ -26,12 +26,15 @@ class ProduitAjoutDepuisBoutiqueTest extends TestCase
         $user = $this->creerUtilisateurAvecBoutique();
         $boutique = $user->currentBoutique;
 
-        $response = $this->actingAs($user)->post(route('public.boutique.produits.store', $boutique->slug), $this->payload());
+        $response = $this->actingAs($user)->post(route('public.boutique.produits.store', $boutique->slug), $this->payload([
+            'mini_characteristics' => 'RAM 8 Go • SSD 256 Go',
+        ]));
 
         $response->assertRedirect(route('public.boutique', $boutique->slug));
         $this->assertDatabaseHas('produits', [
             'boutique_id' => $boutique->id,
             'nom' => 'Produit ajouté depuis la boutique',
+            'mini_characteristics' => 'RAM 8 Go • SSD 256 Go',
             'actif' => 1,
             'marketplace_visible' => 1,
             'gere_stock' => 0,

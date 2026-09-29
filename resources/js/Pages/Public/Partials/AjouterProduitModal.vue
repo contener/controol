@@ -22,6 +22,7 @@ const form = useForm({
     prix_vente: '',
     unite: 'pièce',
     categorie: '',
+    mini_characteristics: '',
     photo: null,
 });
 
@@ -86,6 +87,22 @@ const enregistrer = () => {
                     <InputLabel for="ap_categorie" value="Catégorie (optionnel)" />
                     <TextInput id="ap_categorie" v-model="form.categorie" type="text" class="mt-1 block w-full" />
                     <InputError :message="form.errors.categorie" class="mt-2" />
+                </div>
+
+                <div class="sm:col-span-2">
+                    <InputLabel for="ap_mini_characteristics" value="Mini caractéristiques (optionnel)" />
+                    <TextInput
+                        id="ap_mini_characteristics"
+                        v-model="form.mini_characteristics"
+                        type="text"
+                        maxlength="250"
+                        class="mt-1 block w-full"
+                        placeholder="RAM 8 Go • SSD 256 Go • Core i5"
+                    />
+                    <p class="mt-1 text-xs text-slate-500">
+                        Affichées directement sous le nom du produit dans la boutique.
+                    </p>
+                    <InputError :message="form.errors.mini_characteristics" class="mt-2" />
                 </div>
             </div>
 

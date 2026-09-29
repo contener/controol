@@ -51,6 +51,7 @@ class StoreProduitDepuisBoutiqueRequest extends FormRequest
             'prix_vente' => ['required', 'numeric', 'min:0'],
             'unite' => ['required', 'string', 'max:50'],
             'categorie' => ['nullable', 'string', 'max:255'],
+            'mini_characteristics' => ['nullable', 'string', 'max:250'],
             'photo' => ['nullable', 'image', 'max:2048'],
         ];
     }
