@@ -61,12 +61,15 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Schema::getIndexes() (agnostique au moteur) plutôt que "show index from" (syntaxe
+     * MySQL uniquement) -- cette migration doit aussi pouvoir tourner sous SQLite, utilisé
+     * par la suite de tests (RefreshDatabase, voir phpunit.xml : DB_CONNECTION=sqlite).
+     */
     private function indexExiste(string $table, string $indexName): bool
     {
-        $connection = Schema::getConnection();
-
-        return collect($connection->select("show index from {$table}"))
-            ->pluck('Key_name')
+        return collect(Schema::getIndexes($table))
+            ->pluck('name')
             ->contains($indexName);
     }
 };

@@ -126,7 +126,7 @@ class ProduitAjoutDepuisBoutiqueTest extends TestCase
     {
         $user = $this->creerUtilisateurAvecBoutique();
 
-        $this->actingAs($user)->post(route('produits.store'), $this->payload(['nom' => 'Créé via Produits & Services']))
+        $this->actingAs($user)->post(route('produits.store'), $this->payload(['nom' => 'Créé via Produits & Services', 'gere_stock' => false]))
             ->assertRedirect(route('produits.index'));
 
         $this->assertDatabaseHas('produits', [

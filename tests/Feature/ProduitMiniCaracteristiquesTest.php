@@ -20,6 +20,7 @@ class ProduitMiniCaracteristiquesTest extends TestCase
             'nom' => 'Ordinateur Lenovo ThinkPad',
             'prix_vente' => 250000,
             'unite' => 'pièce',
+            'gere_stock' => false,
             'mini_characteristics' => 'Core i5 • RAM 8 Go • SSD 256 Go',
         ])->assertRedirect(route('produits.index'));
 
@@ -38,6 +39,7 @@ class ProduitMiniCaracteristiquesTest extends TestCase
             'nom' => 'Produit sans mini caractéristiques',
             'prix_vente' => 1000,
             'unite' => 'pièce',
+            'gere_stock' => false,
         ])->assertRedirect(route('produits.index'));
 
         $this->assertDatabaseHas('produits', [
@@ -79,6 +81,7 @@ class ProduitMiniCaracteristiquesTest extends TestCase
             'nom' => $produit->nom,
             'prix_vente' => $produit->prix_vente,
             'unite' => $produit->unite,
+            'gere_stock' => false,
             'mini_characteristics' => '',
         ])->assertRedirect(route('produits.index'));
 
