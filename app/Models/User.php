@@ -99,7 +99,9 @@ class User extends Authenticatable
      * NOTE : 'role' est délibérément absent de $fillable ci-dessus. Un changement de
      * rôle ne doit jamais pouvoir transiter par une requête utilisateur (formulaire de
      * profil, payload JSON forgé...) — uniquement via `php artisan user:make-super-admin`
-     * ou un forceFill() explicite côté serveur.
+     * ou un forceFill() explicite côté serveur. 'google_id' suit le même principe : jamais
+     * fillable, uniquement écrit par GoogleAuthController à partir de la réponse OAuth
+     * vérifiée par Google, jamais depuis une entrée utilisateur.
      */
     public function isSuperAdmin(): bool
     {

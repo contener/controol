@@ -44,6 +44,12 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('flash_error'),
                 'lien_conversation' => fn () => $request->session()->get('flash_lien_conversation'),
             ],
+            'google' => [
+                // Le bouton "Continuer avec Google" (Login/Register) reste masqué tant que
+                // GOOGLE_CLIENT_ID n'est pas configuré, plutôt que d'afficher un bouton qui
+                // échouerait systématiquement.
+                'active' => fn () => filled(config('services.google.client_id')),
+            ],
             'mesBoutiques' => function () use ($request) {
                 $user = $request->user();
 

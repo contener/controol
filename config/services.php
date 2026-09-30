@@ -35,6 +35,12 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
     // Service indépendant whatsapp-connector/ (Node.js) — gère les connexions WhatsApp
     // (QR) des agents IA. Reste vide tant qu'aucun hébergement adapté (processus Node
     // persistant) n'est en place : WhatsappConnectorClient::configure() pilote alors

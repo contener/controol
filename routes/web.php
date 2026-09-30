@@ -21,6 +21,7 @@ use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\DestinationSocialeController;
 use App\Http\Controllers\FactureController;
 use App\Http\Controllers\FactureModeleController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\GuestConversationController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\MesConversationsController;
@@ -38,6 +39,12 @@ Route::get('/', function () {
 });
 
 Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
+});
+
 Route::get('/boutique/{slug}', [PublicBoutiqueController::class, 'show'])->name('public.boutique');
 Route::post('/boutique/{slug}/messages', [PublicBoutiqueController::class, 'envoyerMessage'])
     ->middleware('throttle:5,1')
