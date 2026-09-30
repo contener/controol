@@ -162,7 +162,8 @@ plus le même projet.
   telephone, whatsapp, role (user|admin|super_admin, défaut user, hors $fillable),
   current_boutique_id (FK boutiques), locale (fr), theme (light), admin_role_label,
   est_actif (bool défaut true), code_parrainage (unique, nullable, généré à la
-  demande), parrain_id (FK users auto-référencée, nullOnDelete)`.
+  demande), parrain_id (FK users auto-référencée, nullOnDelete), google_id (string,
+  unique, nullable, hors $fillable — connexion Google, voir §5.1)`.
 - **`admin_permissions`** : `user_id, permission` (string libre, unique par paire).
 - **`admin_audits`** : `admin_id, action, resource, resource_id, ancienne_valeur/
   nouvelle_valeur (json), ip_address` — pas d'`updated_at`, jamais modifié.
@@ -301,6 +302,29 @@ Vérification d'email désactivée. Remember-me cookie : **30 jours** (le défau
 de ~400 jours a été jugé trop long et réduit intentionnellement, cf. §7 Sécurité).
 Profil : infos perso, mot de passe, 2FA, sessions actives, suppression de compte, +
 sections métier ajoutées (Abonnement, Parrainage).
+
+**Connexion/inscription Google (OAuth)** : bouton "Continuer avec Google" sur les pages
+Login/Register, masqué automatiquement tant que `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
+ne sont pas renseignés en environnement (prop Inertia partagée `google.active`, voir
+`HandleInertiaRequests`). Implémenté via `laravel/socialite` + `GoogleAuthController`
+(`/auth/google/redirect`, `/auth/google/callback`) :
+- Un compte déjà trouvé par `google_id` est réutilisé tel quel.
+- Sinon, un compte existant (créé par email/mot de passe) avec la **même adresse** est
+  **relié** (`google_id` renseigné) plutôt que dupliqué -- uniquement si Google renvoie
+  l'adresse comme vérifiée.
+- Sinon un nouveau compte est créé (`password` = valeur aléatoire jamais utilisée,
+  modifiable ensuite via "mot de passe oublié" si l'utilisateur veut aussi se connecter
+  sans Google) et suit **exactement** le même parcours qu'une inscription classique
+  (essai gratuit, capture d'un parrainage/d'une invitation boutique en attente en
+  session) via `App\Services\NouvelUtilisateurService::initialiser()`, service partagé
+  extrait de `CreateNewUser` pour que les deux flux d'inscription ne divergent jamais.
+- Un compte protégé par la 2FA n'est **jamais** connecté directement : redirigé vers
+  l'écran de vérification existant (même mécanisme que
+  `Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable`, réutilisé). Un compte
+  désactivé (`est_actif=false`) reste bloqué avec le même message que la connexion
+  classique.
+- `users.google_id` n'est **jamais** dans `$fillable` (même principe que `role`/
+  `parrain_id`) : uniquement écrit côté serveur à partir de la réponse OAuth vérifiée.
 
 ### 5.2 Boutiques
 Un utilisateur peut posséder plusieurs boutiques (limite selon plan). Une "boutique
@@ -590,6 +614,21 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
   logique contre des données réelles sans jamais rien persister — remplace les tests
   PHPUnit habituels quand l'environnement de production n'a pas les dépendances de
   développement installées (`composer install --no-dev`).
+- **La vraie suite PHPUnit PEUT être exécutée temporairement sur le serveur** (utile
+  pour une vérification plus poussée qu'un script de fumée) : `composer install`
+  (sans `--no-dev`) installe `phpunit`/`mockery`, tourne contre SQLite en mémoire
+  (`phpunit.xml`, jamais la vraie base) — **toujours revenir ensuite à
+  `composer install --no-dev --no-interaction --no-scripts`** pour ne pas laisser les
+  dépendances de développement en production. Deux pièges connus de cet hébergement :
+  (1) `proc_open` y est désactivé — tout ce qui l'utilise (`composer` post-install
+  scripts, `php artisan test`, `php artisan about`) échoue ; lancer `php artisan
+  package:discover --ansi` manuellement après un changement de dépendances (en ayant
+  d'abord supprimé `bootstrap/cache/{packages,services,config}.php` s'ils référencent
+  un package qui vient de disparaître), et `php vendor/bin/phpunit` directement plutôt
+  que `php artisan test`. (2) Les assets compilés ne vivent jamais dans
+  `controool_app/public/build` (uniquement dans `public_html/build`, voir plus haut) —
+  un lien symbolique `ln -s ../../public_html/build public/build` dans `controool_app`
+  élimine les échecs "Vite manifest not found" des tests qui rendent une page Inertia.
 - **Ne jamais inscrire de mot de passe/identifiant de connexion réel dans ce fichier
   ni dans le dépôt Git** — à conserver séparément (gestionnaire de mots de passe). Ce
   document décrit la structure et la procédure, pas les accès eux-mêmes.
@@ -620,6 +659,13 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-09-30** — Connexion et inscription via Google (OAuth, `laravel/socialite`) sur
+  les pages Login/Register, masquée tant que non configurée côté `.env`. Effets de bord
+  de l'inscription (essai gratuit, capture parrainage/invitation boutique) extraits de
+  `CreateNewUser` vers `NouvelUtilisateurService`, partagé par les deux flux
+  d'inscription. Au passage : corrigé un index MySQL-only (`show index from`) qui
+  empêchait silencieusement toute exécution de la vraie suite PHPUnit sur ce projet
+  depuis le 2026-09-17 (voir §8, méthode pour lancer PHPUnit sur cet hébergement).
 - **2026-09-29** — Bouton flottant `+` sur la page boutique publique (visible du seul
   propriétaire) pour ajouter un produit sans passer par Produits & Services ; produit
   ainsi créé immédiatement visible (`marketplace_visible = true` par défaut, au lieu de
