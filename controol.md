@@ -82,8 +82,13 @@ c'est la langue native du code (`Facture`, `Boutique`, `Client`, `estActive()`,
   authentifiée uniquement) rend l'installation facilement découvrable plutôt que
   cachée dans un menu navigateur : capture `beforeinstallprompt` (Chrome/Android) pour
   un bouton "Installer" direct, ou affiche l'instruction manuelle Partager → "Sur
-  l'écran d'accueil" sur iOS (Safari ne déclenche jamais cet évènement). Fermeture
-  mémorisée en `localStorage`, par navigateur, ne réapparaît pas après.
+  l'écran d'accueil" sur iOS (Safari ne déclenche jamais cet évènement). Un refus
+  explicite (fermeture avant installation) est mémorisé en `localStorage` et ne
+  réaffiche plus l'invite d'installation. **Reste volontairement visible même une fois
+  l'app installée** (`display-mode: standalone` détecté) : devient alors un bandeau
+  "Mettre à jour" (vérifie une nouvelle version du service worker, vide le cache des
+  assets statiques, recharge) — jamais masqué par ce même `localStorage`, pour rester
+  toujours accessible comme simple commande utilitaire.
 - **Service annexe indépendant** : `whatsapp-connector/` — micro-service Node.js
   (`@whiskeysockets/baileys` + `express` + `qrcode`), **jamais mélangé au code
   Laravel/Vue**, communique par HTTP avec un secret partagé
@@ -688,7 +693,9 @@ changement de comportement significatif)*
   worker minimal ne cachant que les assets Vite) — base pour générer un vrai `.apk`
   Android via PWABuilder (TWA), même backend/même base de données, voir §2. Ajout d'un
   bandeau "Installer l'application" dans l'interface (zone authentifiée) pour rendre
-  l'installation découvrable, au lieu de dépendre du menu caché du navigateur.
+  l'installation découvrable, au lieu de dépendre du menu caché du navigateur. Corrigé
+  pour rester visible même une fois l'app installée (bascule en bandeau "Mettre à
+  jour" plutôt que de disparaître).
 - **2026-10-01** — Menu mobile (hamburger, `AppLayout.vue`) corrigé : passe d'un panneau
   en flux normal (qui pouvait dépasser la hauteur de l'écran, obligeant à faire défiler
   toute la page pour voir les dernières options) à un panneau en position fixe sous
