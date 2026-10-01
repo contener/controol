@@ -551,7 +551,11 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
   chose.
 - Layout principal `AppLayout.vue` : nav desktop (dropdown compte) + nav mobile
   (menu responsive), sélecteur de boutique courante, cloche de notifications,
-  sélecteur langue/thème.
+  sélecteur langue/thème. Le panneau du menu hamburger (mobile) est en position fixe
+  sous l'en-tête (`fixed inset-x-0 top-16 bottom-0`) avec son propre défilement interne
+  (`overflow-y-auto`) — jamais un panneau en flux normal à l'intérieur de la nav
+  sticky, qui peut dépasser la hauteur de l'écran et obliger à faire défiler toute la
+  page pour atteindre les dernières options.
 - Toute page listant des données paginées suit le même schéma : recherche debounced
   300ms, filtres en `SelectInput`, tableau avec ligne "aucun résultat", pagination
   Laravel standard rendue en liens.
@@ -659,6 +663,10 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-01** — Menu mobile (hamburger, `AppLayout.vue`) corrigé : passe d'un panneau
+  en flux normal (qui pouvait dépasser la hauteur de l'écran, obligeant à faire défiler
+  toute la page pour voir les dernières options) à un panneau en position fixe sous
+  l'en-tête avec défilement interne (voir §6).
 - **2026-09-30** — Connexion et inscription via Google (OAuth, `laravel/socialite`) sur
   les pages Login/Register, masquée tant que non configurée côté `.env`. Effets de bord
   de l'inscription (essai gratuit, capture parrainage/invitation boutique) extraits de
