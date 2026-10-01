@@ -259,7 +259,11 @@ const logout = () => {
                 </div>
 
                 <!-- Responsive Navigation Menu -->
-                <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
+                <!-- Position fixed + défilement propre au panneau (pas à la page) : sans
+                     cela, ce panneau grandissait à l'intérieur de la nav sticky et pouvait
+                     dépasser la hauteur de l'écran, obligeant à faire défiler toute la page
+                     pour atteindre les dernières options (changement de boutique, déconnexion). -->
+                <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shadow-lg">
                     <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                             {{ t('nav.global_view') }}
