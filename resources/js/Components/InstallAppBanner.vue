@@ -4,12 +4,19 @@ import { onMounted, onUnmounted, ref } from 'vue';
 const DISMISS_KEY = 'controol_install_banner_dismissed';
 
 const show = ref(false);
+const etat = ref('install'); // 'install' (pas encore installée) ou 'update' (déjà installée)
 const plateforme = ref('chrome'); // 'chrome' (bouton direct) ou 'ios' (instructions manuelles)
+const miseAJourEnCours = ref(false);
 let deferredPrompt = null;
 
-const dejaInstallee = () => window.matchMedia('(display-mode: standalone)').matches
+const estInstallee = () => window.matchMedia('(display-mode: standalone)').matches
     || window.navigator.standalone === true;
 
+const estIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+// Le refus de l'installation reste mémorisé (ne pas insister après un "non" explicite) --
+// mais ne s'applique jamais à l'état "update" : une fois l'app installée, le bandeau
+// reste une simple commande utilitaire ("vérifier les mises à jour"), toujours visible.
 const dejaRefusee = () => {
     try {
         return localStorage.getItem(DISMISS_KEY) === '1';
@@ -21,8 +28,10 @@ const dejaRefusee = () => {
 const onBeforeInstallPrompt = (event) => {
     event.preventDefault();
     deferredPrompt = event;
-    plateforme.value = 'chrome';
-    show.value = true;
+    if (etat.value !== 'update') {
+        plateforme.value = 'chrome';
+        show.value = true;
+    }
 };
 
 const installer = async () => {
@@ -32,11 +41,34 @@ const installer = async () => {
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
-    show.value = false;
+    etat.value = 'update';
+    plateforme.value = estIos() ? 'ios' : 'chrome';
+};
+
+// Force le service worker à vérifier une nouvelle version, vide le cache des fichiers
+// statiques (/build/assets/, voir public/sw.js) et recharge -- garantit la dernière
+// version déployée, que l'app soit ouverte depuis l'icône installée ou le navigateur.
+const mettreAJour = async () => {
+    miseAJourEnCours.value = true;
+    try {
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.getRegistration();
+            await registration?.update();
+        }
+        if ('caches' in window) {
+            const cles = await caches.keys();
+            await Promise.all(cles.map((cle) => caches.delete(cle)));
+        }
+    } finally {
+        window.location.reload();
+    }
 };
 
 const fermer = () => {
     show.value = false;
+    if (etat.value === 'update') {
+        return; // Dismiss pour cette visite seulement -- réapparaît à la prochaine ouverture.
+    }
     try {
         localStorage.setItem(DISMISS_KEY, '1');
     } catch {
@@ -46,7 +78,14 @@ const fermer = () => {
 };
 
 onMounted(() => {
-    if (dejaInstallee() || dejaRefusee()) {
+    if (estInstallee()) {
+        etat.value = 'update';
+        plateforme.value = estIos() ? 'ios' : 'chrome';
+        show.value = true;
+        return;
+    }
+
+    if (dejaRefusee()) {
         return;
     }
 
@@ -54,8 +93,7 @@ onMounted(() => {
 
     // iOS Safari ne déclenche jamais beforeinstallprompt -- seule façon d'installer :
     // Partager > "Sur l'écran d'accueil", à afficher comme instruction manuelle.
-    const estIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.navigator.standalone;
-    if (estIos) {
+    if (estIos()) {
         plateforme.value = 'ios';
         show.value = true;
     }
@@ -76,7 +114,10 @@ onUnmounted(() => {
                     </svg>
                 </span>
                 <p class="text-sm text-white truncate">
-                    <template v-if="plateforme === 'chrome'">
+                    <template v-if="etat === 'update'">
+                        Application déjà installée. Vérifiez que vous avez la dernière version.
+                    </template>
+                    <template v-else-if="plateforme === 'chrome'">
                         Installez Controol sur votre téléphone pour y accéder comme une vraie application.
                     </template>
                     <template v-else>
@@ -87,7 +128,16 @@ onUnmounted(() => {
 
             <div class="shrink-0 flex items-center gap-2">
                 <button
-                    v-if="plateforme === 'chrome'"
+                    v-if="etat === 'update'"
+                    type="button"
+                    :disabled="miseAJourEnCours"
+                    class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+                    @click="mettreAJour"
+                >
+                    {{ miseAJourEnCours ? 'Mise à jour...' : 'Mettre à jour' }}
+                </button>
+                <button
+                    v-else-if="plateforme === 'chrome'"
                     type="button"
                     class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md bg-white text-blue-700 hover:bg-blue-50"
                     @click="installer"
