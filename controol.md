@@ -78,17 +78,24 @@ c'est la langue native du code (`Facture`, `Boutique`, `Client`, `estActive()`,
   l'APK au domaine — sans ce fichier, l'app installée garde la barre d'adresse du
   navigateur visible). Ce fichier n'existe pas encore dans le dépôt : à créer à la
   génération du premier APK, avec l'empreinte SHA-256 que PWABuilder fournit alors.
-  `resources/js/Components/InstallAppBanner.vue` (monté dans `AppLayout.vue`, zone
-  authentifiée uniquement) rend l'installation facilement découvrable plutôt que
+  `resources/js/Components/InstallAppBanner.vue` (monté dans `AppLayout.vue` ET sur
+  les pages Login/Register) rend l'installation facilement découvrable plutôt que
   cachée dans un menu navigateur : capture `beforeinstallprompt` (Chrome/Android) pour
   un bouton "Installer" direct, ou affiche l'instruction manuelle Partager → "Sur
   l'écran d'accueil" sur iOS (Safari ne déclenche jamais cet évènement). Un refus
   explicite (fermeture avant installation) est mémorisé en `localStorage` et ne
   réaffiche plus l'invite d'installation. **Reste volontairement visible même une fois
-  l'app installée** (`display-mode: standalone` détecté) : devient alors un bandeau
-  "Mettre à jour" (vérifie une nouvelle version du service worker, vide le cache des
-  assets statiques, recharge) — jamais masqué par ce même `localStorage`, pour rester
-  toujours accessible comme simple commande utilitaire.
+  l'app installée**, et détecte cet état de façon fiable même consultée depuis un
+  onglet classique du navigateur (pas seulement ouverte depuis l'icône) en combinant
+  trois signaux : `display-mode: standalone`, `navigator.getInstalledRelatedApps()`
+  (le manifeste se déclare lui-même via `related_applications`, voir
+  `public/manifest.webmanifest`), et un indicateur mémorisé en `localStorage` dès que
+  l'évènement `appinstalled` se déclenche une première fois — quelle que soit la façon
+  dont l'installation a eu lieu (notre bouton ou le menu natif du navigateur). Dans cet
+  état, devient un bandeau "Mettre à jour" (vérifie une nouvelle version du service
+  worker, vide le cache des assets statiques, recharge) — jamais masqué par le
+  `localStorage` de refus, pour rester toujours accessible comme simple commande
+  utilitaire.
 - **Service annexe indépendant** : `whatsapp-connector/` — micro-service Node.js
   (`@whiskeysockets/baileys` + `express` + `qrcode`), **jamais mélangé au code
   Laravel/Vue**, communique par HTTP avec un secret partagé
@@ -695,7 +702,11 @@ changement de comportement significatif)*
   bandeau "Installer l'application" dans l'interface (zone authentifiée) pour rendre
   l'installation découvrable, au lieu de dépendre du menu caché du navigateur. Corrigé
   pour rester visible même une fois l'app installée (bascule en bandeau "Mettre à
-  jour" plutôt que de disparaître).
+  jour" plutôt que de disparaître). Détection d'installation fiabilisée (ne reposait
+  QUE sur `display-mode: standalone`, donc invisible quand l'app installée est
+  consultée depuis un onglet classique — ajout de `getInstalledRelatedApps()` et d'un
+  indicateur mémorisé sur l'évènement `appinstalled`, voir §2). Bandeau ajouté aussi
+  aux pages Connexion et Création de compte.
 - **2026-10-01** — Menu mobile (hamburger, `AppLayout.vue`) corrigé : passe d'un panneau
   en flux normal (qui pouvait dépasser la hauteur de l'écran, obligeant à faire défiler
   toute la page pour voir les dernières options) à un panneau en position fixe sous
