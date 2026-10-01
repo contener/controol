@@ -78,6 +78,12 @@ c'est la langue native du code (`Facture`, `Boutique`, `Client`, `estActive()`,
   l'APK au domaine — sans ce fichier, l'app installée garde la barre d'adresse du
   navigateur visible). Ce fichier n'existe pas encore dans le dépôt : à créer à la
   génération du premier APK, avec l'empreinte SHA-256 que PWABuilder fournit alors.
+  `resources/js/Components/InstallAppBanner.vue` (monté dans `AppLayout.vue`, zone
+  authentifiée uniquement) rend l'installation facilement découvrable plutôt que
+  cachée dans un menu navigateur : capture `beforeinstallprompt` (Chrome/Android) pour
+  un bouton "Installer" direct, ou affiche l'instruction manuelle Partager → "Sur
+  l'écran d'accueil" sur iOS (Safari ne déclenche jamais cet évènement). Fermeture
+  mémorisée en `localStorage`, par navigateur, ne réapparaît pas après.
 - **Service annexe indépendant** : `whatsapp-connector/` — micro-service Node.js
   (`@whiskeysockets/baileys` + `express` + `qrcode`), **jamais mélangé au code
   Laravel/Vue**, communique par HTTP avec un secret partagé
@@ -680,7 +686,9 @@ changement de comportement significatif)*
 
 - **2026-10-01** — Controool devient une PWA installable (manifest, icônes, service
   worker minimal ne cachant que les assets Vite) — base pour générer un vrai `.apk`
-  Android via PWABuilder (TWA), même backend/même base de données, voir §2.
+  Android via PWABuilder (TWA), même backend/même base de données, voir §2. Ajout d'un
+  bandeau "Installer l'application" dans l'interface (zone authentifiée) pour rendre
+  l'installation découvrable, au lieu de dépendre du menu caché du navigateur.
 - **2026-10-01** — Menu mobile (hamburger, `AppLayout.vue`) corrigé : passe d'un panneau
   en flux normal (qui pouvait dépasser la hauteur de l'écran, obligeant à faire défiler
   toute la page pour voir les dernières options) à un panneau en position fixe sous
