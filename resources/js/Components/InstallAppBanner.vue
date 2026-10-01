@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 
 const DISMISS_KEY = 'controol_install_banner_dismissed';
+const INSTALLED_KEY = 'controol_pwa_installed';
 
 const show = ref(false);
 const etat = ref('install'); // 'install' (pas encore installée) ou 'update' (déjà installée)
@@ -9,14 +10,58 @@ const plateforme = ref('chrome'); // 'chrome' (bouton direct) ou 'ios' (instruct
 const miseAJourEnCours = ref(false);
 let deferredPrompt = null;
 
-const estInstallee = () => window.matchMedia('(display-mode: standalone)').matches
-    || window.navigator.standalone === true;
-
 const estIos = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 
-// Le refus de l'installation reste mémorisé (ne pas insister après un "non" explicite) --
-// mais ne s'applique jamais à l'état "update" : une fois l'app installée, le bandeau
-// reste une simple commande utilitaire ("vérifier les mises à jour"), toujours visible.
+// "display-mode: standalone" ne détecte que si CET onglet a été ouvert depuis l'icône
+// installée -- pas si l'app est déjà installée mais consultée depuis un onglet
+// classique du navigateur (cas le plus courant : l'utilisateur garde ses habitudes de
+// navigation même après avoir installé). D'où les deux vérifications supplémentaires.
+const marqueeInstallee = () => {
+    try {
+        return localStorage.getItem(INSTALLED_KEY) === '1';
+    } catch {
+        return false;
+    }
+};
+
+const memoriserInstallee = () => {
+    try {
+        localStorage.setItem(INSTALLED_KEY, '1');
+    } catch {
+        // Stockage indisponible -- sans gravité, voir les deux autres vérifications.
+    }
+};
+
+const estInstallee = async () => {
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        memoriserInstallee();
+
+        return true;
+    }
+
+    if (marqueeInstallee()) {
+        return true;
+    }
+
+    // API Chrome/Edge : le manifeste se déclare lui-même en "related_applications"
+    // (voir public/manifest.webmanifest) pour permettre cette vérification depuis un
+    // onglet classique, même quand l'app n'est pas ouverte en mode autonome.
+    if ('getInstalledRelatedApps' in navigator) {
+        try {
+            const apps = await navigator.getInstalledRelatedApps();
+            if (apps.length > 0) {
+                memoriserInstallee();
+
+                return true;
+            }
+        } catch {
+            // API présente mais indisponible dans ce contexte -- repli silencieux.
+        }
+    }
+
+    return false;
+};
+
 const dejaRefusee = () => {
     try {
         return localStorage.getItem(DISMISS_KEY) === '1';
@@ -34,6 +79,13 @@ const onBeforeInstallPrompt = (event) => {
     }
 };
 
+const onAppInstalled = () => {
+    memoriserInstallee();
+    etat.value = 'update';
+    plateforme.value = estIos() ? 'ios' : 'chrome';
+    show.value = true;
+};
+
 const installer = async () => {
     if (!deferredPrompt) {
         return;
@@ -41,8 +93,6 @@ const installer = async () => {
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
-    etat.value = 'update';
-    plateforme.value = estIos() ? 'ios' : 'chrome';
 };
 
 // Force le service worker à vérifier une nouvelle version, vide le cache des fichiers
@@ -77,11 +127,14 @@ const fermer = () => {
     }
 };
 
-onMounted(() => {
-    if (estInstallee()) {
+onMounted(async () => {
+    window.addEventListener('appinstalled', onAppInstalled);
+
+    if (await estInstallee()) {
         etat.value = 'update';
         plateforme.value = estIos() ? 'ios' : 'chrome';
         show.value = true;
+
         return;
     }
 
@@ -101,6 +154,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    window.removeEventListener('appinstalled', onAppInstalled);
 });
 </script>
 

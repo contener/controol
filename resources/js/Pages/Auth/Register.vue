@@ -4,6 +4,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
+import InstallAppBanner from '@/Components/InstallAppBanner.vue';
 
 const form = useForm({
     name: '',
@@ -56,6 +57,8 @@ const forceMotDePasse = computed(() => {
 
 <template>
     <Head title="Créer mon compte" />
+
+    <InstallAppBanner />
 
     <div class="min-h-screen flex bg-slate-50 dark:bg-slate-900">
         <!-- Panneau de présentation (masqué sur mobile) -->

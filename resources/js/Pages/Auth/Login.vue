@@ -5,6 +5,7 @@ import AuthenticationCard from '@/Components/AuthenticationCard.vue';
 import AuthenticationCardLogo from '@/Components/AuthenticationCardLogo.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
+import InstallAppBanner from '@/Components/InstallAppBanner.vue';
 
 defineProps({
     canResetPassword: Boolean,
@@ -31,6 +32,8 @@ const submit = () => {
 
 <template>
     <Head title="Connexion" />
+
+    <InstallAppBanner />
 
     <AuthenticationCard>
         <template #logo>
