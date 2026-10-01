@@ -10,6 +10,7 @@ import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
+import InstallAppBanner from '@/Components/InstallAppBanner.vue';
 
 defineProps({
     title: String,
@@ -367,6 +368,8 @@ const logout = () => {
                     </div>
                 </div>
             </nav>
+
+            <InstallAppBanner />
 
             <FlashMessages />
 
