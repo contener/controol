@@ -63,6 +63,21 @@ c'est la langue native du code (`Facture`, `Boutique`, `Client`, `estActive()`,
 - **i18n** : `vue-i18n`, `fr` (langue par défaut) + `en`, dictionnaires dans
   `resources/js/lang/{fr,en}.json`, clé `nav.*` pour la navigation.
 - **Build** : Vite. Déploiement d'assets par bascule atomique de dossier (voir §8).
+- **PWA / APK Android** : l'app est une PWA installable (`public/manifest.webmanifest`,
+  `public/sw.js`, icônes dans `public/images/pwa/`). Le service worker est
+  **volontairement minimal** : il ne met en cache QUE les fichiers statiques versionnés
+  par Vite (`/build/assets/`, nom différent à chaque build) — jamais une page HTML ni
+  une réponse Inertia/API, pour ne jamais risquer d'afficher du stock, des factures ou
+  des paiements périmés sur une application de gestion en direct. **Pour obtenir un
+  vrai fichier `.apk`** : aller sur [pwabuilder.com](https://www.pwabuilder.com), entrer
+  `https://controol.fr`, cliquer sur "Package for stores" → Android (génère un TWA —
+  Trusted Web Activity — qui charge simplement le site dans une vue web dédiée, même
+  backend/même base de données, aucun code supplémentaire nécessaire). PWABuilder
+  fournit aussi le contenu exact à déployer sur
+  `https://controol.fr/.well-known/assetlinks.json` (lier le certificat de signature de
+  l'APK au domaine — sans ce fichier, l'app installée garde la barre d'adresse du
+  navigateur visible). Ce fichier n'existe pas encore dans le dépôt : à créer à la
+  génération du premier APK, avec l'empreinte SHA-256 que PWABuilder fournit alors.
 - **Service annexe indépendant** : `whatsapp-connector/` — micro-service Node.js
   (`@whiskeysockets/baileys` + `express` + `qrcode`), **jamais mélangé au code
   Laravel/Vue**, communique par HTTP avec un secret partagé
@@ -663,6 +678,9 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-01** — Controool devient une PWA installable (manifest, icônes, service
+  worker minimal ne cachant que les assets Vite) — base pour générer un vrai `.apk`
+  Android via PWABuilder (TWA), même backend/même base de données, voir §2.
 - **2026-10-01** — Menu mobile (hamburger, `AppLayout.vue`) corrigé : passe d'un panneau
   en flux normal (qui pouvait dépasser la hauteur de l'écran, obligeant à faire défiler
   toute la page pour voir les dernières options) à un panneau en position fixe sous
