@@ -1,3 +1,10 @@
+<IfModule mod_mime.c>
+    <!-- Sans ce type MIME explicite, certains navigateurs/outils (dont les vérificateurs
+    PWA type Lighthouse/PWABuilder) ne reconnaissent pas le fichier comme un vrai
+    manifeste d'application web installable. -->
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
