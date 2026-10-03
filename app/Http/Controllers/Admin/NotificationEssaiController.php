@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\EssaiStatut;
 use App\Http\Controllers\Controller;
+use App\Models\Abonnement;
+use App\Models\AdminAudit;
 use App\Models\EssaiUtilisateur;
 use App\Models\ModeleNotificationEssai;
+use App\Models\NotificationUtilisateur;
 use App\Models\ParametreEssai;
+use App\Models\Plan;
 use App\Models\WhatsappContactLog;
 use App\Support\WhatsappModeles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -72,6 +77,67 @@ class NotificationEssaiController extends Controller
         ParametreEssai::actuel()->update($data);
 
         return back()->with('flash_success', "Heure d'envoi mise à jour.");
+    }
+
+    /**
+     * Redonne 7 jours d'essai à un utilisateur dont l'essai est expiré -- jamais de
+     * mutation de la ligne existante (principe "grand livre" déjà suivi pour le
+     * parrainage/les paiements, voir §3 de controol.md) : nouvel Abonnement + nouvel
+     * EssaiUtilisateur, comme une inscription normale (NouvelUtilisateurService), pour
+     * que l'historique du premier essai (date de fin réelle, jamais réécrite) reste
+     * consultable. Un essai déjà en cours, converti ou annulé ne peut pas être
+     * "réactivé" -- action réservée au seul cas où l'essai est bien arrivé à expiration.
+     */
+    public function reactiverEssai(Request $request, EssaiUtilisateur $essai): RedirectResponse
+    {
+        abort_unless($request->user()->hasAdminPermission('notifications.envoyer'), 403);
+        abort_unless($essai->statut() === EssaiStatut::Expire, 422, "Seul un essai expiré peut être réactivé.");
+
+        $planBasique = Plan::where('code', 'basique')->first();
+        abort_unless($planBasique, 422, "Le plan Basique n'existe pas.");
+
+        $dateDebut = now();
+        $dateFin = $dateDebut->copy()->addDays(7);
+
+        DB::transaction(function () use ($essai, $planBasique, $dateDebut, $dateFin, $request) {
+            $abonnement = Abonnement::create([
+                'user_id' => $essai->user_id,
+                'plan_id' => $planBasique->id,
+                'statut' => 'actif',
+                'date_debut' => $dateDebut,
+                'date_fin' => $dateFin,
+            ]);
+
+            EssaiUtilisateur::create([
+                'user_id' => $essai->user_id,
+                'abonnement_id' => $abonnement->id,
+                'plan_id' => $planBasique->id,
+                'date_debut' => $dateDebut,
+                'date_fin' => $dateFin,
+                'prix_promo' => 3500,
+            ]);
+
+            AdminAudit::create([
+                'admin_id' => $request->user()->id,
+                'action' => 'essai_reactive',
+                'resource' => 'essai_utilisateur',
+                'resource_id' => $essai->id,
+                'ancienne_valeur' => ['statut' => 'expire', 'date_fin' => $essai->date_fin->toDateTimeString()],
+                'nouvelle_valeur' => ['date_debut' => $dateDebut->toDateTimeString(), 'date_fin' => $dateFin->toDateTimeString()],
+                'ip_address' => $request->ip(),
+            ]);
+
+            NotificationUtilisateur::create([
+                'user_id' => $essai->user_id,
+                'type' => 'essai_rappel',
+                'titre' => 'Votre essai gratuit a été réactivé !',
+                'message' => "Bonne nouvelle : votre essai gratuit du plan Basique a été réactivé pour 7 jours supplémentaires. Profitez-en pour découvrir toutes les fonctionnalités et faire votre choix d'abonnement en toute tranquillité.",
+                'est_promotionnelle' => true,
+                'created_at' => now(),
+            ]);
+        });
+
+        return back()->with('flash_success', "Essai réactivé pour 7 jours supplémentaires — l'utilisateur a été notifié.");
     }
 
     /**

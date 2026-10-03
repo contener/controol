@@ -410,4 +410,54 @@ class EssaiBasiqueTest extends TestCase
                 ->where('permissionsWhatsapp.historique', false)
                 ->where('essais.data', fn ($essais) => collect($essais)->firstWhere('email', 'sans-historique@example.com')['derniere_relance'] === null));
     }
+
+    public function test_admin_with_envoyer_permission_can_reactivate_an_expired_trial(): void
+    {
+        $planBasique = $this->creerPlanBasique();
+        $this->creerPlanGratuit();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir', 'notifications.envoyer']);
+        $user = $this->creerUtilisateurAvecEssai('expire-reactive@example.com', $planBasique);
+        $essaiExpire = EssaiUtilisateur::where('user_id', $user->id)->firstOrFail();
+        $this->expirerEssai($essaiExpire);
+        Artisan::call('abonnements:expirer');
+        $this->assertSame('gratuit', $user->fresh()->planActif()->code);
+
+        $response = $this->actingAs($admin)->post("/admin/notifications/essais/{$essaiExpire->id}/reactiver");
+
+        $response->assertRedirect();
+        $this->assertSame(2, EssaiUtilisateur::where('user_id', $user->id)->count());
+        $nouvelEssai = EssaiUtilisateur::where('user_id', $user->id)->where('id', '!=', $essaiExpire->id)->firstOrFail();
+        $this->assertSame(EssaiStatut::EnCours, $nouvelEssai->statut());
+        $this->assertSame(7, $nouvelEssai->joursRestants());
+        $this->assertSame('basique', $user->fresh()->planActif()->code);
+
+        // L'ancien essai expiré reste inchangé (historique jamais réécrit).
+        $this->assertSame(EssaiStatut::Expire, $essaiExpire->fresh()->statut());
+
+        $this->assertDatabaseHas('admin_audits', ['admin_id' => $admin->id, 'action' => 'essai_reactive', 'resource_id' => $essaiExpire->id]);
+        $this->assertDatabaseHas('notifications_utilisateurs', ['user_id' => $user->id, 'type' => 'essai_rappel']);
+    }
+
+    public function test_admin_without_envoyer_permission_cannot_reactivate_a_trial(): void
+    {
+        $planBasique = $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
+        $user = $this->creerUtilisateurAvecEssai('expire-refuse@example.com', $planBasique);
+        $essaiExpire = EssaiUtilisateur::where('user_id', $user->id)->firstOrFail();
+        $this->expirerEssai($essaiExpire);
+
+        $this->actingAs($admin)->post("/admin/notifications/essais/{$essaiExpire->id}/reactiver")->assertStatus(403);
+        $this->assertSame(1, EssaiUtilisateur::where('user_id', $user->id)->count());
+    }
+
+    public function test_cannot_reactivate_a_trial_that_is_not_expired(): void
+    {
+        $planBasique = $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir', 'notifications.envoyer']);
+        $user = $this->creerUtilisateurAvecEssai('en-cours-refuse@example.com', $planBasique);
+        $essaiEnCours = EssaiUtilisateur::where('user_id', $user->id)->firstOrFail();
+
+        $this->actingAs($admin)->post("/admin/notifications/essais/{$essaiEnCours->id}/reactiver")->assertStatus(422);
+        $this->assertSame(1, EssaiUtilisateur::where('user_id', $user->id)->count());
+    }
 }

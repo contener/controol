@@ -210,6 +210,7 @@ Route::middleware([
             Route::get('/', [NotificationEssaiController::class, 'index'])->name('index')->middleware('admin.permission:notifications.voir');
             Route::patch('/modeles/{modele}', [NotificationEssaiController::class, 'updateModele'])->name('modeles.update')->middleware('admin.permission:notifications.envoyer');
             Route::patch('/parametres', [NotificationEssaiController::class, 'updateParametres'])->name('parametres.update')->middleware('admin.permission:notifications.envoyer');
+            Route::post('/essais/{essai}/reactiver', [NotificationEssaiController::class, 'reactiverEssai'])->name('essais.reactiver')->middleware('admin.permission:notifications.envoyer');
         });
     });
 });

@@ -109,6 +109,15 @@ const apresEnvoiRelance = () => {
     essaiARelancer.value = null;
     router.reload({ only: ['essais'], preserveScroll: true });
 };
+
+const reactiverEssai = (essai) => {
+    if (confirm(`Redonner 7 jours d'essai gratuit à ${essai.nom} ? Cette action est immédiate et l'utilisateur sera notifié.`)) {
+        router.post(route('admin.notifications.essais.reactiver', essai.id), {}, {
+            preserveScroll: true,
+            only: ['essais', 'statistiques'],
+        });
+    }
+};
 </script>
 
 <template>
@@ -277,13 +286,20 @@ const apresEnvoiRelance = () => {
                                             </button>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
+                                    <td class="px-4 py-3 whitespace-nowrap text-right text-sm space-x-3">
                                         <button
                                             v-if="permissionsWhatsapp?.contacter"
                                             class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 font-medium"
                                             @click="essaiARelancer = essai"
                                         >
                                             Relancer
+                                        </button>
+                                        <button
+                                            v-if="essai.statut === 'expire' && permissionsNotifications.envoyer"
+                                            class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                                            @click="reactiverEssai(essai)"
+                                        >
+                                            Réactiver l'essai
                                         </button>
                                     </td>
                                 </tr>
