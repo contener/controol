@@ -24,6 +24,7 @@ class Plan extends Model
         'publication_sociale',
         'modeles_facture_avances',
         'chatbot_whatsapp',
+        'audience',
         'ordre',
     ];
 
@@ -35,6 +36,7 @@ class Plan extends Model
             'publication_sociale' => 'boolean',
             'modeles_facture_avances' => 'boolean',
             'chatbot_whatsapp' => 'boolean',
+            'audience' => 'boolean',
         ];
     }
 }

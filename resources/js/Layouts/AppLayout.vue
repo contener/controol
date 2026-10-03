@@ -79,6 +79,9 @@ const logout = () => {
                                 <NavLink :href="route('produits.index')" :active="route().current('produits.*')">
                                     {{ t('nav.products') }}
                                 </NavLink>
+                                <NavLink :href="route('audience.index')" :active="route().current('audience.*')">
+                                    👥 {{ t('nav.audience') }}
+                                </NavLink>
                                 <NavLink :href="route('stock.index')" :active="route().current('stock.*')">
                                     {{ t('nav.stock') }}
                                 </NavLink>
@@ -280,6 +283,9 @@ const logout = () => {
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('produits.index')" :active="route().current('produits.*')">
                             {{ t('nav.products') }}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink :href="route('audience.index')" :active="route().current('audience.*')">
+                            👥 {{ t('nav.audience') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('stock.index')" :active="route().current('stock.*')">
                             {{ t('nav.stock') }}

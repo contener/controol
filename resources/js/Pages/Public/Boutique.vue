@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import PartageLiens from '@/Components/PartageLiens.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
@@ -20,6 +21,7 @@ const props = defineProps({
     estAbonne: { type: Boolean, default: false },
     visiteurABoutique: { type: Boolean, default: false },
     estProprietaire: { type: Boolean, default: false },
+    produitsAimes: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -79,6 +81,23 @@ const fermerMessage = () => {
 };
 
 const ajoutProduitOuvert = ref(false);
+
+// Like à sens unique (pas de "unlike" en v1) : état local initialisé depuis le
+// serveur (produits déjà aimés lors du dernier chargement), mis à jour de façon
+// optimiste au clic pour un retour visuel immédiat.
+const aimes = ref(new Set(props.produitsAimes));
+const aEteAime = (produit) => aimes.value.has(produit.id);
+const aimer = async (produit) => {
+    if (aEteAime(produit)) {
+        return;
+    }
+    aimes.value.add(produit.id);
+    try {
+        await axios.post(route('public.boutique.produits.jaime', [boutique.slug, produit.id]));
+    } catch {
+        aimes.value.delete(produit.id);
+    }
+};
 
 // Garde-fou : après un changement de produit sans rechargement (nouveau produit sans
 // conversation existante), `conversationActive` peut encore contenir le fil du produit
@@ -195,9 +214,19 @@ const conversationPourModal = computed(() => {
                 </div>
 
                 <div v-for="produit in produits" :key="produit.id" class="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
-                    <div class="aspect-square bg-slate-100">
+                    <div class="aspect-square bg-slate-100 relative">
                         <img v-if="produit.photo_path" :src="`/storage/${produit.photo_path}`" class="w-full h-full object-cover" :alt="produit.nom" loading="lazy">
                         <div v-else class="w-full h-full flex items-center justify-center text-slate-300 text-3xl">📦</div>
+                        <button
+                            type="button"
+                            :title="aEteAime(produit) ? 'Vous aimez ce produit' : 'J\'aime ce produit'"
+                            :aria-label="aEteAime(produit) ? 'Vous aimez ce produit' : 'J\'aime ce produit'"
+                            class="absolute top-2 right-2 size-8 rounded-full bg-white/90 shadow flex items-center justify-center transition-transform"
+                            :class="aEteAime(produit) ? '' : 'hover:scale-110'"
+                            @click="aimer(produit)"
+                        >
+                            <span class="text-base leading-none" :class="aEteAime(produit) ? '' : 'opacity-40'">❤️</span>
+                        </button>
                     </div>
                     <div class="p-3 flex-1 flex flex-col">
                         <h3 class="text-sm font-medium text-slate-900 line-clamp-2">{{ produit.nom }}</h3>

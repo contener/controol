@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PaiementController as AdminPaiementController;
 use App\Http\Controllers\Admin\ParrainageController as AdminParrainageController;
 use App\Http\Controllers\Admin\UtilisateurController as AdminUtilisateurController;
 use App\Http\Controllers\AbonnementController;
+use App\Http\Controllers\AudienceController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CampagneSocialeController;
 use App\Http\Controllers\ClientController;
@@ -58,6 +59,9 @@ Route::delete('/boutique/{slug}/suivre', [PublicBoutiqueController::class, 'nepl
 Route::post('/boutique/{slug}/produits', [ProduitController::class, 'storeDepuisBoutique'])
     ->middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'account.active'])
     ->name('public.boutique.produits.store');
+Route::post('/boutique/{slug}/produits/{produit}/jaime', [PublicBoutiqueController::class, 'aimerProduit'])
+    ->middleware('throttle:20,1')
+    ->name('public.boutique.produits.jaime');
 
 Route::get('/conversations/{conversation}', [GuestConversationController::class, 'show'])
     ->middleware('signed')
@@ -98,6 +102,13 @@ Route::middleware([
         Route::resource('produits', ProduitController::class)->except(['show']);
         Route::patch('/produits/{produit}/marketplace', [ProduitController::class, 'updateMarketplace'])->name('produits.marketplace');
         Route::resource('depenses', DepenseController::class)->except(['show']);
+
+        Route::prefix('audience')->name('audience.')->group(function () {
+            Route::get('/', [AudienceController::class, 'index'])->name('index');
+            Route::get('/{membre}', [AudienceController::class, 'show'])->name('show');
+            Route::post('/{membre}/whatsapp', [AudienceController::class, 'relancerWhatsapp'])->name('whatsapp');
+            Route::patch('/{membre}/statut', [AudienceController::class, 'updateStatut'])->name('statut');
+        });
 
         Route::get('/messages', [MessageController::class, 'index'])->name('messages.index');
         Route::post('/messages', [MessageController::class, 'store'])->name('messages.store');

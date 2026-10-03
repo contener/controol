@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreConversationMessageRequest;
+use App\Models\AudienceInteraction;
+use App\Models\AudienceMembre;
 use App\Models\Boutique;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\Produit;
 use App\Models\Suivi;
+use App\Services\AudienceService;
 use App\Services\VisiteurIdentiteService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,6 +72,7 @@ class PublicBoutiqueController extends Controller
         return Inertia::render('Public/Boutique', [
             'boutique' => $boutique->only(self::CHAMPS_PUBLICS),
             'produits' => $produits,
+            'produitsAimes' => $this->produitsAimesParVisiteur($boutique, $produits, $request, $identite),
             'categories' => $categories,
             'filtres' => $request->only('categorie'),
             'meta' => $this->meta($boutique),
@@ -164,6 +169,22 @@ class PublicBoutiqueController extends Controller
         ]);
         $conversation->increment('messages_non_lus_boutique', 1, ['dernier_message_a' => now()]);
 
+        // Un message sur un produit est un signal d'intérêt commercial fort (section 3,
+        // niveau 3 du cahier des charges Audience) -- journalisé pour que le
+        // propriétaire retrouve cette personne dans son audience, sans dupliquer la
+        // résolution d'identité déjà faite ci-dessus. Clés renommées : AudienceMembre
+        // utilise `user_id`, Conversation utilise `visiteur_user_id`.
+        if ($produit) {
+            app(AudienceService::class)->enregistrerInteraction(
+                $boutique,
+                AudienceInteraction::MESSAGE,
+                $produit,
+                Auth::check() ? ['user_id' => Auth::id()] : ['visiteur_token' => $identiteVisiteur['visiteur_token']],
+                $request->string('nom_visiteur')->toString() ?: null,
+                $request->string('contact_visiteur')->toString() ?: null,
+            );
+        }
+
         $reponse = back()->with('flash_success', 'Votre message a bien été envoyé au vendeur.');
 
         if ($nouvelle && ! Auth::check()) {
@@ -171,6 +192,67 @@ class PublicBoutiqueController extends Controller
         }
 
         return $reponse;
+    }
+
+    /**
+     * Aimer est gratuit pour le visiteur (jamais verrouillé par le plan de la
+     * boutique) -- seule la consultation de l'audience par le propriétaire l'est.
+     * Produit toujours re-résolu scopé à la boutique du slug, jamais fait confiance à
+     * un id brut qui pourrait appartenir à une autre boutique.
+     */
+    public function aimerProduit(Request $request, string $slug, int $produit, VisiteurIdentiteService $identite, AudienceService $audience): JsonResponse
+    {
+        $boutique = $this->resoudreBoutique($slug);
+
+        $produitModele = Produit::withoutGlobalScopes()
+            ->where('boutique_id', $boutique->id)
+            ->where('actif', true)
+            ->where('marketplace_visible', true)
+            ->findOrFail($produit);
+
+        $identiteVisiteur = Auth::check()
+            ? ['user_id' => Auth::id()]
+            : ['visiteur_token' => $identite->resoudreOuCreerJeton($request)];
+
+        $audience->enregistrerInteraction($boutique, AudienceInteraction::LIKE, $produitModele, $identiteVisiteur);
+
+        return response()->json(['aime' => true]);
+    }
+
+    /**
+     * Ne lit le cookie visiteur qu'en lecture (jamais resoudreOuCreerJeton(), qui en
+     * créerait un pour chaque simple visite) -- un visiteur qui n'a jamais interagi ne
+     * doit pas se voir attribuer un token juste pour afficher la page.
+     */
+    private function produitsAimesParVisiteur(Boutique $boutique, $produits, Request $request, VisiteurIdentiteService $identite): array
+    {
+        if ($produits->isEmpty()) {
+            return [];
+        }
+
+        $jeton = Auth::check() ? null : $request->cookie(VisiteurIdentiteService::COOKIE_TOKEN);
+
+        if (! Auth::check() && ! $jeton) {
+            return [];
+        }
+
+        $membre = AudienceMembre::withoutGlobalScopes()
+            ->where('boutique_id', $boutique->id)
+            ->when(Auth::check(), fn ($q) => $q->where('user_id', Auth::id()))
+            ->when(! Auth::check(), fn ($q) => $q->where('visiteur_token', $jeton))
+            ->first();
+
+        if (! $membre) {
+            return [];
+        }
+
+        return AudienceInteraction::withoutGlobalScopes()
+            ->where('audience_membre_id', $membre->id)
+            ->where('type', AudienceInteraction::LIKE)
+            ->pluck('produit_id')
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**

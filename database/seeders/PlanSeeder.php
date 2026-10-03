@@ -25,6 +25,7 @@ class PlanSeeder extends Seeder
                 'publication_sociale' => false,
                 'modeles_facture_avances' => false,
                 'chatbot_whatsapp' => false,
+                'audience' => false,
                 'ordre' => 1,
             ],
             [
@@ -44,6 +45,7 @@ class PlanSeeder extends Seeder
                 'publication_sociale' => false,
                 'modeles_facture_avances' => true,
                 'chatbot_whatsapp' => false,
+                'audience' => true,
                 'ordre' => 2,
             ],
             [
@@ -62,6 +64,7 @@ class PlanSeeder extends Seeder
                 'publication_sociale' => true,
                 'modeles_facture_avances' => true,
                 'chatbot_whatsapp' => true,
+                'audience' => true,
                 'ordre' => 3,
             ],
         ];
