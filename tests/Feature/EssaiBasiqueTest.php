@@ -248,4 +248,90 @@ class EssaiBasiqueTest extends TestCase
         $this->actingAs($user)->patchJson('/mes-notifications/tout-lu')->assertOk();
         $this->assertNotNull($notification2->fresh()->lu_a);
     }
+
+    public function test_admin_page_exposes_days_remaining_and_boutique_status_per_trial_user(): void
+    {
+        $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
+
+        $sansBoutique = $this->inscrire('sans-boutique@example.com');
+        $avecBoutique = $this->inscrire('avec-boutique@example.com');
+        \App\Models\Boutique::create([
+            'user_id' => $avecBoutique->id, 'nom' => 'Boutique test', 'slug' => 'boutique-test-'.uniqid(),
+            'devise' => 'XAF', 'taux_tva_defaut' => 19.25,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/notifications');
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('essais.data', fn ($essais) => collect($essais)->contains(fn ($e) => $e['email'] === 'sans-boutique@example.com' && $e['a_boutique'] === false && $e['statut'] === 'en_cours' && $e['jours_restants'] === 7)
+                && collect($essais)->contains(fn ($e) => $e['email'] === 'avec-boutique@example.com' && $e['a_boutique'] === true)));
+    }
+
+    public function test_admin_page_filters_trial_users_by_statut(): void
+    {
+        $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
+
+        $enCours = $this->inscrire('en-cours@example.com');
+        $expireUtilisateur = $this->inscrire('expire@example.com');
+        $this->expirerEssai(EssaiUtilisateur::where('user_id', $expireUtilisateur->id)->firstOrFail());
+
+        $this->actingAs($admin)->get('/admin/notifications?statutEssai=en_cours')
+            ->assertInertia(fn ($page) => $page
+                ->where('essais.data', fn ($essais) => collect($essais)->pluck('email')->contains('en-cours@example.com')
+                    && ! collect($essais)->pluck('email')->contains('expire@example.com')));
+
+        $this->actingAs($admin)->get('/admin/notifications?statutEssai=expire')
+            ->assertInertia(fn ($page) => $page
+                ->where('essais.data', fn ($essais) => collect($essais)->pluck('email')->contains('expire@example.com')
+                    && ! collect($essais)->pluck('email')->contains('en-cours@example.com')));
+    }
+
+    public function test_whatsapp_number_hidden_from_trial_list_without_voir_permission(): void
+    {
+        $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
+        $user = $this->inscrire();
+        $user->update(['whatsapp' => '+237600000000']);
+
+        $this->actingAs($admin)->get('/admin/notifications')
+            ->assertInertia(fn ($page) => $page
+                ->where('essais.data', fn ($essais) => collect($essais)->first()['whatsapp'] === null)
+                ->where('permissionsWhatsapp.voir', false));
+    }
+
+    public function test_whatsapp_relance_templates_for_trial_users_exist_and_are_context_aware(): void
+    {
+        $cles = \App\Support\WhatsappModeles::cles();
+
+        $this->assertContains('essai_relance_sans_boutique', $cles);
+        $this->assertContains('essai_relance_avec_boutique', $cles);
+
+        $modeles = collect(\App\Support\WhatsappModeles::liste())->keyBy('cle');
+        $this->assertStringContainsString('{{jours_restants}}', $modeles['essai_relance_sans_boutique']['texte']);
+        $this->assertStringContainsString('boutique', $modeles['essai_relance_sans_boutique']['texte']);
+        $this->assertStringContainsString('{{jours_restants}}', $modeles['essai_relance_avec_boutique']['texte']);
+        $this->assertStringContainsString('abonnement', $modeles['essai_relance_avec_boutique']['texte']);
+    }
+
+    public function test_admin_can_relaunch_a_trial_user_via_whatsapp_from_the_trial_list(): void
+    {
+        $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir', 'whatsapp.contacter']);
+        $user = $this->inscrire();
+        $user->update(['whatsapp' => '+237600000000']);
+
+        $response = $this->actingAs($admin)->postJson("/admin/utilisateurs/{$user->id}/whatsapp", [
+            'message' => 'Message de test',
+            'modele_cle' => 'essai_relance_sans_boutique',
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('whatsapp_contact_logs', [
+            'user_id' => $user->id,
+            'admin_id' => $admin->id,
+            'modele_cle' => 'essai_relance_sans_boutique',
+        ]);
+    }
 }

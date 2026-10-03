@@ -5,10 +5,10 @@ namespace App\Support;
 /**
  * Modèles de messages de relance WhatsApp — catalogue en code, pas en base (textes gérés par
  * les développeurs, pas du contenu éditable par les admins dans cette première passe). Les
- * placeholders ({{nom}}, {{boutique}}, {{plan}}, {{date_expiration}}) sont substitués côté
- * Vue au moment où l'admin choisit un modèle, avec les données déjà présentes sur la page —
- * pas d'aller-retour serveur nécessaire pour prévisualiser, et le texte reste éditable avant
- * l'ouverture de WhatsApp.
+ * placeholders ({{nom}}, {{boutique}}, {{plan}}, {{date_expiration}}, {{jours_restants}}) sont
+ * substitués côté Vue au moment où l'admin choisit un modèle, avec les données déjà présentes
+ * sur la page — pas d'aller-retour serveur nécessaire pour prévisualiser, et le texte reste
+ * éditable avant l'ouverture de WhatsApp.
  */
 class WhatsappModeles
 {
@@ -25,6 +25,10 @@ class WhatsappModeles
     public const PROSPECTION_MARKETPLACE = 'prospection_marketplace';
 
     public const PROSPECTION_RELANCE_INTERET = 'prospection_relance_interet';
+
+    public const ESSAI_RELANCE_SANS_BOUTIQUE = 'essai_relance_sans_boutique';
+
+    public const ESSAI_RELANCE_AVEC_BOUTIQUE = 'essai_relance_avec_boutique';
 
     private const TEXTES = [
         self::RELANCE_ABONNEMENT => [
@@ -54,6 +58,14 @@ class WhatsappModeles
         self::PROSPECTION_RELANCE_INTERET => [
             'libelle' => 'Prospection — Relance après intérêt',
             'texte' => "Bonjour {{nom}},\n\nNous revenons vers vous concernant CONTROOL.\n\nSi vous souhaitez gérer plus facilement vos ventes, vos stocks, vos clients et vos factures, nous pouvons vous accompagner dans la création de votre compte.\n\nVoici le lien :\n{{lien_inscription}}",
+        ],
+        self::ESSAI_RELANCE_SANS_BOUTIQUE => [
+            'libelle' => 'Essai — Pas encore de boutique',
+            'texte' => "Bonjour {{nom}} 👋,\n\nIl vous reste {{jours_restants}} jour(s) sur votre essai gratuit CONTROOL. Nous avons remarqué que vous n'avez pas encore créé votre boutique — c'est rapide (moins de 2 minutes) et c'est la première étape pour profiter pleinement de votre essai !\n\nBesoin d'un coup de main pour démarrer ? Nous sommes là avec plaisir 😊",
+        ],
+        self::ESSAI_RELANCE_AVEC_BOUTIQUE => [
+            'libelle' => 'Essai — A une boutique, à convertir',
+            'texte' => "Bonjour {{nom}} 👋,\n\nIl vous reste {{jours_restants}} jour(s) sur votre essai gratuit CONTROOL. Votre boutique est prête, bravo pour ce bon départ !\n\nPour continuer à en profiter sans interruption après l'essai, vous pouvez passer à l'abonnement dès que vous êtes prêt(e), sans aucune pression. Une question ? Nous sommes à votre écoute 😊",
         ],
     ];
 

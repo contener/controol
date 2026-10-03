@@ -13,9 +13,15 @@ import SecondaryButton from '@/Components/SecondaryButton.vue';
 // seul générateur de lien wa.me côté serveur (voir App\Services\WhatsappRelanceService).
 const props = defineProps({
     show: Boolean,
-    cible: { type: Object, default: null }, // { id, nom, whatsapp (nullable si non autorisé/absent), plan?, entreprise?, ville? }
+    // { id, nom, whatsapp (nullable si non autorisé/absent), plan?, entreprise?, ville?,
+    //   joursRestants? (essai en cours uniquement) }
+    cible: { type: Object, default: null },
     type: { type: String, default: 'utilisateur' }, // 'utilisateur' | 'contact'
     modeles: { type: Array, default: () => [] },
+    // Présélectionne un modèle à l'ouverture (ex. relance essai : le bon modèle est déjà
+    // déterminé selon que l'utilisateur a une boutique ou non) -- laisse quand même la main
+    // à l'admin pour changer de modèle ou éditer librement le texte avant l'envoi.
+    modeleCleInitiale: { type: String, default: '' },
 });
 const emit = defineEmits(['close', 'envoye']);
 
@@ -35,15 +41,19 @@ const substituer = (texte) => texte
     .replaceAll('{{entreprise}}', props.cible?.entreprise ?? '')
     .replaceAll('{{ville}}', props.cible?.ville ?? '')
     .replaceAll('{{boutique}}', props.cible?.entreprise ?? '')
-    .replaceAll('{{date_expiration}}', '')
+    .replaceAll('{{date_expiration}}', props.cible?.dateExpiration ?? '')
+    .replaceAll('{{jours_restants}}', props.cible?.joursRestants !== undefined && props.cible?.joursRestants !== null ? String(props.cible.joursRestants) : '')
     .replaceAll('{{lien_inscription}}', route('register'));
 
 watch(() => props.show, (visible) => {
-    if (visible) {
-        modeleCle.value = '';
-        message.value = '';
-        erreur.value = '';
+    if (!visible) {
+        return;
     }
+
+    erreur.value = '';
+    const modeleInitial = props.modeles.find((m) => m.cle === props.modeleCleInitiale);
+    modeleCle.value = modeleInitial ? modeleInitial.cle : '';
+    message.value = modeleInitial ? substituer(modeleInitial.texte) : '';
 });
 
 watch(modeleCle, (cle) => {
