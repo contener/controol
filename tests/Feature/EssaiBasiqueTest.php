@@ -438,6 +438,48 @@ class EssaiBasiqueTest extends TestCase
         $this->assertDatabaseHas('notifications_utilisateurs', ['user_id' => $user->id, 'type' => 'essai_rappel']);
     }
 
+    /**
+     * Après réactivation, l'utilisateur a DEUX lignes essais_utilisateurs (l'historique
+     * n'est jamais réécrit) -- mais la liste admin ne doit en montrer qu'une seule, la
+     * plus récente, sinon l'admin voit encore "Expiré" sur l'ancienne ligne et croit que
+     * la réactivation n'a rien fait (bug réellement rencontré en production).
+     */
+    public function test_trial_list_shows_only_the_most_recent_trial_per_user_after_reactivation(): void
+    {
+        $planBasique = $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir', 'notifications.envoyer']);
+        $user = $this->creerUtilisateurAvecEssai('dedup@example.com', $planBasique);
+        $essaiExpire = EssaiUtilisateur::where('user_id', $user->id)->firstOrFail();
+        $this->expirerEssai($essaiExpire);
+
+        $this->actingAs($admin)->post("/admin/notifications/essais/{$essaiExpire->id}/reactiver")->assertRedirect();
+        $this->assertSame(2, EssaiUtilisateur::where('user_id', $user->id)->count());
+
+        $response = $this->actingAs($admin)->get('/admin/notifications');
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('essais.data', function ($essais) {
+                $lignesUtilisateur = collect($essais)->where('email', 'dedup@example.com');
+
+                return $lignesUtilisateur->count() === 1 && $lignesUtilisateur->first()['statut'] === 'en_cours';
+            }));
+    }
+
+    public function test_reactivation_success_flash_message_is_returned(): void
+    {
+        $planBasique = $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir', 'notifications.envoyer']);
+        $user = $this->creerUtilisateurAvecEssai('flash-reactive@example.com', $planBasique);
+        $essaiExpire = EssaiUtilisateur::where('user_id', $user->id)->firstOrFail();
+        $this->expirerEssai($essaiExpire);
+
+        $this->actingAs($admin)
+            ->from('/admin/notifications')
+            ->post("/admin/notifications/essais/{$essaiExpire->id}/reactiver")
+            ->assertRedirect('/admin/notifications')
+            ->assertSessionHas('flash_success');
+    }
+
     public function test_admin_without_envoyer_permission_cannot_reactivate_a_trial(): void
     {
         $planBasique = $this->creerPlanBasique();

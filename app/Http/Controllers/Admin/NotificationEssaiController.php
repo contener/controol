@@ -146,13 +146,24 @@ class NotificationEssaiController extends Controller
      * au bon moment, avec le bon message. Le statut n'étant pas une colonne persistée
      * (EssaiUtilisateur::statut()), le filtre traduit chaque valeur en conditions SQL
      * équivalentes plutôt que de filtrer après coup (ce qui casserait la pagination).
+     *
+     * Un seul essai par utilisateur affiché : le plus récent (id le plus élevé). Depuis
+     * reactiverEssai(), un utilisateur peut avoir plusieurs lignes essais_utilisateurs
+     * (l'ancienne expirée jamais réécrite + la nouvelle) -- sans ce filtre, il
+     * apparaîtrait deux fois (une fois "Expiré", une fois "En cours"), et la ligne
+     * "Expiré" resterait affichée telle quelle après réactivation, donnant
+     * l'impression que l'action n'a rien fait alors qu'elle a bien fonctionné.
      */
     private function essaisUtilisateurs(Request $request): LengthAwarePaginator
     {
         $statutFiltre = $request->string('statutEssai')->toString();
         $recherche = $request->string('rechercheEssai')->toString();
 
-        $query = EssaiUtilisateur::query()->with(['user' => fn ($q) => $q->withCount('boutiques')]);
+        $dernierEssaiParUtilisateur = EssaiUtilisateur::selectRaw('MAX(id) as id')->groupBy('user_id');
+
+        $query = EssaiUtilisateur::query()
+            ->whereIn('id', $dernierEssaiParUtilisateur)
+            ->with(['user' => fn ($q) => $q->withCount('boutiques')]);
 
         match ($statutFiltre) {
             'en_cours' => $query->whereNull('converti_a')->whereNull('annule_a')->where('date_fin', '>=', now()),
@@ -225,11 +236,14 @@ class NotificationEssaiController extends Controller
 
     /**
      * Données réelles calculées depuis essais_utilisateurs — jamais de valeurs
-     * fictives, conforme au cahier des charges.
+     * fictives, conforme au cahier des charges. Un seul essai par utilisateur compté
+     * (le plus récent, voir essaisUtilisateurs()) -- sinon un utilisateur réactivé
+     * serait compté deux fois (une fois dans "expirés", une fois dans "actifs").
      */
     private function statistiques(): array
     {
-        $essais = EssaiUtilisateur::query()->get(['id', 'date_fin', 'converti_a', 'annule_a']);
+        $dernierEssaiParUtilisateur = EssaiUtilisateur::selectRaw('MAX(id) as id')->groupBy('user_id');
+        $essais = EssaiUtilisateur::whereIn('id', $dernierEssaiParUtilisateur)->get(['id', 'date_fin', 'converti_a', 'annule_a']);
 
         $actifs = 0;
         $expirantAujourdhui = 0;

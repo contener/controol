@@ -98,24 +98,24 @@ const modeleCleRelance = computed(() => (essaiARelancer.value?.a_boutique
 // Même route que la confirmation depuis la fiche utilisateur (Utilisateurs/Show.vue) --
 // un seul endpoint, utilisable depuis n'importe quelle page qui affiche un historique
 // de relances WhatsApp.
+// IMPORTANT : pas de `only` (rechargement partiel) sur ces actions -- "flash" n'est
+// pas marqué Inertia::always() dans HandleInertiaRequests, donc un rechargement
+// partiel qui ne le liste pas explicitement exclut silencieusement le message de
+// confirmation du serveur (flash_success/flash_error), donnant l'impression qu'une
+// action a échoué alors qu'elle a bien fonctionné. Un rechargement complet coûte peu
+// sur une page d'administration peu fréquentée ; la certitude d'avoir le flash prime.
 const confirmerEnvoiRelance = (relance) => {
-    router.patch(route('admin.utilisateurs.whatsapp.confirmer', relance.id), {}, { preserveScroll: true, only: ['essais'] });
+    router.patch(route('admin.utilisateurs.whatsapp.confirmer', relance.id), {}, { preserveScroll: true });
 };
 
-// Rechargement ciblé (pas toute la page) juste après l'ouverture de WhatsApp, pour que
-// la colonne "Relance WhatsApp" affiche immédiatement la nouvelle relance -- sans ça,
-// elle resterait affichée "Jamais relancé" jusqu'au prochain rechargement manuel.
 const apresEnvoiRelance = () => {
     essaiARelancer.value = null;
-    router.reload({ only: ['essais'], preserveScroll: true });
+    router.reload({ preserveScroll: true });
 };
 
 const reactiverEssai = (essai) => {
     if (confirm(`Redonner 7 jours d'essai gratuit à ${essai.nom} ? Cette action est immédiate et l'utilisateur sera notifié.`)) {
-        router.post(route('admin.notifications.essais.reactiver', essai.id), {}, {
-            preserveScroll: true,
-            only: ['essais', 'statistiques'],
-        });
+        router.post(route('admin.notifications.essais.reactiver', essai.id), {}, { preserveScroll: true });
     }
 };
 </script>
