@@ -506,21 +506,27 @@ en plus de marquer comme lu.
   par admin (heure, fuseau, 7 templates de message par jour d'essai). Expiration gérée
   par une commande planifiée qui repasse l'utilisateur au plan Gratuit sans jamais
   supprimer ses données.
-- **⚠️ Prérequis d'hébergement impératif, vérifié le 2026-10-03** : les deux commandes
-  planifiées (`essais:notifier`, `abonnements:expirer`, toutes deux dans
-  `routes/console.php` via `Schedule::command(...)`) ne s'exécutent **que si** un cron
-  système appelle `php artisan schedule:run` chaque minute. Ce n'est **pas** automatique
-  sur cet hébergement mutualisé Hostinger — `crontab` n'est même pas accessible en SSH
+- **⚠️ Prérequis d'hébergement impératif** : les deux commandes planifiées
+  (`essais:notifier`, `abonnements:expirer`, toutes deux dans `routes/console.php` via
+  `Schedule::command(...)`) ne s'exécutent **que si** un cron système appelle
+  `php artisan schedule:run` chaque minute. Ce n'est **pas** automatique sur un
+  hébergement mutualisé Hostinger — `crontab` n'est même pas accessible en SSH
   (`crontab: command not found`), la configuration se fait uniquement via le Cron Jobs
-  de hPanel. **Découvert cassé en production** : 0 rappel d'essai envoyé pendant des
-  jours malgré 15 essais actifs, 21+ essais expirés jamais rétrogradés vers le plan
-  Gratuit — corrigé manuellement (`php artisan essais:notifier` + `php artisan
-  abonnements:expirer` lancés à la main), mais **la cause racine reste à corriger côté
-  hPanel** : ajouter une tâche cron `* * * * *` exécutant
-  `php /home/u489236406/domains/controol.fr/controool_app/artisan schedule:run` (chemin
-  exact à vérifier si l'hébergement change). À vérifier après toute migration
-  d'hébergement ou reconstruction à partir de ce document — sans cette tâche, tout le
-  système d'essai (rappels + rétrogradation automatique) reste silencieusement inactif.
+  de hPanel (tâche `* * * * *` exécutant
+  `php /home/u489236406/domains/controol.fr/controool_app/artisan schedule:run`, chemin
+  exact à vérifier si l'hébergement change). **Incident réel (2026-10-03→04)** :
+  découvert cassé en production — 0 rappel d'essai envoyé pendant plusieurs jours
+  malgré 15 essais actifs, 21+ essais expirés jamais rétrogradés vers le plan Gratuit.
+  Corrigé en deux temps : rattrapage manuel immédiat (`php artisan essais:notifier` +
+  `php artisan abonnements:expirer` lancés à la main), puis cron système ajouté côté
+  hPanel par l'utilisateur et vérifié enregistré (`php artisan schedule:list`). Vérifier
+  après toute migration d'hébergement ou reconstruction à partir de ce document — sans
+  cette tâche, tout le système d'essai reste silencieusement inactif. **Second bug
+  trouvé à cette occasion** : `ParametreEssai.fuseau` (Africa/Douala, UTC+1) était
+  stocké/affiché côté admin mais jamais appliqué au planning — `dailyAt()` sans
+  `->timezone()` explicite interprète l'heure dans `APP_TIMEZONE` (UTC en production),
+  décalant silencieusement l'envoi d'une heure (08:00 configuré → 08:00 UTC = 9h heure
+  locale). Corrigé par l'ajout de `->timezone($fuseauNotification)`.
 - **Lien de paiement externe hébergé** (Zahletup) : `plans.lien_paiement` (prix
   normal) + `plans.lien_paiement_promo` (nullable, prix promo essai). Le fournisseur
   a un montant fixe par lien — un même lien ne peut donc jamais servir à la fois le
@@ -726,12 +732,16 @@ invitation à s'abonner si elle existe déjà — ton volontairement doux, jamai
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
-- **2026-10-03** — **Découverte et correction d'un incident de production** : le
+- **2026-10-03→04** — **Découverte et correction d'un incident de production** : le
   planificateur Laravel (`schedule:run`) ne tournait pas (pas de cron système configuré
   sur l'hébergement Hostinger — hors du contrôle du code) — 0 rappel d'essai envoyé en
   plusieurs jours malgré 15 essais actifs, 21+ essais expirés jamais rétrogradés vers le
-  plan Gratuit. Corrigé manuellement en relançant les deux commandes concernées ; cause
-  racine (tâche cron hPanel manquante) documentée en §5.11, à corriger côté hébergement.
+  plan Gratuit. Corrigé manuellement en relançant les deux commandes concernées, puis
+  cause racine corrigée : tâche cron ajoutée côté hPanel par l'utilisateur, vérifiée
+  enregistrée via `php artisan schedule:list` (voir §5.11). Au passage, second bug
+  trouvé et corrigé : le fuseau horaire admin-configurable (`parametres_essai.fuseau`)
+  n'était jamais réellement appliqué à l'heure d'envoi (`Schedule::...->timezone()`
+  manquant), décalant silencieusement les rappels d'une heure.
   Ajout dans l'espace Super Admin (page Notifications) d'une liste individuelle des
   utilisateurs en essai (statut, jours restants, boutique créée ou non, dernier rappel
   envoyé) avec relance WhatsApp en un clic dont le message s'adapte automatiquement
