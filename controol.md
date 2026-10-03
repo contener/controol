@@ -506,6 +506,21 @@ en plus de marquer comme lu.
   par admin (heure, fuseau, 7 templates de message par jour d'essai). Expiration gérée
   par une commande planifiée qui repasse l'utilisateur au plan Gratuit sans jamais
   supprimer ses données.
+- **⚠️ Prérequis d'hébergement impératif, vérifié le 2026-10-03** : les deux commandes
+  planifiées (`essais:notifier`, `abonnements:expirer`, toutes deux dans
+  `routes/console.php` via `Schedule::command(...)`) ne s'exécutent **que si** un cron
+  système appelle `php artisan schedule:run` chaque minute. Ce n'est **pas** automatique
+  sur cet hébergement mutualisé Hostinger — `crontab` n'est même pas accessible en SSH
+  (`crontab: command not found`), la configuration se fait uniquement via le Cron Jobs
+  de hPanel. **Découvert cassé en production** : 0 rappel d'essai envoyé pendant des
+  jours malgré 15 essais actifs, 21+ essais expirés jamais rétrogradés vers le plan
+  Gratuit — corrigé manuellement (`php artisan essais:notifier` + `php artisan
+  abonnements:expirer` lancés à la main), mais **la cause racine reste à corriger côté
+  hPanel** : ajouter une tâche cron `* * * * *` exécutant
+  `php /home/u489236406/domains/controol.fr/controool_app/artisan schedule:run` (chemin
+  exact à vérifier si l'hébergement change). À vérifier après toute migration
+  d'hébergement ou reconstruction à partir de ce document — sans cette tâche, tout le
+  système d'essai (rappels + rétrogradation automatique) reste silencieusement inactif.
 - **Lien de paiement externe hébergé** (Zahletup) : `plans.lien_paiement` (prix
   normal) + `plans.lien_paiement_promo` (nullable, prix promo essai). Le fournisseur
   a un montant fixe par lien — un même lien ne peut donc jamais servir à la fois le
@@ -568,10 +583,25 @@ téléphone normalisé dès sa création/modification.
 obligatoire** (voir §7). Sections : dashboard (agrégats globaux), gestion des
 administrateurs eux-mêmes (super_admin exclusivement, jamais délégable), utilisateurs
 finaux (suspendre/supprimer/relancer), paiements (valider/refuser), marketplace
-(modération), notifications d'essai (templates/réglages), parrainage (vue globale,
-règlements, annulations), contacts CRM (liste/import/export/relance). Permissions
+(modération), notifications d'essai (templates/réglages **+ liste individuelle des
+utilisateurs en essai**, voir ci-dessous), parrainage (vue globale, règlements,
+annulations), contacts CRM (liste/import/export/relance). Permissions
 granulaires par section (`App\Support\AdminPermissions`), super_admin outrepasse
 toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
+
+**Liste des utilisateurs en essai** (page Notifications,
+`NotificationEssaiController::essaisUtilisateurs()`) : un `EssaiUtilisateur` par ligne
+(pas seulement des agrégats) avec statut calculé (En cours/Expiré/Converti/Annulé),
+jours restants, présence d'au moins une boutique (`user.boutiques_count`), et dernier
+jour notifié (`dernier_jour_notifie` — permet de vérifier visuellement que les rappels
+quotidiens atteignent bien chaque utilisateur, sans dépendre uniquement des logs).
+Filtrable par statut et recherche nom/email. Relance WhatsApp en un clic qui réutilise
+l'endpoint existant (`whatsapp.contacter`, `WhatsappRelanceService`, voir §5.15) avec un
+message pré-rédigé qui **s'adapte automatiquement** à la situation de l'utilisateur
+(`App\Support\WhatsappModeles::ESSAI_RELANCE_SANS_BOUTIQUE` /
+`ESSAI_RELANCE_AVEC_BOUTIQUE`, sélectionné côté Vue selon `a_boutique`, jamais un choix
+manuel de l'admin) : invitation à créer sa boutique si ce n'est pas encore fait,
+invitation à s'abonner si elle existe déjà — ton volontairement doux, jamais pressant.
 
 ---
 
@@ -696,6 +726,16 @@ toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-03** — **Découverte et correction d'un incident de production** : le
+  planificateur Laravel (`schedule:run`) ne tournait pas (pas de cron système configuré
+  sur l'hébergement Hostinger — hors du contrôle du code) — 0 rappel d'essai envoyé en
+  plusieurs jours malgré 15 essais actifs, 21+ essais expirés jamais rétrogradés vers le
+  plan Gratuit. Corrigé manuellement en relançant les deux commandes concernées ; cause
+  racine (tâche cron hPanel manquante) documentée en §5.11, à corriger côté hébergement.
+  Ajout dans l'espace Super Admin (page Notifications) d'une liste individuelle des
+  utilisateurs en essai (statut, jours restants, boutique créée ou non, dernier rappel
+  envoyé) avec relance WhatsApp en un clic dont le message s'adapte automatiquement
+  selon que l'utilisateur a déjà une boutique ou non (voir §5.17).
 - **2026-10-01** — Controool devient une PWA installable (manifest, icônes, service
   worker minimal ne cachant que les assets Vite) — base pour générer un vrai `.apk`
   Android via PWABuilder (TWA), même backend/même base de données, voir §2. Ajout d'un
