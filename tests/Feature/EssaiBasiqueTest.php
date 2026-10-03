@@ -64,6 +64,27 @@ class EssaiBasiqueTest extends TestCase
         return $admin;
     }
 
+    /**
+     * Construit directement un utilisateur + son essai (sans passer par /register) --
+     * /register est une route "guest" : appeler inscrire() deux fois dans le même test
+     * échouerait, le second appel étant redirigé puisque le premier utilisateur reste
+     * connecté en session.
+     */
+    private function creerUtilisateurAvecEssai(string $email, Plan $planBasique): User
+    {
+        $user = User::factory()->create(['email' => $email]);
+        $abonnement = \App\Models\Abonnement::create([
+            'user_id' => $user->id, 'plan_id' => $planBasique->id, 'statut' => 'actif',
+            'date_debut' => now(), 'date_fin' => now()->addDays(7),
+        ]);
+        EssaiUtilisateur::create([
+            'user_id' => $user->id, 'abonnement_id' => $abonnement->id, 'plan_id' => $planBasique->id,
+            'date_debut' => now(), 'date_fin' => now()->addDays(7), 'prix_promo' => 3500,
+        ]);
+
+        return $user;
+    }
+
     public function test_registration_grants_a_7_day_basique_trial(): void
     {
         $this->creerPlanBasique();
@@ -168,13 +189,13 @@ class EssaiBasiqueTest extends TestCase
 
     public function test_essais_notifier_skips_converted_and_expired_trials(): void
     {
-        $this->creerPlanBasique();
+        $planBasique = $this->creerPlanBasique();
         $this->creerPlanGratuit();
 
-        $converti = $this->inscrire('converti@example.com');
+        $converti = $this->creerUtilisateurAvecEssai('converti@example.com', $planBasique);
         EssaiUtilisateur::where('user_id', $converti->id)->update(['converti_a' => now()]);
 
-        $expire = $this->inscrire('expire@example.com');
+        $expire = $this->creerUtilisateurAvecEssai('expire@example.com', $planBasique);
         $essaiExpire = EssaiUtilisateur::where('user_id', $expire->id)->firstOrFail();
         $this->expirerEssai($essaiExpire);
 
@@ -251,11 +272,11 @@ class EssaiBasiqueTest extends TestCase
 
     public function test_admin_page_exposes_days_remaining_and_boutique_status_per_trial_user(): void
     {
-        $this->creerPlanBasique();
+        $planBasique = $this->creerPlanBasique();
         $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
 
-        $sansBoutique = $this->inscrire('sans-boutique@example.com');
-        $avecBoutique = $this->inscrire('avec-boutique@example.com');
+        $this->creerUtilisateurAvecEssai('sans-boutique@example.com', $planBasique);
+        $avecBoutique = $this->creerUtilisateurAvecEssai('avec-boutique@example.com', $planBasique);
         \App\Models\Boutique::create([
             'user_id' => $avecBoutique->id, 'nom' => 'Boutique test', 'slug' => 'boutique-test-'.uniqid(),
             'devise' => 'XAF', 'taux_tva_defaut' => 19.25,
@@ -270,11 +291,11 @@ class EssaiBasiqueTest extends TestCase
 
     public function test_admin_page_filters_trial_users_by_statut(): void
     {
-        $this->creerPlanBasique();
+        $planBasique = $this->creerPlanBasique();
         $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
 
-        $enCours = $this->inscrire('en-cours@example.com');
-        $expireUtilisateur = $this->inscrire('expire@example.com');
+        $this->creerUtilisateurAvecEssai('en-cours@example.com', $planBasique);
+        $expireUtilisateur = $this->creerUtilisateurAvecEssai('expire@example.com', $planBasique);
         $this->expirerEssai(EssaiUtilisateur::where('user_id', $expireUtilisateur->id)->firstOrFail());
 
         $this->actingAs($admin)->get('/admin/notifications?statutEssai=en_cours')
