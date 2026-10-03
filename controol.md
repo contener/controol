@@ -286,6 +286,20 @@ plus le même projet.
   compteurs de messages non lus des deux côtés.
 - **`conversation_messages`** : `expediteur (boutique|visiteur), contenu`.
 
+### Audience par produit (voir §5.18)
+- **`audience_membres`** : `boutique_id, user_id (nullable), visiteur_token (uuid,
+  nullable), nom/contact (nullable, instantané pour un visiteur anonyme uniquement —
+  pour un compte connecté toujours lu en direct via `users`, jamais dupliqué), statut
+  (actif|contacte|interesse|converti|desinscrit|bloque|archive)`. Deux index UNIQUE
+  séparés `(boutique_id, user_id)` / `(boutique_id, visiteur_token)` — une ligne par
+  personne unique et par boutique.
+- **`audience_interactions`** : `boutique_id, audience_membre_id, produit_id
+  (nullable), type (chaîne libre : LIKE|MESSAGE|WHATSAPP_RELANCE_OPENED...), metadata
+  (json nullable)` — pas d'`updated_at`, jamais modifié. Aucun compteur/date agrégée
+  stocké nulle part : toujours calculé à la volée depuis cette table.
+- **`plans.audience`** : booléen, déverrouille cette fonctionnalité (Basique/Pro
+  uniquement), même pattern que `marketplace`/`modeles_facture_avances`.
+
 ### Réseaux sociaux (partage manuel, jamais automatisé)
 - **`destinations_sociales`** : `boutique_id, nom, lien, type (libre), statut
   (en_attente|en_cours|envoye|echec|non_autorise), ordre`.
@@ -643,6 +657,68 @@ reproduire en la reconstruisant** :
    réussi. Toujours un rechargement complet sur cette page (coût négligeable, admin peu
    fréquentée) plutôt que de risquer d'exclure `flash`.
 
+### 5.18 Audience par produit (interactions visiteurs → relance commerciale)
+
+Chaque boutique voit quels visiteurs se sont intéressés à ses produits (like, message)
+et peut les relancer sur WhatsApp. Verrouillé derrière le plan Basique/Pro
+(`plans.audience`, booléen, même pattern que `marketplace`/`modeles_facture_avances`) —
+le plan Gratuit voit un aperçu verrouillé (🔒) avec des **compteurs agrégés réels**
+(jamais de noms/contacts), bouton vers `abonnement.index`.
+
+**Modèle en grand livre** (`App\Models\AudienceMembre` + `AudienceInteraction`) : une
+ligne `AudienceMembre` par personne unique et par boutique (deux index UNIQUE séparés
+`(boutique_id, user_id)` / `(boutique_id, visiteur_token)`, jamais de doublon même si
+la personne interagit avec plusieurs produits), et un `AudienceInteraction` par
+événement, jamais modifié après création. **Aucune donnée calculable n'est dupliquée**
+— `total_interactions`, `last_interaction_at`, `total_products_interacted`,
+`last_product_id` sont **toujours calculés à la volée** (agrégation SQL,
+`AudienceMembre::derniereInteraction()` via `latestOfMany()`, même pattern que
+`Conversation::dernierMessage()`), jamais stockés sur `AudienceMembre` — même principe
+déjà appliqué trois fois dans ce projet (`EssaiUtilisateur::statut()`,
+`Suivi::estActif()`, `CommissionParrainage`). `type` reste une chaîne libre (`LIKE`,
+`MESSAGE`, `WHATSAPP_RELANCE_OPENED`...), jamais un enum DB rigide, pour pouvoir
+ajouter des types d'interaction plus tard (vues, commentaires) sans migration.
+
+**Réutilise l'infrastructure existante plutôt que d'en recréer** : un message envoyé
+depuis une fiche produit (`conversations.produit_id`, déjà existant) devient
+automatiquement une interaction `MESSAGE`
+(`PublicBoutiqueController::envoyerMessage()`, juste après la création de la
+conversation) ; l'identité visiteur anonyme/connectée réutilise
+`App\Services\VisiteurIdentiteService::resoudreOuCreerJeton()` tel quel (déjà
+générique). `AudienceMembre`/`AudienceInteraction` utilisent `BelongsToBoutique` (scope
+automatique pour les requêtes propriétaire dans `AudienceController`), mais
+`AudienceService::enregistrerInteraction()` utilise systématiquement
+`withoutGlobalScopes()` en interne : cette méthode est aussi appelée depuis le contexte
+public non authentifié (`aimerProduit`, `envoyerMessage`), où le visiteur — s'il est
+connecté — peut posséder lui-même une autre boutique ; le scope filtrerait alors par SA
+boutique courante, jamais celle réellement visitée.
+
+**Like** (❤️ sur les cartes produit de `Public/Boutique.vue`) : gratuit pour le
+visiteur, jamais verrouillé par le plan (seule la consultation de l'audience par le
+propriétaire l'est). **À sens unique en v1** (pas de "unlike") : idempotent via
+`firstOrCreate` sur `(audience_membre_id, produit_id, type=LIKE)`, jamais de doublon
+même en cliquant plusieurs fois. L'état "déjà aimé" est renvoyé par le serveur au
+chargement de la page (`produitsAimes`, lu depuis le cookie visiteur **en lecture
+seule** — ne crée jamais un cookie juste pour afficher la page, seul un clic réel sur
+j'aime en crée un).
+
+**Relance WhatsApp** (`AudienceController::relancerWhatsapp()`) : lien `wa.me`
+construit **côté serveur**, journalise l'ouverture comme une interaction
+`WHATSAPP_RELANCE_OPENED` de plus (pas de table d'audit séparée — une seule boutique =
+un seul propriétaire dans ce modèle multi-tenant, contrairement aux relances Super
+Admin qui justifient `admin_audits`/`WhatsappContactLog`). N'affirme jamais qu'un
+message a été envoyé automatiquement — l'ouverture de WhatsApp signifie seulement que
+la relance a été préparée. **Volontairement un système distinct et plus simple** que
+`WhatsappRelanceService`/`RelanceWhatsappModal.vue` (réservés aux Super Admins et à
+`App\Support\AdminPermissions`, mauvais modèle de permission pour une boutique).
+
+**Hors périmètre v1** (cahier des charges original de 26 sections, simplifications
+documentées) : vues produit et commentaires (aucun signal fiable sans page de détail
+produit, qui n'existe pas), API REST versionnée (toute l'appli est un monolithe
+Inertia), rattachement automatique anonyme → compte, export CSV, notifications
+automatiques (le cahier des charges lui-même les place au conditionnel/les déconseille
+sans consentement explicite).
+
 ---
 
 ## 6. Design & UI
@@ -766,6 +842,13 @@ reproduire en la reconstruisant** :
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-04** — **Nouvelle fonctionnalité : Audience par produit** (voir §5.18).
+  Chaque boutique voit désormais quels visiteurs se sont intéressés à ses produits
+  (like, message) et peut les relancer sur WhatsApp — verrouillé derrière le plan
+  Basique/Pro (`plans.audience`), aperçu agrégé pour le Gratuit. Modèle en grand livre
+  (`audience_membres` + `audience_interactions`), réutilise l'identité visiteur et les
+  conversations déjà existantes plutôt que de recréer un système séparé. Nouveau bouton
+  ❤️ sur les cartes produit de la boutique publique (à sens unique en v1).
 - **2026-10-04** — **Correction de deux bugs qui rendaient la réactivation d'essai
   invisible pour l'admin** (signalé "ça ne fonctionne pas" alors que la fonctionnalité
   marchait réellement, vérifié en production sur les comptes concernés) : (1) liste des
