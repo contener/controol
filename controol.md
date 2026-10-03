@@ -626,6 +626,23 @@ journalisée (`admin_audits`, action `essai_reactive`) et l'utilisateur reçoit 
 notification in-app l'informant de la réactivation. Refusé (422) si l'essai n'est pas
 réellement expiré (en cours/converti/annulé).
 
+**⚠️ Deux pièges déjà rencontrés avec cette fonctionnalité (2026-10-04), à ne jamais
+reproduire en la reconstruisant** :
+1. **La liste des essais ne montre qu'un seul essai par utilisateur, le plus récent**
+   (`WHERE id IN (SELECT MAX(id) ... GROUP BY user_id)`, dans `essaisUtilisateurs()` ET
+   `statistiques()`). Sans ce filtre, un utilisateur réactivé a DEUX lignes
+   `essais_utilisateurs` (l'ancienne expirée, jamais réécrite + la nouvelle) : l'ancienne
+   ligne "Expiré" reste affichée telle quelle, donnant l'impression que la réactivation
+   n'a rien fait — alors qu'elle fonctionne réellement (vérifié en production : abonnement
+   + essai bien créés, tous les privilèges du plan actifs).
+2. **Aucune action de cette page (réactiver, confirmer une relance, ouvrir WhatsApp)
+   n'utilise de rechargement partiel Inertia (`only: [...]`)** : le prop `flash` n'est
+   pas marqué `Inertia::always()` dans `HandleInertiaRequests`, donc un rechargement
+   partiel qui ne le liste pas explicitement exclut silencieusement le message de
+   confirmation du serveur — l'admin ne voit alors aucune preuve visuelle que l'action a
+   réussi. Toujours un rechargement complet sur cette page (coût négligeable, admin peu
+   fréquentée) plutôt que de risquer d'exclure `flash`.
+
 ---
 
 ## 6. Design & UI
@@ -749,6 +766,14 @@ réellement expiré (en cours/converti/annulé).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-04** — **Correction de deux bugs qui rendaient la réactivation d'essai
+  invisible pour l'admin** (signalé "ça ne fonctionne pas" alors que la fonctionnalité
+  marchait réellement, vérifié en production sur les comptes concernés) : (1) liste des
+  essais dédupliquée — un seul essai affiché par utilisateur, le plus récent, sinon
+  l'ancienne ligne "Expiré" restait visible après réactivation ; (2) retrait des
+  rechargements partiels Inertia (`only: [...]`) sur les actions de cette page, qui
+  excluaient silencieusement le message de confirmation (`flash`). Voir §5.17 pour le
+  détail, à ne jamais reproduire en reconstruisant cette fonctionnalité.
 - **2026-10-04** — Bouton "Réactiver l'essai" (Super Admin, page Notifications) :
   redonne 7 jours d'essai Basique à un utilisateur dont l'essai est expiré (nouvel
   Abonnement + EssaiUtilisateur, jamais une réécriture de l'historique). Au passage,
