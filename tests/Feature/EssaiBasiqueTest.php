@@ -355,4 +355,59 @@ class EssaiBasiqueTest extends TestCase
             'modele_cle' => 'essai_relance_sans_boutique',
         ]);
     }
+
+    public function test_trial_list_shows_relaunch_confirmation_status(): void
+    {
+        $planBasique = $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir', 'whatsapp.contacter', 'whatsapp.historique']);
+        $user = $this->creerUtilisateurAvecEssai('relance@example.com', $planBasique);
+
+        // Avant toute relance : "jamais relancé".
+        $this->actingAs($admin)->get('/admin/notifications')
+            ->assertInertia(fn ($page) => $page
+                ->where('essais.data', fn ($essais) => collect($essais)->firstWhere('email', 'relance@example.com')['derniere_relance'] === null));
+
+        $log = \App\Models\WhatsappContactLog::create([
+            'user_id' => $user->id, 'admin_id' => $admin->id, 'numero_whatsapp' => '+237600000000',
+            'message' => 'Bonjour', 'modele_cle' => 'essai_relance_sans_boutique', 'ouvert_a' => now(),
+        ]);
+
+        // Relancé mais pas encore confirmé.
+        $this->actingAs($admin)->get('/admin/notifications')
+            ->assertInertia(fn ($page) => $page
+                ->where('essais.data', function ($essais) {
+                    $relance = collect($essais)->firstWhere('email', 'relance@example.com')['derniere_relance'];
+
+                    return $relance !== null && $relance['confirme'] === false;
+                }));
+
+        // Confirmation de l'envoi, réutilise l'endpoint existant.
+        $this->actingAs($admin)->patch("/admin/utilisateurs/whatsapp-logs/{$log->id}/confirmer")->assertRedirect();
+        $this->assertNotNull($log->fresh()->confirme_a);
+
+        $this->actingAs($admin)->get('/admin/notifications')
+            ->assertInertia(fn ($page) => $page
+                ->where('essais.data', function ($essais) {
+                    $relance = collect($essais)->firstWhere('email', 'relance@example.com')['derniere_relance'];
+
+                    return $relance !== null && $relance['confirme'] === true;
+                }));
+    }
+
+    public function test_relaunch_confirmation_status_hidden_without_historique_permission(): void
+    {
+        $planBasique = $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
+        $user = $this->creerUtilisateurAvecEssai('sans-historique@example.com', $planBasique);
+
+        \App\Models\WhatsappContactLog::create([
+            'user_id' => $user->id, 'admin_id' => $admin->id, 'numero_whatsapp' => '+237600000000',
+            'message' => 'Bonjour', 'modele_cle' => 'essai_relance_sans_boutique', 'ouvert_a' => now(),
+        ]);
+
+        $this->actingAs($admin)->get('/admin/notifications')
+            ->assertInertia(fn ($page) => $page
+                ->where('permissionsWhatsapp.historique', false)
+                ->where('essais.data', fn ($essais) => collect($essais)->firstWhere('email', 'sans-historique@example.com')['derniere_relance'] === null));
+    }
 }

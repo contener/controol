@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\EssaiUtilisateur;
 use App\Models\ModeleNotificationEssai;
 use App\Models\ParametreEssai;
+use App\Models\WhatsappContactLog;
 use App\Support\WhatsappModeles;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,6 +36,7 @@ class NotificationEssaiController extends Controller
             'permissionsWhatsapp' => [
                 'voir' => $request->user()->hasAdminPermission('whatsapp.voir'),
                 'contacter' => $request->user()->hasAdminPermission('whatsapp.contacter'),
+                'historique' => $request->user()->hasAdminPermission('whatsapp.historique'),
             ],
             'modelesWhatsappEssai' => collect(WhatsappModeles::liste())
                 ->whereIn('cle', [WhatsappModeles::ESSAI_RELANCE_SANS_BOUTIQUE, WhatsappModeles::ESSAI_RELANCE_AVEC_BOUTIQUE])
@@ -100,13 +103,34 @@ class NotificationEssaiController extends Controller
         $essais = $query->orderByDesc('date_debut')->paginate(15)->withQueryString();
 
         $voirWhatsapp = $request->user()->hasAdminPermission('whatsapp.voir');
+        $voirHistorique = $request->user()->hasAdminPermission('whatsapp.historique');
+        $dernieresRelances = $voirHistorique
+            ? $this->dernieresRelancesParUtilisateur($essais->getCollection()->pluck('user_id'))
+            : collect();
 
-        $essais->getCollection()->transform(fn (EssaiUtilisateur $essai) => $this->formaterEssai($essai, $voirWhatsapp));
+        $essais->getCollection()->transform(fn (EssaiUtilisateur $essai) => $this->formaterEssai($essai, $voirWhatsapp, $dernieresRelances->get($essai->user_id)));
 
         return $essais;
     }
 
-    private function formaterEssai(EssaiUtilisateur $essai, bool $voirWhatsapp): array
+    /**
+     * Une seule requête pour toute la page (pas N+1) -- ne garde que la relance la plus
+     * récente par utilisateur, confirmée ou non, tous modèles de message confondus
+     * (pas seulement les deux modèles d'essai : une relance envoyée via un autre modèle
+     * reste une preuve valable de contact récent).
+     */
+    private function dernieresRelancesParUtilisateur(Collection $userIds): Collection
+    {
+        return WhatsappContactLog::whereIn('user_id', $userIds)
+            ->whereNotNull('user_id')
+            ->with('admin:id,name')
+            ->orderByDesc('ouvert_a')
+            ->get()
+            ->unique('user_id')
+            ->keyBy('user_id');
+    }
+
+    private function formaterEssai(EssaiUtilisateur $essai, bool $voirWhatsapp, ?WhatsappContactLog $derniereRelance): array
     {
         $statut = $essai->statut();
 
@@ -124,6 +148,12 @@ class NotificationEssaiController extends Controller
             'dernier_jour_notifie' => $essai->dernier_jour_notifie,
             'date_debut' => $essai->date_debut->format('d/m/Y'),
             'date_fin' => $essai->date_fin->format('d/m/Y'),
+            'derniere_relance' => $derniereRelance ? [
+                'id' => $derniereRelance->id,
+                'ouvert_a' => $derniereRelance->ouvert_a->format('d/m/Y H:i'),
+                'confirme' => $derniereRelance->confirme,
+                'admin_nom' => $derniereRelance->admin?->name,
+            ] : null,
         ];
     }
 

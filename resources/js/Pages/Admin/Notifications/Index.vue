@@ -94,6 +94,21 @@ const cibleRelance = computed(() => (essaiARelancer.value
 const modeleCleRelance = computed(() => (essaiARelancer.value?.a_boutique
     ? 'essai_relance_avec_boutique'
     : 'essai_relance_sans_boutique'));
+
+// Même route que la confirmation depuis la fiche utilisateur (Utilisateurs/Show.vue) --
+// un seul endpoint, utilisable depuis n'importe quelle page qui affiche un historique
+// de relances WhatsApp.
+const confirmerEnvoiRelance = (relance) => {
+    router.patch(route('admin.utilisateurs.whatsapp.confirmer', relance.id), {}, { preserveScroll: true, only: ['essais'] });
+};
+
+// Rechargement ciblé (pas toute la page) juste après l'ouverture de WhatsApp, pour que
+// la colonne "Relance WhatsApp" affiche immédiatement la nouvelle relance -- sans ça,
+// elle resterait affichée "Jamais relancé" jusqu'au prochain rechargement manuel.
+const apresEnvoiRelance = () => {
+    essaiARelancer.value = null;
+    router.reload({ only: ['essais'], preserveScroll: true });
+};
 </script>
 
 <template>
@@ -207,12 +222,13 @@ const modeleCleRelance = computed(() => (essaiARelancer.value?.a_boutique
                                     <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Statut</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Jours restants</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Dernier rappel</th>
+                                    <th v-if="permissionsWhatsapp?.historique" class="px-4 py-2 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Relance WhatsApp</th>
                                     <th class="px-4 py-2 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                                 <tr v-if="essais.data.length === 0">
-                                    <td colspan="6" class="px-4 py-6 text-center text-slate-400 dark:text-slate-500">Aucun utilisateur trouvé.</td>
+                                    <td :colspan="permissionsWhatsapp?.historique ? 7 : 6" class="px-4 py-6 text-center text-slate-400 dark:text-slate-500">Aucun utilisateur trouvé.</td>
                                 </tr>
                                 <tr v-for="essai in essais.data" :key="essai.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
                                     <td class="px-4 py-3 whitespace-nowrap">
@@ -238,6 +254,29 @@ const modeleCleRelance = computed(() => (essaiARelancer.value?.a_boutique
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                                         {{ essai.dernier_jour_notifie ? `Jour ${essai.dernier_jour_notifie}` : 'Jamais' }}
                                     </td>
+                                    <td v-if="permissionsWhatsapp?.historique" class="px-4 py-3 whitespace-nowrap text-sm">
+                                        <div v-if="!essai.derniere_relance" class="text-slate-400 dark:text-slate-500">Jamais relancé</div>
+                                        <div v-else>
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    class="px-2 py-0.5 text-xs font-medium rounded-full"
+                                                    :class="essai.derniere_relance.confirme ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300' : 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300'"
+                                                >
+                                                    {{ essai.derniere_relance.confirme ? 'Envoyée — confirmée' : 'Ouverte — non confirmée' }}
+                                                </span>
+                                            </div>
+                                            <div class="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                                                {{ essai.derniere_relance.ouvert_a }} par {{ essai.derniere_relance.admin_nom ?? '—' }}
+                                            </div>
+                                            <button
+                                                v-if="!essai.derniere_relance.confirme && permissionsWhatsapp?.contacter"
+                                                class="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                                @click="confirmerEnvoiRelance(essai.derniere_relance)"
+                                            >
+                                                Marquer comme envoyée
+                                            </button>
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
                                         <button
                                             v-if="permissionsWhatsapp?.contacter"
@@ -259,7 +298,7 @@ const modeleCleRelance = computed(() => (essaiARelancer.value?.a_boutique
                         :modeles="modelesWhatsappEssai"
                         :modele-cle-initiale="modeleCleRelance"
                         @close="essaiARelancer = null"
-                        @envoye="essaiARelancer = null"
+                        @envoye="apresEnvoiRelance"
                     />
 
                     <div v-if="essais.links.length > 3" class="flex flex-wrap gap-1 mt-4">
