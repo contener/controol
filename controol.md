@@ -608,6 +608,13 @@ message pré-rédigé qui **s'adapte automatiquement** à la situation de l'util
 `ESSAI_RELANCE_AVEC_BOUTIQUE`, sélectionné côté Vue selon `a_boutique`, jamais un choix
 manuel de l'admin) : invitation à créer sa boutique si ce n'est pas encore fait,
 invitation à s'abonner si elle existe déjà — ton volontairement doux, jamais pressant.
+**Confirmation d'envoi visible directement sur cette liste** (colonne "Relance
+WhatsApp", gated `whatsapp.historique`) : réutilise le mécanisme existant
+`WhatsappContactLog.confirme_a` (déjà présent sur la fiche individuelle d'un
+utilisateur, `Utilisateurs/Show.vue`) — badge "Envoyée — confirmée" ou "Ouverte — non
+confirmée" avec un bouton "Marquer comme envoyée". La liste se recharge
+automatiquement (reload ciblé Inertia, pas toute la page) juste après l'ouverture de
+WhatsApp, pour que la relance apparaisse sans rechargement manuel.
 
 ---
 
@@ -732,6 +739,11 @@ invitation à s'abonner si elle existe déjà — ton volontairement doux, jamai
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-04** — Liste des utilisateurs en essai (Super Admin, page Notifications) :
+  ajout d'une colonne "Relance WhatsApp" affichant si une relance a bien été envoyée et
+  confirmée (réutilise `WhatsappContactLog.confirme_a`, déjà en place sur la fiche
+  individuelle d'un utilisateur). La liste se recharge automatiquement après l'ouverture
+  de WhatsApp, pour que la confirmation soit visible sans rechargement manuel.
 - **2026-10-03→04** — **Découverte et correction d'un incident de production** : le
   planificateur Laravel (`schedule:run`) ne tournait pas (pas de cron système configuré
   sur l'hébergement Hostinger — hors du contrôle du code) — 0 rappel d'essai envoyé en
