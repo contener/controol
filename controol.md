@@ -616,6 +616,16 @@ confirmée" avec un bouton "Marquer comme envoyée". La liste se recharge
 automatiquement (reload ciblé Inertia, pas toute la page) juste après l'ouverture de
 WhatsApp, pour que la relance apparaisse sans rechargement manuel.
 
+**Réactivation manuelle d'un essai expiré** (bouton "Réactiver l'essai", visible
+uniquement si `statut === 'expire'`, gated `notifications.envoyer`,
+`NotificationEssaiController::reactiverEssai()`) : redonne 7 jours d'essai Basique.
+Crée un **nouvel** `Abonnement` + `EssaiUtilisateur` plutôt que de modifier la ligne
+expirée — même principe "grand livre" que le parrainage/les paiements (§3) : l'ancien
+essai (date de fin réelle) reste consultable tel quel, jamais réécrit. Action
+journalisée (`admin_audits`, action `essai_reactive`) et l'utilisateur reçoit une
+notification in-app l'informant de la réactivation. Refusé (422) si l'essai n'est pas
+réellement expiré (en cours/converti/annulé).
+
 ---
 
 ## 6. Design & UI
@@ -739,6 +749,13 @@ WhatsApp, pour que la relance apparaisse sans rechargement manuel.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-04** — Bouton "Réactiver l'essai" (Super Admin, page Notifications) :
+  redonne 7 jours d'essai Basique à un utilisateur dont l'essai est expiré (nouvel
+  Abonnement + EssaiUtilisateur, jamais une réécriture de l'historique). Au passage,
+  corrigé un bug latent de `User::abonnementActif()` : `latest('date_debut')` seul ne
+  départageait pas deux abonnements créés à la même seconde (devenu réellement
+  possible avec cette réactivation manuelle), rendant "le plus récent" arbitraire —
+  ajout d'un second critère de tri (id desc).
 - **2026-10-04** — Liste des utilisateurs en essai (Super Admin, page Notifications) :
   ajout d'une colonne "Relance WhatsApp" affichant si une relance a bien été envoyée et
   confirmée (réutilise `WhatsappContactLog.confirme_a`, déjà en place sur la fiche
