@@ -203,9 +203,15 @@ class User extends Authenticatable
         return $this->hasMany(ReglementParrainage::class, 'parrain_id');
     }
 
+    /**
+     * Départagé par id en second critère : deux abonnements créés à la même seconde
+     * (ex. la rétrogradation automatique vers Gratuit et une réactivation manuelle
+     * d'essai juste après, voir NotificationEssaiController::reactiverEssai()) ont le
+     * même date_debut -- sans ce second critère, "le plus récent" devient arbitraire.
+     */
     public function abonnementActif(): ?Abonnement
     {
-        return $this->abonnements()->actuellementActif()->latest('date_debut')->first();
+        return $this->abonnements()->actuellementActif()->orderByDesc('date_debut')->orderByDesc('id')->first();
     }
 
     public function planActif(): ?Plan
