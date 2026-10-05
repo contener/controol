@@ -727,7 +727,23 @@ Admin qui justifient `admin_audits`/`WhatsappContactLog`). N'affirme jamais qu'u
 message a été envoyé automatiquement — l'ouverture de WhatsApp signifie seulement que
 la relance a été préparée. **Volontairement un système distinct et plus simple** que
 `WhatsappRelanceService`/`RelanceWhatsappModal.vue` (réservés aux Super Admins et à
-`App\Support\AdminPermissions`, mauvais modèle de permission pour une boutique).
+`App\Support\AdminPermissions`, mauvais modèle de permission pour une boutique). Ce
+bouton n'apparaît que si `membre.contactAffiche()` renvoie un numéro — **toujours
+indisponible pour une personne qui n'a renseigné aucun contact WhatsApp**.
+
+**Relance par message interne** (`AudienceController::relancerMessage()`, 2026-10-05) :
+deuxième canal de relance, **toujours disponible** (contrairement à WhatsApp), car il
+ne dépend d'aucun numéro — il réutilise directement le système de conversations déjà
+existant via l'identité du membre (`visiteur_user_id` ou `visiteur_token`). Reprend le
+fil `OUVERTE` le plus récent avec cette personne s'il existe, sinon en ouvre un nouveau
+(rattaché à son dernier produit consulté si connu) ; poste un message
+`ConversationMessage` (`EXPEDITEUR_BOUTIQUE`) et journalise une interaction
+`MESSAGE_RELANCE_ENVOYE`. Contrairement à la relance WhatsApp, **ce message est
+réellement envoyé immédiatement** (pas seulement "préparé") — visible côté visiteur dès
+qu'il revisite la boutique (connecté : `mesConversations()` ; anonyme : même cookie
+`ctrl_visiteur_token`). Les deux boutons ("📱 Relancer sur WhatsApp" quand un contact
+existe, "💬 Relancer par message" toujours) ouvrent la même modale
+(`RelanceAudienceModal.vue`, prop `canal`), qui bifurque sur l'action appropriée.
 
 **Hors périmètre v1** (cahier des charges original de 26 sections, simplifications
 documentées) : vues produit et commentaires (aucun signal fiable sans page de détail
@@ -859,6 +875,12 @@ sans consentement explicite).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-05** — **Relance Audience par message interne, en plus de WhatsApp** (voir
+  §5.18). La relance WhatsApp disparaissait entièrement pour toute personne sans numéro
+  renseigné. Ajoute un second bouton "💬 Relancer par message" qui réutilise le système
+  de conversations existant (`visiteur_user_id`/`visiteur_token`) — disponible pour
+  tout le monde, et réellement envoyé immédiatement (contrairement à WhatsApp qui ne
+  fait qu'ouvrir un lien prérempli à envoyer manuellement).
 - **2026-10-05** — **Correction du bouton ❤️ j'aime (cassé en production) + ajout d'un
   compteur de likes visible** (voir §5.18). Le like échouait silencieusement sur chaque
   clic : `Boutique.vue` référençait une variable `boutique` inexistante dans le script
