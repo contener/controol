@@ -107,6 +107,7 @@ Route::middleware([
             Route::get('/', [AudienceController::class, 'index'])->name('index');
             Route::get('/{membre}', [AudienceController::class, 'show'])->name('show');
             Route::post('/{membre}/whatsapp', [AudienceController::class, 'relancerWhatsapp'])->name('whatsapp');
+            Route::post('/{membre}/message', [AudienceController::class, 'relancerMessage'])->name('message');
             Route::patch('/{membre}/statut', [AudienceController::class, 'updateStatut'])->name('statut');
         });
 

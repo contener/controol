@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import DialogModal from '@/Components/DialogModal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -11,6 +12,7 @@ const props = defineProps({
     show: Boolean,
     membre: { type: Object, default: null }, // { id, nom }
     messageInitial: { type: String, default: '' },
+    canal: { type: String, default: 'whatsapp' }, // 'whatsapp' ou 'message'
 });
 const emit = defineEmits(['close']);
 
@@ -25,16 +27,11 @@ watch(() => props.show, (visible) => {
     }
 });
 
-// N'utilise pas router.post() (Inertia) exprès : on ne veut pas naviguer avant
-// l'ouverture du nouvel onglet WhatsApp -- même pattern que RelanceWhatsappModal.vue
+// N'utilise pas router.post() (Inertia) pour WhatsApp exprès : on ne veut pas naviguer
+// avant l'ouverture du nouvel onglet -- même pattern que RelanceWhatsappModal.vue
 // (Super Admin), simplifié : pas de modèle à choisir, pas d'étape de confirmation
 // "envoyé" (l'ouverture de WhatsApp signifie uniquement que la relance est préparée).
 const ouvrirWhatsapp = async () => {
-    if (!message.value.trim()) {
-        erreur.value = 'Le message ne peut pas être vide.';
-        return;
-    }
-
     enCours.value = true;
     erreur.value = '';
 
@@ -48,6 +45,38 @@ const ouvrirWhatsapp = async () => {
         enCours.value = false;
     }
 };
+
+// Le message interne, lui, est réellement envoyé côté serveur (pas juste "préparé")
+// -- via Inertia, comme toute autre action serveur de cette page.
+const envoyerMessage = () => {
+    enCours.value = true;
+    erreur.value = '';
+
+    router.post(route('audience.message', props.membre.id), { message: message.value }, {
+        preserveScroll: true,
+        onSuccess: () => emit('close'),
+        onError: (errors) => { erreur.value = errors.message ?? "Impossible d'envoyer le message pour le moment."; },
+        onFinish: () => { enCours.value = false; },
+    });
+};
+
+const envoyer = () => {
+    if (!message.value.trim()) {
+        erreur.value = 'Le message ne peut pas être vide.';
+        return;
+    }
+
+    if (props.canal === 'whatsapp') {
+        ouvrirWhatsapp();
+    } else {
+        envoyerMessage();
+    }
+};
+
+const texteBouton = computed(() => (props.canal === 'whatsapp' ? '📱 Ouvrir WhatsApp' : '💬 Envoyer le message'));
+const texteAide = computed(() => (props.canal === 'whatsapp'
+    ? "WhatsApp s'ouvrira dans un nouvel onglet avec ce message prérempli — vous devrez l'envoyer vous-même depuis WhatsApp."
+    : "Le message est envoyé directement dans la conversation avec cette personne — visible dès qu'elle revisite votre boutique."));
 </script>
 
 <template>
@@ -64,14 +93,12 @@ const ouvrirWhatsapp = async () => {
                 />
                 <InputError :message="erreur" class="mt-2" />
             </div>
-            <p class="mt-3 text-xs text-slate-400 dark:text-slate-500">
-                WhatsApp s'ouvrira dans un nouvel onglet avec ce message prérempli — vous devrez l'envoyer vous-même depuis WhatsApp.
-            </p>
+            <p class="mt-3 text-xs text-slate-400 dark:text-slate-500">{{ texteAide }}</p>
         </template>
         <template #footer>
             <SecondaryButton @click="$emit('close')">Annuler</SecondaryButton>
-            <PrimaryButton class="ms-3" :class="{ 'opacity-25': enCours }" :disabled="enCours" @click="ouvrirWhatsapp">
-                📱 Ouvrir WhatsApp
+            <PrimaryButton class="ms-3" :class="{ 'opacity-25': enCours }" :disabled="enCours" @click="envoyer">
+                {{ texteBouton }}
             </PrimaryButton>
         </template>
     </DialogModal>

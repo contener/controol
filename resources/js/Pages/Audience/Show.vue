@@ -16,6 +16,7 @@ const typeLabels = {
     LIKE: '❤️ Like',
     MESSAGE: '💬 Message',
     WHATSAPP_RELANCE_OPENED: '📱 Relance WhatsApp ouverte',
+    MESSAGE_RELANCE_ENVOYE: '💬 Relance par message envoyée',
 };
 
 const statutLabels = {
@@ -34,6 +35,11 @@ watch(statutSelectionne, (statut) => {
 });
 
 const relanceOuverte = ref(false);
+const canalRelance = ref('whatsapp');
+const ouvrirRelance = (canal) => {
+    canalRelance.value = canal;
+    relanceOuverte.value = true;
+};
 const messageInitial = computed(() => {
     const dernierProduit = props.produitsConsultes[0]?.nom;
     return dernierProduit
@@ -69,14 +75,23 @@ const messageInitial = computed(() => {
                                 <dd class="mt-0.5 text-slate-900 dark:text-slate-100">{{ membre.premiere_interaction_a }}</dd>
                             </div>
                         </dl>
-                        <button
-                            v-if="membre.contact"
-                            type="button"
-                            class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 shrink-0"
-                            @click="relanceOuverte = true"
-                        >
-                            📱 Relancer sur WhatsApp
-                        </button>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            <button
+                                v-if="membre.contact"
+                                type="button"
+                                class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+                                @click="ouvrirRelance('whatsapp')"
+                            >
+                                📱 Relancer sur WhatsApp
+                            </button>
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                                @click="ouvrirRelance('message')"
+                            >
+                                💬 Relancer par message
+                            </button>
+                        </div>
                     </div>
 
                     <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex items-center gap-3">
@@ -117,6 +132,7 @@ const messageInitial = computed(() => {
             :show="relanceOuverte"
             :membre="membre"
             :message-initial="messageInitial"
+            :canal="canalRelance"
             @close="relanceOuverte = false"
         />
     </AppLayout>

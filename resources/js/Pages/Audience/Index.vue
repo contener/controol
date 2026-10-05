@@ -40,6 +40,7 @@ const typeLabels = {
     LIKE: '❤️ Like',
     MESSAGE: '💬 Message',
     WHATSAPP_RELANCE_OPENED: '📱 Relance WhatsApp',
+    MESSAGE_RELANCE_ENVOYE: '💬 Relance par message',
 };
 
 const statutLabels = {

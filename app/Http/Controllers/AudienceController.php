@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\AudienceInteraction;
 use App\Models\AudienceMembre;
+use App\Models\Conversation;
+use App\Models\ConversationMessage;
 use App\Models\Produit;
 use App\Services\AudienceService;
 use Illuminate\Http\JsonResponse;
@@ -132,6 +134,57 @@ class AudienceController extends Controller
         $numeroPropre = ltrim(preg_replace('/[^\d+]/', '', $numero), '+');
 
         return response()->json(['lien' => "https://wa.me/{$numeroPropre}?text=".rawurlencode($data['message'])]);
+    }
+
+    /**
+     * Relance par message interne (conversations) -- deuxième canal, disponible pour
+     * tout le monde (connecté ou anonyme via jeton), contrairement à WhatsApp qui
+     * nécessite un numéro renseigné. Réutilise le système de conversations existant
+     * plutôt que d'en recréer un : reprend le fil ouvert le plus récent avec cette
+     * personne s'il existe, sinon en ouvre un nouveau (rattaché à son dernier produit
+     * consulté si connu). Contrairement à la relance WhatsApp, le message est
+     * réellement envoyé ici (pas seulement "préparé").
+     */
+    public function relancerMessage(Request $request, AudienceMembre $membre): RedirectResponse
+    {
+        abort_unless((bool) $request->user()->planActif()?->audience, 403, "Cette fonctionnalité nécessite le plan Basique ou Pro.");
+
+        $data = $request->validate(['message' => ['required', 'string', 'max:2000']]);
+
+        $boutique = $request->user()->currentBoutique;
+        $identiteVisiteur = $membre->user_id
+            ? ['visiteur_user_id' => $membre->user_id]
+            : ['visiteur_token' => $membre->visiteur_token];
+
+        $conversation = Conversation::where($identiteVisiteur)
+            ->where('statut', Conversation::STATUT_OUVERTE)
+            ->orderByDesc('dernier_message_a')
+            ->first();
+
+        if (! $conversation) {
+            $conversation = Conversation::create([
+                'produit_id' => $membre->derniereInteraction?->produit_id,
+                ...$identiteVisiteur,
+                'visiteur_nom' => $membre->nomAffiche(),
+                'visiteur_contact' => $membre->contactAffiche(),
+                'statut' => Conversation::STATUT_OUVERTE,
+            ]);
+        }
+
+        $conversation->messages()->create([
+            'expediteur' => ConversationMessage::EXPEDITEUR_BOUTIQUE,
+            'contenu' => $data['message'],
+        ]);
+        $conversation->increment('messages_non_lus_visiteur', 1, ['dernier_message_a' => now()]);
+
+        app(AudienceService::class)->enregistrerInteraction(
+            $boutique,
+            AudienceInteraction::MESSAGE_RELANCE_ENVOYE,
+            $conversation->produit_id ? Produit::withoutGlobalScopes()->find($conversation->produit_id) : null,
+            $membre->user_id ? ['user_id' => $membre->user_id] : ['visiteur_token' => $membre->visiteur_token],
+        );
+
+        return back()->with('flash_success', 'Message envoyé.');
     }
 
     public function updateStatut(Request $request, AudienceMembre $membre): RedirectResponse

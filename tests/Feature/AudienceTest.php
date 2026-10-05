@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\AudienceInteraction;
 use App\Models\AudienceMembre;
+use App\Models\Conversation;
+use App\Models\ConversationMessage;
 use App\Models\Produit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -159,6 +161,56 @@ class AudienceTest extends TestCase
 
         $response = $this->actingAs($user)->get('/audience');
         $response->assertInertia(fn ($page) => $page->where('autorise', false)->where('statistiques.total', 1));
+    }
+
+    public function test_message_relaunch_works_even_without_a_whatsapp_number(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $user->planActif()->update(['audience' => true]);
+        $produit = $this->creerProduit($user->current_boutique_id);
+        $visiteur = User::factory()->create(['whatsapp' => null]);
+
+        $this->actingAs($visiteur)->post(route('public.boutique.produits.jaime', [$user->currentBoutique->slug, $produit->id]));
+        $membre = AudienceMembre::withoutGlobalScopes()->where('boutique_id', $user->current_boutique_id)->firstOrFail();
+        $this->assertNull($membre->contactAffiche());
+
+        $response = $this->actingAs($user)->post("/audience/{$membre->id}/message", ['message' => 'Bonjour, toujours intéressé ?']);
+
+        $response->assertRedirect();
+        $conversation = Conversation::withoutGlobalScopes()->where('boutique_id', $user->current_boutique_id)->where('visiteur_user_id', $visiteur->id)->firstOrFail();
+        $this->assertSame(1, $conversation->messages()->count());
+        $this->assertSame(ConversationMessage::EXPEDITEUR_BOUTIQUE, $conversation->messages()->first()->expediteur);
+        $this->assertSame(1, AudienceInteraction::withoutGlobalScopes()->where('type', AudienceInteraction::MESSAGE_RELANCE_ENVOYE)->count());
+    }
+
+    public function test_message_relaunch_reuses_an_already_open_conversation(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $user->planActif()->update(['audience' => true]);
+        $produit = $this->creerProduit($user->current_boutique_id);
+        $visiteur = User::factory()->create();
+
+        $this->actingAs($visiteur)->post(route('public.boutique.messages.store', $user->currentBoutique->slug), [
+            'nom_visiteur' => $visiteur->name,
+            'contenu' => 'Bonjour, intéressé par ce produit.',
+            'produit_id' => $produit->id,
+        ]);
+        $membre = AudienceMembre::withoutGlobalScopes()->where('boutique_id', $user->current_boutique_id)->firstOrFail();
+
+        $this->actingAs($user)->post("/audience/{$membre->id}/message", ['message' => 'Toujours intéressé ?'])->assertRedirect();
+
+        $this->assertSame(1, Conversation::withoutGlobalScopes()->where('boutique_id', $user->current_boutique_id)->count());
+    }
+
+    public function test_message_relaunch_blocked_for_free_plan(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('gratuit', []);
+        $produit = $this->creerProduit($user->current_boutique_id);
+        $visiteur = User::factory()->create();
+        $this->actingAs($visiteur)->post(route('public.boutique.produits.jaime', [$user->currentBoutique->slug, $produit->id]));
+        $membre = AudienceMembre::withoutGlobalScopes()->where('boutique_id', $user->current_boutique_id)->firstOrFail();
+
+        $this->actingAs($user)->post("/audience/{$membre->id}/message", ['message' => 'Bonjour'])->assertForbidden();
     }
 
     public function test_owner_can_update_a_member_status(): void

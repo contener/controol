@@ -16,6 +16,8 @@ class AudienceInteraction extends Model
 
     public const WHATSAPP_RELANCE_OPENED = 'WHATSAPP_RELANCE_OPENED';
 
+    public const MESSAGE_RELANCE_ENVOYE = 'MESSAGE_RELANCE_ENVOYE';
+
     public $timestamps = false;
 
     protected $fillable = [
