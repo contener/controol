@@ -15,6 +15,7 @@ const props = defineProps({
     boutiques: Array,
     audits: Array,
     permissionsWhatsapp: Object,
+    permissionsNotifications: Object,
     modelesWhatsapp: { type: Array, default: () => [] },
     logsWhatsapp: { type: Array, default: () => [] },
 });
@@ -98,8 +99,8 @@ const actionLabels = {
                             <div class="mt-1 text-slate-900 dark:text-slate-100">{{ formatDate(utilisateur.created_at) }}</div>
                         </div>
                     </div>
-                    <div v-if="permissionsWhatsapp?.contacter" class="mt-4">
-                        <PrimaryButton @click="relanceOuverte = true">Relancer sur WhatsApp</PrimaryButton>
+                    <div v-if="permissionsWhatsapp?.contacter || permissionsNotifications?.envoyer" class="mt-4">
+                        <PrimaryButton @click="relanceOuverte = true">Relancer</PrimaryButton>
                     </div>
                 </div>
 
@@ -192,6 +193,7 @@ const actionLabels = {
             :cible="cibleRelance"
             type="utilisateur"
             :modeles="modelesWhatsapp"
+            :peut-envoyer-message="permissionsNotifications?.envoyer"
             @close="relanceOuverte = false"
             @envoye="relanceOuverte = false"
         />

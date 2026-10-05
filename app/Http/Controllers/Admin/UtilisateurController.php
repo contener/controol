@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Jetstream\DeleteUser;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreMessageContactRequest;
 use App\Http\Requests\StoreWhatsappContactRequest;
 use App\Models\AdminAudit;
 use App\Models\Boutique;
+use App\Models\NotificationUtilisateur;
 use App\Models\User;
 use App\Models\WhatsappContactLog;
 use App\Services\WhatsappRelanceService;
@@ -79,6 +81,7 @@ class UtilisateurController extends Controller
             'utilisateurs' => $utilisateurs,
             'filtres' => $request->only(['recherche', 'statut', 'tri', 'direction', 'avecWhatsapp']),
             'permissionsWhatsapp' => $this->permissionsWhatsapp($request),
+            'permissionsNotifications' => $this->permissionsNotifications($request),
             'modelesWhatsapp' => WhatsappModeles::liste(),
         ]);
     }
@@ -123,6 +126,7 @@ class UtilisateurController extends Controller
                 ->limit(20)
                 ->get(),
             'permissionsWhatsapp' => $permissionsWhatsapp,
+            'permissionsNotifications' => $this->permissionsNotifications($request),
             'modelesWhatsapp' => WhatsappModeles::liste(),
             'logsWhatsapp' => $permissionsWhatsapp['historique']
                 ? WhatsappContactLog::where('user_id', $utilisateur->id)->with('admin:id,name')->latest('ouvert_a')->limit(20)->get()
@@ -226,12 +230,45 @@ class UtilisateurController extends Controller
         return back()->with('flash_success', 'Relance marquée comme envoyée.');
     }
 
+    /**
+     * Deuxième canal de relance, en plus de WhatsApp : dépose directement une
+     * notification sur la cloche de l'utilisateur, au nom de "l'équipe technique de
+     * Controol" (aucun numéro WhatsApp requis, donc toujours disponible, contrairement
+     * à whatsappContacter() ci-dessus). Contrairement à la relance WhatsApp qui ne fait
+     * qu'ouvrir un lien prérempli, ce message est réellement envoyé immédiatement.
+     */
+    public function messageContacter(StoreMessageContactRequest $request, User $utilisateur): RedirectResponse
+    {
+        $this->assertEstUnUtilisateurGere($utilisateur);
+
+        $message = $request->string('message')->toString();
+
+        NotificationUtilisateur::create([
+            'user_id' => $utilisateur->id,
+            'type' => 'relance_admin',
+            'titre' => "Message de l'équipe technique de Controol",
+            'message' => $message,
+            'est_promotionnelle' => true,
+        ]);
+
+        $this->journaliser($request, 'utilisateur_relance_message', $utilisateur, null, ['message' => $message]);
+
+        return back()->with('flash_success', "Message envoyé — visible sur la cloche de notification de {$utilisateur->name}.");
+    }
+
     private function permissionsWhatsapp(Request $request): array
     {
         return [
             'voir' => $request->user()->hasAdminPermission('whatsapp.voir'),
             'contacter' => $request->user()->hasAdminPermission('whatsapp.contacter'),
             'historique' => $request->user()->hasAdminPermission('whatsapp.historique'),
+        ];
+    }
+
+    private function permissionsNotifications(Request $request): array
+    {
+        return [
+            'envoyer' => $request->user()->hasAdminPermission('notifications.envoyer'),
         ];
     }
 

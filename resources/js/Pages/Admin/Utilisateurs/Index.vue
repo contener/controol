@@ -11,6 +11,7 @@ const props = defineProps({
     utilisateurs: Object,
     filtres: Object,
     permissionsWhatsapp: Object,
+    permissionsNotifications: Object,
     modelesWhatsapp: { type: Array, default: () => [] },
 });
 
@@ -104,8 +105,8 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ formatDate(utilisateur.created_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
                                     <Link :href="route('admin.utilisateurs.show', utilisateur.id)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Voir</Link>
-                                    <button v-if="permissionsWhatsapp?.contacter" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300" @click="utilisateurARelancer = utilisateur">
-                                        WhatsApp
+                                    <button v-if="permissionsWhatsapp?.contacter || permissionsNotifications?.envoyer" class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300" @click="utilisateurARelancer = utilisateur">
+                                        Relancer
                                     </button>
                                     <button class="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-200" @click="basculer(utilisateur)">
                                         {{ utilisateur.est_actif ? 'Désactiver' : 'Réactiver' }}
@@ -121,6 +122,7 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                     :cible="cibleRelance"
                     type="utilisateur"
                     :modeles="modelesWhatsapp"
+                    :peut-envoyer-message="permissionsNotifications?.envoyer"
                     @close="utilisateurARelancer = null"
                     @envoye="utilisateurARelancer = null"
                 />

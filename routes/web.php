@@ -194,6 +194,7 @@ Route::middleware([
 
             Route::post('/{utilisateur}/whatsapp', [AdminUtilisateurController::class, 'whatsappContacter'])->name('whatsapp.contacter')->middleware('admin.permission:whatsapp.contacter');
             Route::patch('/whatsapp-logs/{log}/confirmer', [AdminUtilisateurController::class, 'whatsappConfirmer'])->name('whatsapp.confirmer')->middleware('admin.permission:whatsapp.contacter');
+            Route::post('/{utilisateur}/message', [AdminUtilisateurController::class, 'messageContacter'])->name('message.contacter')->middleware('admin.permission:notifications.envoyer');
         });
 
         // Base de contacts de prospection — distincte des utilisateurs CONTROOL ci-dessus,

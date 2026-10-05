@@ -288,7 +288,7 @@ const reactiverEssai = (essai) => {
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-right text-sm space-x-3">
                                         <button
-                                            v-if="permissionsWhatsapp?.contacter"
+                                            v-if="permissionsWhatsapp?.contacter || permissionsNotifications?.envoyer"
                                             class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 font-medium"
                                             @click="essaiARelancer = essai"
                                         >
@@ -313,6 +313,7 @@ const reactiverEssai = (essai) => {
                         type="utilisateur"
                         :modeles="modelesWhatsappEssai"
                         :modele-cle-initiale="modeleCleRelance"
+                        :peut-envoyer-message="permissionsNotifications?.envoyer"
                         @close="essaiARelancer = null"
                         @envoye="apresEnvoiRelance"
                     />
