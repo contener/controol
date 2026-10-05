@@ -700,7 +700,24 @@ propriétaire l'est). **À sens unique en v1** (pas de "unlike") : idempotent vi
 même en cliquant plusieurs fois. L'état "déjà aimé" est renvoyé par le serveur au
 chargement de la page (`produitsAimes`, lu depuis le cookie visiteur **en lecture
 seule** — ne crée jamais un cookie juste pour afficher la page, seul un clic réel sur
-j'aime en crée un).
+j'aime en crée un). Le cœur affiche aussi un **compteur visible** (`produit.likes_count`,
+calculé via `withCount` sur `Produit::interactionsAudience()` avec
+`withoutGlobalScopes()` — jamais dupliqué en base), incrémenté de façon optimiste côté
+client au clic. Comme toute donnée Audience, ce chiffre est recalculé à chaque
+chargement de page depuis le grand livre `audience_interactions` : aucun délai entre un
+like et sa visibilité dans la liste Audience du propriétaire.
+
+**Piège rencontré et corrigé (2026-10-05)** : le clic sur le cœur échouait
+silencieusement en production — `Boutique.vue` référençait une variable `boutique`
+inexistante dans le `<script setup>` (seul `props.boutique` existe, les props n'étant
+jamais déstructurées dans ce fichier), ce qui levait une `ReferenceError` aussitôt
+rattrapée par le `catch {}` du like optimiste, annulant silencieusement l'action sans
+jamais prévenir l'utilisateur. Les tests `AudienceTest` ne l'avaient pas détecté car ils
+appellent le contrôleur directement (`$this->post(...)`), sans jamais exécuter le
+JavaScript réel du navigateur — un rappel que toute logique uniquement côté client doit
+être vérifiée par un test de bout en bout réel (navigateur ou requête HTTP simulant
+exactement le flux cookie/CSRF d'un vrai visiteur), pas seulement par les tests
+Feature Laravel.
 
 **Relance WhatsApp** (`AudienceController::relancerWhatsapp()`) : lien `wa.me`
 construit **côté serveur**, journalise l'ouverture comme une interaction
@@ -842,6 +859,17 @@ sans consentement explicite).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-05** — **Correction du bouton ❤️ j'aime (cassé en production) + ajout d'un
+  compteur de likes visible** (voir §5.18). Le like échouait silencieusement sur chaque
+  clic : `Boutique.vue` référençait une variable `boutique` inexistante dans le script
+  (au lieu de `props.boutique`), provoquant une erreur JS aussitôt rattrapée par le
+  `catch` du like optimiste, sans jamais prévenir l'utilisateur ni les tests
+  automatisés (qui appellent le contrôleur directement, sans exécuter le JS réel).
+  Ajoute aussi un compteur visible sur chaque cœur (`produit.likes_count`, calculé à la
+  volée depuis `audience_interactions`, jamais dupliqué en base), incrémenté de façon
+  optimiste au clic. Vérifié de bout en bout en production via une requête simulant
+  exactement un vrai visiteur anonyme (cookie session + jeton CSRF réels), puis données
+  de test nettoyées.
 - **2026-10-04** — **Nouvelle fonctionnalité : Audience par produit** (voir §5.18).
   Chaque boutique voit désormais quels visiteurs se sont intéressés à ses produits
   (like, message) et peut les relancer sur WhatsApp — verrouillé derrière le plan
