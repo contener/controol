@@ -630,6 +630,23 @@ confirmée" avec un bouton "Marquer comme envoyée". La liste se recharge
 automatiquement (reload ciblé Inertia, pas toute la page) juste après l'ouverture de
 WhatsApp, pour que la relance apparaisse sans rechargement manuel.
 
+**Relance par message interne (cloche), en plus de WhatsApp** (2026-10-05,
+`UtilisateurController::messageContacter()`, route `admin.utilisateurs.message.contacter`,
+gated `notifications.envoyer`) : la relance WhatsApp disparaissait/échouait entièrement
+pour tout utilisateur sans numéro renseigné. La modale de relance partagée
+(`RelanceWhatsappModal.vue`, utilisée par Notifications/Index.vue **et**
+Utilisateurs/Index.vue/Show.vue) propose désormais un deuxième canal "💬 Message
+(cloche)" qui ne dépend d'aucun numéro : il dépose directement une notification sur la
+cloche de l'utilisateur via `NotificationUtilisateur::create()` (même mécanisme déjà
+utilisé par `reactiverEssai()`/`ParrainageService` — aucun nouveau service créé), avec
+`titre = "Message de l'équipe technique de Controol"` (il n'existe pas de champ
+"expéditeur" sur ce modèle ; le titre porte cette information). Contrairement à
+WhatsApp, **ce message est réellement envoyé immédiatement**, visible dès le prochain
+chargement de page côté utilisateur. Jamais proposé pour un contact de prospection
+(Admin/Contacts) : un `Contact` n'a pas de compte `User`, donc pas de cloche à notifier.
+Le bouton "Relancer" des deux pages n'est visible que si l'admin a `whatsapp.contacter`
+**ou** `notifications.envoyer` (au moins un des deux canaux disponible).
+
 **Réactivation manuelle d'un essai expiré** (bouton "Réactiver l'essai", visible
 uniquement si `statut === 'expire'`, gated `notifications.envoyer`,
 `NotificationEssaiController::reactiverEssai()`) : redonne 7 jours d'essai Basique.
@@ -874,6 +891,14 @@ sans consentement explicite).
 
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
+
+- **2026-10-05** — **Relance par message interne (cloche) dans Notifications et
+  Utilisateurs, en plus de WhatsApp** (voir §5.17). La relance WhatsApp était jusque-là
+  le seul canal, inutilisable pour tout utilisateur sans numéro renseigné. Ajoute un
+  second canal dans la modale de relance partagée : dépose une notification sur la
+  cloche de l'utilisateur au nom de "l'équipe technique de Controol"
+  (`NotificationUtilisateur::create()`, gated `notifications.envoyer`, déjà actif).
+  Jamais proposé pour les contacts de prospection (pas de compte à notifier).
 
 - **2026-10-05** — **Relance Audience par message interne, en plus de WhatsApp** (voir
   §5.18). La relance WhatsApp disparaissait entièrement pour toute personne sans numéro
