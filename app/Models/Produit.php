@@ -50,6 +50,11 @@ class Produit extends Model
         return $this->hasMany(MouvementStock::class);
     }
 
+    public function interactionsAudience(): HasMany
+    {
+        return $this->hasMany(AudienceInteraction::class);
+    }
+
     public function enRupture(): bool
     {
         return $this->gere_stock && $this->seuil_alerte !== null && $this->quantite_stock <= $this->seuil_alerte;

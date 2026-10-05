@@ -84,18 +84,23 @@ const ajoutProduitOuvert = ref(false);
 
 // Like à sens unique (pas de "unlike" en v1) : état local initialisé depuis le
 // serveur (produits déjà aimés lors du dernier chargement), mis à jour de façon
-// optimiste au clic pour un retour visuel immédiat.
+// optimiste au clic pour un retour visuel immédiat. Le compteur par produit est
+// lui aussi initialisé depuis le serveur et incrémenté localement au clic.
 const aimes = ref(new Set(props.produitsAimes));
+const compteurs = ref(new Map(props.produits.map((p) => [p.id, p.likes_count ?? 0])));
 const aEteAime = (produit) => aimes.value.has(produit.id);
+const nombreLikes = (produit) => compteurs.value.get(produit.id) ?? 0;
 const aimer = async (produit) => {
     if (aEteAime(produit)) {
         return;
     }
     aimes.value.add(produit.id);
+    compteurs.value.set(produit.id, nombreLikes(produit) + 1);
     try {
-        await axios.post(route('public.boutique.produits.jaime', [boutique.slug, produit.id]));
+        await axios.post(route('public.boutique.produits.jaime', [props.boutique.slug, produit.id]));
     } catch {
         aimes.value.delete(produit.id);
+        compteurs.value.set(produit.id, nombreLikes(produit) - 1);
     }
 };
 
@@ -221,11 +226,12 @@ const conversationPourModal = computed(() => {
                             type="button"
                             :title="aEteAime(produit) ? 'Vous aimez ce produit' : 'J\'aime ce produit'"
                             :aria-label="aEteAime(produit) ? 'Vous aimez ce produit' : 'J\'aime ce produit'"
-                            class="absolute top-2 right-2 size-8 rounded-full bg-white/90 shadow flex items-center justify-center transition-transform"
+                            class="absolute top-2 right-2 h-8 min-w-8 px-1.5 rounded-full bg-white/90 shadow flex items-center justify-center gap-1 transition-transform"
                             :class="aEteAime(produit) ? '' : 'hover:scale-110'"
                             @click="aimer(produit)"
                         >
                             <span class="text-base leading-none" :class="aEteAime(produit) ? '' : 'opacity-40'">❤️</span>
+                            <span v-if="nombreLikes(produit) > 0" class="text-xs font-semibold text-slate-600 leading-none">{{ nombreLikes(produit) }}</span>
                         </button>
                     </div>
                     <div class="p-3 flex-1 flex flex-col">
