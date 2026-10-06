@@ -666,6 +666,17 @@ fait confiance à la liste d'ids brute envoyée par le client. Une seule entrée
 `resource_id` null, la liste des ids et leur nombre dans `nouvelle_valeur`), pas une par
 destinataire.
 
+**Filtres de la liste Utilisateurs** (2026-10-06, `UtilisateurController::index()`,
+Utilisateurs/Index.vue) : recherche (nom/email/WhatsApp/téléphone), Statut
+(Actif/Inactif), WhatsApp (gated `whatsapp.voir` — Avec/Sans numéro, vérifié sur le
+profil **et** sur la boutique courante, cf. `User::numeroWhatsapp()`), Boutique
+(Avec/Sans — `has('boutiques')`/`doesntHave('boutiques')`), Produits (Avec/Sans —
+réutilise `Boutique::produits()`, jamais une nouvelle relation `User::produits()`
+créée pour l'occasion). "Sans produit" couvre aussi bien l'utilisateur sans aucune
+boutique que celui qui en a une mais n'y a encore ajouté aucun produit — les deux sont
+le même signal commercial ("n'a pas encore listé son catalogue"), traité comme un
+seul filtre plutôt que de forcer l'admin à combiner deux filtres séparés.
+
 **Réactivation manuelle d'un essai expiré** (bouton "Réactiver l'essai", visible
 uniquement si `statut === 'expire'`, gated `notifications.envoyer`,
 `NotificationEssaiController::reactiverEssai()`) : redonne 7 jours d'essai Basique.
@@ -911,6 +922,11 @@ sans consentement explicite).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-06** — **Ajout des filtres "sans boutique" et "sans produit" dans
+  Utilisateurs** (voir §5.17). Seuls Actif/Inactif et Avec/Sans WhatsApp existaient.
+  "Sans produit" couvre aussi bien l'absence totale de boutique que le cas d'une
+  boutique créée mais encore vide de catalogue — un seul filtre pour un seul signal
+  commercial, plutôt que d'en forcer deux séparés.
 - **2026-10-06** — **Relance groupée (sélection multiple) dans Utilisateurs** (voir
   §5.17). Un admin ne pouvait relancer qu'un utilisateur à la fois. Ajoute des cases à
   cocher + un bouton "Relancer la sélection" : un seul message-modèle avec `{{nom}}`,
