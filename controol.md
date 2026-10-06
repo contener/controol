@@ -647,6 +647,25 @@ chargement de page côté utilisateur. Jamais proposé pour un contact de prospe
 Le bouton "Relancer" des deux pages n'est visible que si l'admin a `whatsapp.contacter`
 **ou** `notifications.envoyer` (au moins un des deux canaux disponible).
 
+**Relance groupée (sélection multiple)** (2026-10-06,
+`UtilisateurController::messageContacterMassif()`, route `admin.utilisateurs.message.massif`,
+Utilisateurs/Index.vue uniquement) : cases à cocher sur la liste (limitées à la page
+affichée, pas de "sélectionner toutes les pages") + bouton "💬 Relancer la sélection" →
+`RelanceMassiveModal.vue`. Un seul message-modèle écrit par l'admin, avec
+`{{nom}}`/`{{prenom}}` comme espace réservé ; chaque destinataire reçoit sa **propre**
+notification, son nom déjà substitué côté serveur (`str_replace` par utilisateur avant
+insertion). Insertion en une seule requête (`DB::table('notifications_utilisateurs')->insert()`
+sur un tableau de lignes, pas N créations Eloquent individuelles — même principe que
+`ProduitController::notifierAbonnes()`), seul le texte du message diffère par ligne.
+**Message interne uniquement, pas de pendant WhatsApp** : `wa.me` n'ouvre qu'une
+conversation à la fois, une relance groupée par ce canal n'aurait aucun sens en un
+clic. Tout id glissé dans la sélection qui ne correspond pas à un vrai compte
+`role=user` (ex. un administrateur) est filtré côté serveur avant l'insertion — jamais
+fait confiance à la liste d'ids brute envoyée par le client. Une seule entrée
+`admin_audits` pour toute l'opération (`action: utilisateurs_relance_message_massive`,
+`resource_id` null, la liste des ids et leur nombre dans `nouvelle_valeur`), pas une par
+destinataire.
+
 **Réactivation manuelle d'un essai expiré** (bouton "Réactiver l'essai", visible
 uniquement si `statut === 'expire'`, gated `notifications.envoyer`,
 `NotificationEssaiController::reactiverEssai()`) : redonne 7 jours d'essai Basique.
@@ -891,6 +910,13 @@ sans consentement explicite).
 
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
+
+- **2026-10-06** — **Relance groupée (sélection multiple) dans Utilisateurs** (voir
+  §5.17). Un admin ne pouvait relancer qu'un utilisateur à la fois. Ajoute des cases à
+  cocher + un bouton "Relancer la sélection" : un seul message-modèle avec `{{nom}}`,
+  substitué individuellement pour chaque destinataire sélectionné, déposé sur sa
+  cloche en une seule insertion groupée. Message interne uniquement (pas de pendant
+  WhatsApp, qui n'a pas de sens pour plusieurs destinataires à la fois).
 
 - **2026-10-05** — **Relance par message interne (cloche) dans Notifications et
   Utilisateurs, en plus de WhatsApp** (voir §5.17). La relance WhatsApp était jusque-là
