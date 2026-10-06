@@ -6,6 +6,7 @@ import AdminSubNav from '../Partials/AdminSubNav.vue';
 import TextInput from '@/Components/TextInput.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import RelanceWhatsappModal from './Partials/RelanceWhatsappModal.vue';
+import RelanceMassiveModal from './Partials/RelanceMassiveModal.vue';
 
 const props = defineProps({
     utilisateurs: Object,
@@ -38,6 +39,22 @@ const utilisateurARelancer = ref(null);
 const cibleRelance = computed(() => (utilisateurARelancer.value
     ? { id: utilisateurARelancer.value.id, nom: utilisateurARelancer.value.name, whatsapp: utilisateurARelancer.value.whatsapp, plan: utilisateurARelancer.value.plan }
     : null));
+
+// Sélection multiple pour la relance groupée -- limitée à la page affichée (pas de
+// sélection "toutes les pages", pour rester simple et toujours cohérente avec ce que
+// l'admin voit réellement à l'écran).
+const selectionnes = ref([]);
+const tousSelectionnesSurPage = computed(() => props.utilisateurs.data.length > 0 && props.utilisateurs.data.every((u) => selectionnes.value.includes(u.id)));
+const basculerToutSurPage = () => {
+    selectionnes.value = tousSelectionnesSurPage.value
+        ? selectionnes.value.filter((id) => !props.utilisateurs.data.some((u) => u.id === id))
+        : [...new Set([...selectionnes.value, ...props.utilisateurs.data.map((u) => u.id)])];
+};
+const relanceMassiveOuverte = ref(false);
+const apresEnvoiMassif = () => {
+    relanceMassiveOuverte.value = false;
+    selectionnes.value = [];
+};
 
 const basculer = (utilisateur) => {
     const action = utilisateur.est_actif ? 'désactiver' : 'réactiver';
@@ -73,10 +90,27 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                     </SelectInput>
                 </div>
 
+                <div v-if="permissionsNotifications?.envoyer && selectionnes.length > 0" class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center justify-between">
+                    <span class="text-sm text-blue-800 dark:text-blue-300">{{ selectionnes.length }} utilisateur{{ selectionnes.length > 1 ? 's' : '' }} sélectionné{{ selectionnes.length > 1 ? 's' : '' }}</span>
+                    <div class="flex items-center gap-3">
+                        <button type="button" class="text-sm text-blue-700 dark:text-blue-300 hover:underline" @click="selectionnes = []">Désélectionner</button>
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                            @click="relanceMassiveOuverte = true"
+                        >
+                            💬 Relancer la sélection
+                        </button>
+                    </div>
+                </div>
+
                 <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                         <thead class="bg-slate-50 dark:bg-slate-900">
                             <tr>
+                                <th v-if="permissionsNotifications?.envoyer" class="px-4 py-3 text-left">
+                                    <input type="checkbox" :checked="tousSelectionnesSurPage" class="rounded border-slate-300 dark:border-slate-600" @change="basculerToutSurPage" />
+                                </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Nom</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Email</th>
                                 <th v-if="permissionsWhatsapp?.voir" class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">WhatsApp</th>
@@ -89,9 +123,12 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                         </thead>
                         <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="utilisateurs.data.length === 0">
-                                <td :colspan="permissionsWhatsapp?.voir ? 8 : 7" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun utilisateur trouvé.</td>
+                                <td :colspan="(permissionsWhatsapp?.voir ? 8 : 7) + (permissionsNotifications?.envoyer ? 1 : 0)" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun utilisateur trouvé.</td>
                             </tr>
                             <tr v-for="utilisateur in utilisateurs.data" :key="utilisateur.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
+                                <td v-if="permissionsNotifications?.envoyer" class="px-4 py-4">
+                                    <input type="checkbox" :value="utilisateur.id" v-model="selectionnes" class="rounded border-slate-300 dark:border-slate-600" />
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{{ utilisateur.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ utilisateur.email }}</td>
                                 <td v-if="permissionsWhatsapp?.voir" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ utilisateur.whatsapp ?? 'Non renseigné' }}</td>
@@ -125,6 +162,14 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                     :peut-envoyer-message="permissionsNotifications?.envoyer"
                     @close="utilisateurARelancer = null"
                     @envoye="utilisateurARelancer = null"
+                />
+
+                <RelanceMassiveModal
+                    :show="relanceMassiveOuverte"
+                    :utilisateur-ids="selectionnes"
+                    :nombre-selectionnes="selectionnes.length"
+                    @close="relanceMassiveOuverte = false"
+                    @envoye="apresEnvoiMassif"
                 />
 
                 <div v-if="utilisateurs.links.length > 3" class="flex flex-wrap gap-1">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Jetstream\DeleteUser;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreMessageContactMassifRequest;
 use App\Http\Requests\StoreMessageContactRequest;
 use App\Http\Requests\StoreWhatsappContactRequest;
 use App\Models\AdminAudit;
@@ -254,6 +255,52 @@ class UtilisateurController extends Controller
         $this->journaliser($request, 'utilisateur_relance_message', $utilisateur, null, ['message' => $message]);
 
         return back()->with('flash_success', "Message envoyé — visible sur la cloche de notification de {$utilisateur->name}.");
+    }
+
+    /**
+     * Relance groupée : un seul message-modèle, envoyé à plusieurs utilisateurs en une
+     * fois, chacun recevant une notification distincte avec son propre nom déjà
+     * substitué ({{nom}}/{{prenom}} -> User::name). Insertion en masse en une seule
+     * requête (pas N créations Eloquent individuelles), même principe déjà appliqué
+     * pour notifierAbonnes() -- seul le contenu du message diffère par ligne.
+     * Message interne uniquement (pas de pendant WhatsApp : wa.me n'ouvre qu'une
+     * conversation à la fois, impossible à "envoyer à plusieurs" en un clic).
+     */
+    public function messageContacterMassif(StoreMessageContactMassifRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        $utilisateurs = User::where('role', User::ROLE_USER)
+            ->whereIn('id', $data['utilisateur_ids'])
+            ->get(['id', 'name']);
+
+        abort_if($utilisateurs->isEmpty(), 422, 'Aucun utilisateur valide sélectionné.');
+
+        $maintenant = now();
+        $titre = "Message de l'équipe technique de Controol";
+
+        DB::table('notifications_utilisateurs')->insert(
+            $utilisateurs->map(fn (User $u) => [
+                'user_id' => $u->id,
+                'type' => 'relance_admin',
+                'titre' => $titre,
+                'message' => str_replace(['{{nom}}', '{{prenom}}'], $u->name, $data['message']),
+                'est_promotionnelle' => true,
+                'created_at' => $maintenant,
+            ])->all()
+        );
+
+        AdminAudit::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'utilisateurs_relance_message_massive',
+            'resource' => 'utilisateur',
+            'resource_id' => null,
+            'ancienne_valeur' => null,
+            'nouvelle_valeur' => ['utilisateur_ids' => $utilisateurs->pluck('id')->all(), 'nombre' => $utilisateurs->count()],
+            'ip_address' => $request->ip(),
+        ]);
+
+        return back()->with('flash_success', "Message envoyé à {$utilisateurs->count()} utilisateur(s).");
     }
 
     private function permissionsWhatsapp(Request $request): array
