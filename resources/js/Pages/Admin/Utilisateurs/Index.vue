@@ -19,19 +19,23 @@ const props = defineProps({
 const recherche = ref(props.filtres.recherche ?? '');
 const statut = ref(props.filtres.statut ?? '');
 const avecWhatsapp = ref(props.filtres.avecWhatsapp ?? '');
+const avecBoutique = ref(props.filtres.avecBoutique ?? '');
+const avecProduit = ref(props.filtres.avecProduit ?? '');
 
 let timeoutId = null;
 watch(recherche, () => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(appliquerFiltres, 300);
 });
-watch([statut, avecWhatsapp], appliquerFiltres);
+watch([statut, avecWhatsapp, avecBoutique, avecProduit], appliquerFiltres);
 
 function appliquerFiltres() {
     router.get(route('admin.utilisateurs.index'), {
         recherche: recherche.value,
         statut: statut.value,
         avecWhatsapp: avecWhatsapp.value,
+        avecBoutique: avecBoutique.value,
+        avecProduit: avecProduit.value,
     }, { preserveState: true, replace: true });
 }
 
@@ -76,7 +80,7 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
             <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-4">
                 <AdminSubNav />
 
-                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4 flex flex-col sm:flex-row gap-4">
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-4 flex flex-col sm:flex-row sm:flex-wrap gap-4">
                     <TextInput v-model="recherche" placeholder="Rechercher par nom, email, WhatsApp ou téléphone..." class="flex-1" />
                     <SelectInput v-model="statut" class="sm:w-48">
                         <option value="">Tous les statuts</option>
@@ -87,6 +91,16 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                         <option value="">Tous (WhatsApp)</option>
                         <option value="1">Avec WhatsApp</option>
                         <option value="0">Sans WhatsApp</option>
+                    </SelectInput>
+                    <SelectInput v-model="avecBoutique" class="sm:w-48">
+                        <option value="">Tous (boutique)</option>
+                        <option value="1">Avec boutique</option>
+                        <option value="0">Sans boutique</option>
+                    </SelectInput>
+                    <SelectInput v-model="avecProduit" class="sm:w-48">
+                        <option value="">Tous (produits)</option>
+                        <option value="1">Avec produits</option>
+                        <option value="0">Sans produit</option>
                     </SelectInput>
                 </div>
 

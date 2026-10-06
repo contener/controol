@@ -61,6 +61,27 @@ class UtilisateurController extends Controller
                     $query->whereNot($aUnNumero);
                 }
             })
+            ->when($request->filled('avecBoutique'), function ($query) use ($request) {
+                if ($request->boolean('avecBoutique')) {
+                    $query->has('boutiques');
+                } else {
+                    $query->doesntHave('boutiques');
+                }
+            })
+            // "Sans produit" inclut aussi bien l'utilisateur sans aucune boutique que celui
+            // qui en a une mais n'y a encore ajouté aucun produit -- withoutGlobalScopes()
+            // indispensable ici : Produit est scopé BelongsToBoutique (boutique COURANTE du
+            // Super Admin connecté, pas celle de l'utilisateur consulté), même piège déjà
+            // documenté pour UtilisateurController::show().
+            ->when($request->filled('avecProduit'), function ($query) use ($request) {
+                $aUnProduit = fn ($q) => $q->whereHas('boutiques', fn ($qb) => $qb->whereHas('produits', fn ($qp) => $qp->withoutGlobalScopes()));
+
+                if ($request->boolean('avecProduit')) {
+                    $query->where($aUnProduit);
+                } else {
+                    $query->whereNot($aUnProduit);
+                }
+            })
             ->with('currentBoutique:id,whatsapp')
             ->withCount('boutiques')
             ->orderBy($request->string('tri', 'created_at')->toString(), $request->string('direction', 'desc')->toString())
@@ -80,7 +101,7 @@ class UtilisateurController extends Controller
 
         return Inertia::render('Admin/Utilisateurs/Index', [
             'utilisateurs' => $utilisateurs,
-            'filtres' => $request->only(['recherche', 'statut', 'tri', 'direction', 'avecWhatsapp']),
+            'filtres' => $request->only(['recherche', 'statut', 'tri', 'direction', 'avecWhatsapp', 'avecBoutique', 'avecProduit']),
             'permissionsWhatsapp' => $this->permissionsWhatsapp($request),
             'permissionsNotifications' => $this->permissionsNotifications($request),
             'modelesWhatsapp' => WhatsappModeles::liste(),

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AdminPermission;
 use App\Models\Boutique;
 use App\Models\Client;
+use App\Models\Produit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,49 @@ class AdminUtilisateurManagementTest extends TestCase
             ->component('Admin/Utilisateurs/Index')
             ->has('utilisateurs.data', 1)
             ->where('utilisateurs.data.0.name', 'Alice Martin'));
+    }
+
+    // Filtre "sans boutique" / "avec boutique" : distingue un compte inscrit mais qui
+    // n'a jamais créé de boutique d'un compte qui en a au moins une.
+    public function test_filter_by_boutique_presence_works(): void
+    {
+        $superAdmin = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN]);
+        $this->creerUtilisateurAvecBoutique()->forceFill(['name' => 'Avec boutique'])->save();
+        User::factory()->create(['name' => 'Sans boutique', 'role' => User::ROLE_USER]);
+
+        $avec = $this->actingAs($superAdmin)->get('/admin/utilisateurs?avecBoutique=1');
+        $avec->assertInertia(fn ($page) => $page->has('utilisateurs.data', 1)
+            ->where('utilisateurs.data.0.name', 'Avec boutique'));
+
+        $sans = $this->actingAs($superAdmin)->get('/admin/utilisateurs?avecBoutique=0');
+        $sans->assertInertia(fn ($page) => $page->has('utilisateurs.data', 1)
+            ->where('utilisateurs.data.0.name', 'Sans boutique'));
+    }
+
+    // Filtre "sans produit" : couvre à la fois l'utilisateur sans aucune boutique ET
+    // celui qui en a une mais n'y a encore ajouté aucun produit -- les deux comptent
+    // comme "sans produit", seul celui qui en a réellement un doit sortir d'"avecProduit".
+    public function test_filter_by_product_presence_works(): void
+    {
+        $superAdmin = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN]);
+        $utilisateurAvecProduit = $this->creerUtilisateurAvecBoutique();
+        $utilisateurAvecProduit->forceFill(['name' => 'Avec produit'])->save();
+        Produit::create([
+            'boutique_id' => $utilisateurAvecProduit->current_boutique_id,
+            'type' => 'produit',
+            'nom' => 'Produit test',
+            'prix_vente' => 1000,
+            'unite' => 'pièce',
+        ]);
+        $this->creerUtilisateurAvecBoutique()->forceFill(['name' => 'Boutique sans produit'])->save();
+        User::factory()->create(['name' => 'Sans boutique du tout', 'role' => User::ROLE_USER]);
+
+        $avec = $this->actingAs($superAdmin)->get('/admin/utilisateurs?avecProduit=1');
+        $avec->assertInertia(fn ($page) => $page->has('utilisateurs.data', 1)
+            ->where('utilisateurs.data.0.name', 'Avec produit'));
+
+        $sans = $this->actingAs($superAdmin)->get('/admin/utilisateurs?avecProduit=0');
+        $sans->assertInertia(fn ($page) => $page->has('utilisateurs.data', 2));
     }
 
     // TEST 2 — un admin SANS la permission reçoit 403.
