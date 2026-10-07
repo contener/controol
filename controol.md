@@ -609,6 +609,19 @@ annulations), contacts CRM (liste/import/export/relance). Permissions
 granulaires par section (`App\Support\AdminPermissions`), super_admin outrepasse
 toujours tout. Chaque action admin sensible journalisée dans `admin_audits`.
 
+**Confirmation des relances automatiques** (2026-10-07, page Notifications,
+`NotificationEssaiController::relancesAutomatiques()`) : la page ne montrait jusque-là
+que la *configuration* de l'heure d'envoi (§ ci-dessous), jamais une preuve que la
+tâche planifiée quotidienne (`essais:notifier`, voir `routes/console.php`) s'exécute
+réellement — un vrai incident (scheduler jamais configuré sur Hostinger) est resté
+invisible plusieurs jours sur ce projet pour cette raison exacte (voir historique du
+2026-10-04). Affiche désormais un historique de 14 jours (nombre de
+`NotificationUtilisateur` de type `essai_rappel` créées chaque jour, ✓ vert si > 0,
+✕ rouge si 0 — un jour à 0 signale immédiatement un arrêt du scheduler, bien avant
+qu'un utilisateur ne s'en plaigne), le nombre envoyé aujourd'hui, et l'horodatage de
+la dernière exécution détectée (dernière notification `essai_rappel` créée, toutes
+dates confondues).
+
 **Liste des utilisateurs en essai** (page Notifications,
 `NotificationEssaiController::essaisUtilisateurs()`) : un `EssaiUtilisateur` par ligne
 (pas seulement des agrégats) avec statut calculé (En cours/Expiré/Converti/Annulé),
@@ -921,6 +934,14 @@ sans consentement explicite).
 
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
+
+- **2026-10-07** — **Confirmation des relances automatiques d'essai sur la page
+  Notifications** (voir §5.17). La page ne montrait que la configuration de l'heure
+  d'envoi, jamais une preuve que le rappel quotidien de 8h s'exécute réellement. Ajoute
+  un historique de 14 jours (nombre de rappels envoyés chaque jour, 0 mis en évidence
+  en rouge) + le nombre du jour et l'horodatage de la dernière exécution détectée —
+  objectif explicite : repérer immédiatement un arrêt du scheduler, comme celui déjà
+  vécu une fois sur ce projet (2026-10-04).
 
 - **2026-10-06** — **Ajout des filtres "sans boutique" et "sans produit" dans
   Utilisateurs** (voir §5.17). Seuls Actif/Inactif et Avec/Sans WhatsApp existaient.
