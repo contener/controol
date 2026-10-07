@@ -219,6 +219,39 @@ class EssaiBasiqueTest extends TestCase
         $this->actingAs($admin)->get('/admin/notifications')->assertOk();
     }
 
+    /**
+     * Confirmation visible que la tâche planifiée s'exécute réellement -- pas
+     * seulement qu'elle est configurée (voir l'incident réel déjà rencontré sur ce
+     * projet : scheduler non configuré, 0 rappel envoyé pendant plusieurs jours).
+     */
+    public function test_notifications_page_shows_todays_automatic_relance_count(): void
+    {
+        $this->creerPlanBasique();
+        $this->inscrire();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
+
+        Artisan::call('essais:notifier');
+
+        $response = $this->actingAs($admin)->get('/admin/notifications');
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('relancesAutomatiques.aujourdhui', 1)
+            ->has('relancesAutomatiques.historique', 14)
+            ->whereNot('relancesAutomatiques.derniere_execution_a', null));
+    }
+
+    public function test_notifications_page_shows_zero_for_a_day_with_no_automatic_relance(): void
+    {
+        $this->creerPlanBasique();
+        $admin = $this->creerAdminAvecPermissions(['notifications.voir']);
+
+        $response = $this->actingAs($admin)->get('/admin/notifications');
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('relancesAutomatiques.aujourdhui', 0)
+            ->where('relancesAutomatiques.derniere_execution_a', null));
+    }
+
     public function test_admin_without_envoyer_permission_cannot_edit_a_template(): void
     {
         $this->creerPlanBasique();

@@ -32,6 +32,7 @@ class NotificationEssaiController extends Controller
             'modeles' => ModeleNotificationEssai::orderBy('jour')->get(),
             'parametres' => ParametreEssai::actuel(),
             'statistiques' => $this->statistiques(),
+            'relancesAutomatiques' => $this->relancesAutomatiques(),
             'permissionsNotifications' => [
                 'voir' => true,
                 'envoyer' => $request->user()->hasAdminPermission('notifications.envoyer'),
@@ -231,6 +232,42 @@ class NotificationEssaiController extends Controller
                 'confirme' => $derniereRelance->confirme,
                 'admin_nom' => $derniereRelance->admin?->name,
             ] : null,
+        ];
+    }
+
+    /**
+     * Confirmation visible que la tâche planifiée quotidienne (`essais:notifier`, voir
+     * routes/console.php) s'exécute réellement chaque matin -- pas seulement qu'elle
+     * est configurée. Historique de 14 jours plutôt qu'un seul chiffre "aujourd'hui" :
+     * un vrai incident (scheduler non configuré, déjà rencontré une fois sur ce projet,
+     * voir §5.17/historique du 2026-10-04) se voit immédiatement comme un ou plusieurs
+     * jours à 0, bien avant qu'un utilisateur ne s'en plaigne.
+     */
+    private function relancesAutomatiques(): array
+    {
+        $depuis = now()->subDays(13)->startOfDay();
+
+        $parJour = NotificationUtilisateur::where('type', 'essai_rappel')
+            ->where('created_at', '>=', $depuis)
+            ->selectRaw('DATE(created_at) as jour, COUNT(*) as nombre')
+            ->groupBy('jour')
+            ->pluck('nombre', 'jour');
+
+        $historique = collect(range(13, 0))
+            ->map(fn (int $i) => now()->subDays($i)->toDateString())
+            ->map(fn (string $date) => [
+                'date' => $date,
+                'nombre' => (int) ($parJour->get($date) ?? 0),
+            ])
+            ->values()
+            ->all();
+
+        $derniere = NotificationUtilisateur::where('type', 'essai_rappel')->latest('created_at')->first();
+
+        return [
+            'historique' => $historique,
+            'aujourdhui' => (int) ($parJour->get(now()->toDateString()) ?? 0),
+            'derniere_execution_a' => $derniere?->created_at?->format('d/m/Y H:i'),
         ];
     }
 

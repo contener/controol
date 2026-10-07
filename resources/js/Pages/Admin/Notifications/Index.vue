@@ -15,6 +15,7 @@ const props = defineProps({
     modeles: Array,
     parametres: Object,
     statistiques: Object,
+    relancesAutomatiques: Object,
     permissionsNotifications: Object,
     essais: Object,
     filtresEssais: Object,
@@ -113,6 +114,9 @@ const apresEnvoiRelance = () => {
     router.reload({ preserveScroll: true });
 };
 
+const formaterJour = (date) => new Date(`${date}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+const estAujourdhui = (date) => date === new Date().toLocaleDateString('en-CA');
+
 const reactiverEssai = (essai) => {
     if (confirm(`Redonner 7 jours d'essai gratuit à ${essai.nom} ? Cette action est immédiate et l'utilisateur sera notifié.`)) {
         router.post(route('admin.notifications.essais.reactiver', essai.id), {}, { preserveScroll: true });
@@ -147,6 +151,49 @@ const reactiverEssai = (essai) => {
                         <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Conversions</div>
                         <div class="mt-1 text-2xl font-semibold text-green-600 dark:text-green-400">{{ statistiques.convertis }}</div>
                     </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
+                    <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300">🔁 Confirmation des relances automatiques</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Rappels envoyés chaque matin à l'heure configurée ci-dessous, sans action de votre part —
+                                un jour à 0 ci-dessous signale que la tâche planifiée ne s'est pas exécutée ce jour-là.
+                            </p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="text-xs text-slate-500 dark:text-slate-400 uppercase">Envoyées aujourd'hui</div>
+                            <div class="mt-1 text-2xl font-semibold" :class="relancesAutomatiques.aujourdhui > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                {{ relancesAutomatiques.aujourdhui }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-end gap-1.5 overflow-x-auto pb-1">
+                        <div v-for="jour in relancesAutomatiques.historique" :key="jour.date" class="flex flex-col items-center gap-1 shrink-0 w-11">
+                            <span class="text-xs font-semibold" :class="jour.nombre > 0 ? 'text-slate-700 dark:text-slate-300' : 'text-red-600 dark:text-red-400'">
+                                {{ jour.nombre }}
+                            </span>
+                            <div
+                                class="w-full h-8 rounded flex items-center justify-center"
+                                :class="jour.nombre > 0 ? 'bg-green-100 dark:bg-green-900/40' : 'bg-red-100 dark:bg-red-900/40'"
+                                :title="`${jour.date} — ${jour.nombre} rappel(s)`"
+                            >
+                                <span class="text-xs" :class="jour.nombre > 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'">
+                                    {{ jour.nombre > 0 ? '✓' : '✕' }}
+                                </span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 whitespace-nowrap" :class="{ 'font-semibold text-slate-600 dark:text-slate-300': estAujourdhui(jour.date) }">
+                                {{ formaterJour(jour.date) }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="mt-3 text-xs text-slate-400 dark:text-slate-500">
+                        Dernière exécution détectée :
+                        <span class="font-medium text-slate-600 dark:text-slate-300">{{ relancesAutomatiques.derniere_execution_a ?? 'jamais' }}</span>
+                    </p>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 shadow-sm rounded-lg p-6">
