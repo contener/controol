@@ -943,6 +943,20 @@ changement de comportement significatif)*
   objectif explicite : repérer immédiatement un arrêt du scheduler, comme celui déjà
   vécu une fois sur ce projet (2026-10-04).
 
+- **2026-10-07** — **⚠️ Incident réel détecté par la fonctionnalité ci-dessus, le jour
+  même de sa mise en ligne** : aucune relance automatique d'essai envoyée entre le
+  2026-10-03 23h20 et le 2026-10-07 07h49 (3 jours de silence), alors que
+  `php artisan schedule:list` confirme une configuration Laravel correcte
+  (`essais:notifier` à 8h Africa/Douala = 7h UTC). Le cron système Hostinger
+  (hPanel, invisible et non gérable via SSH — `crontab` reste "command not found" sur
+  ce plan) s'est donc à nouveau arrêté, pour une cause indéterminable depuis ce
+  compte SSH. Rattrapé manuellement (`php artisan essais:notifier`, idempotent via
+  `dernier_jour_notifie` — 51 utilisateurs relancés sans doublon). **Action requise de
+  l'utilisateur, récurrente** : revérifier régulièrement dans hPanel → Cron Jobs que la
+  tâche existe toujours et s'exécute (Hostinger peut la désactiver silencieusement,
+  ex. lors d'une maintenance de l'hébergeur) — c'est désormais visible en un coup
+  d'œil sur la page Notifications sans avoir à investiguer en SSH.
+
 - **2026-10-06** — **Ajout des filtres "sans boutique" et "sans produit" dans
   Utilisateurs** (voir §5.17). Seuls Actif/Inactif et Avec/Sans WhatsApp existaient.
   "Sans produit" couvre aussi bien l'absence totale de boutique que le cas d'une
