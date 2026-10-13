@@ -32,6 +32,20 @@ class AdminUtilisateurManagementTest extends TestCase
             ->where('utilisateurs.data.0.name', 'Alice Martin'));
     }
 
+    // Le téléphone du profil (saisi à l'inscription) est une donnée distincte du
+    // numéro WhatsApp (saisi sur le profil ou la boutique) -- toujours visible, jamais
+    // soumis à la permission whatsapp.voir qui ne concerne que l'autre numéro.
+    public function test_phone_number_column_is_always_visible_regardless_of_whatsapp_permission(): void
+    {
+        $superAdmin = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN]);
+        $this->creerUtilisateurAvecBoutique()->forceFill(['name' => 'Jean', 'telephone' => '+237670000000', 'whatsapp' => null])->save();
+
+        $response = $this->actingAs($superAdmin)->get('/admin/utilisateurs');
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('utilisateurs.data.0.telephone', '+237670000000'));
+    }
+
     // Filtre "sans boutique" / "avec boutique" : distingue un compte inscrit mais qui
     // n'a jamais créé de boutique d'un compte qui en a au moins une.
     public function test_filter_by_boutique_presence_works(): void

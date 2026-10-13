@@ -128,6 +128,7 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Nom</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Email</th>
                                 <th v-if="permissionsWhatsapp?.voir" class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">WhatsApp</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Téléphone</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Plan</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Boutiques</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Statut</th>
@@ -137,7 +138,7 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                         </thead>
                         <tbody class="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
                             <tr v-if="utilisateurs.data.length === 0">
-                                <td :colspan="(permissionsWhatsapp?.voir ? 8 : 7) + (permissionsNotifications?.envoyer ? 1 : 0)" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun utilisateur trouvé.</td>
+                                <td :colspan="(permissionsWhatsapp?.voir ? 9 : 8) + (permissionsNotifications?.envoyer ? 1 : 0)" class="px-6 py-6 text-center text-slate-400 dark:text-slate-500">Aucun utilisateur trouvé.</td>
                             </tr>
                             <tr v-for="utilisateur in utilisateurs.data" :key="utilisateur.id" class="hover:bg-slate-50 dark:hover:bg-slate-700">
                                 <td v-if="permissionsNotifications?.envoyer" class="px-4 py-4">
@@ -146,6 +147,7 @@ const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR');
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{{ utilisateur.name }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ utilisateur.email }}</td>
                                 <td v-if="permissionsWhatsapp?.voir" class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ utilisateur.whatsapp ?? 'Non renseigné' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ utilisateur.telephone ?? 'Non renseigné' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ utilisateur.plan ?? '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ utilisateur.boutiques_count }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">

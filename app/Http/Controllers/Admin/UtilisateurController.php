@@ -93,6 +93,7 @@ class UtilisateurController extends Controller
             'name' => $u->name,
             'email' => $u->email,
             'whatsapp' => $peutVoirWhatsapp ? $u->numeroWhatsapp() : null,
+            'telephone' => $u->telephone,
             'est_actif' => $u->est_actif,
             'boutiques_count' => $u->boutiques_count,
             'plan' => $u->planActif()?->nom,
