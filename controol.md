@@ -690,6 +690,11 @@ boutique que celui qui en a une mais n'y a encore ajouté aucun produit — les 
 le même signal commercial ("n'a pas encore listé son catalogue"), traité comme un
 seul filtre plutôt que de forcer l'admin à combiner deux filtres séparés.
 
+**Colonne Téléphone** (2026-10-13) : `user.telephone` (saisi à l'inscription) est une
+donnée distincte du numéro WhatsApp (saisi sur le profil ou la boutique,
+`User::numeroWhatsapp()`) — toujours visible sur la liste, jamais soumise à
+`whatsapp.voir` qui ne gouverne que l'autre numéro.
+
 **Réactivation manuelle d'un essai expiré** (bouton "Réactiver l'essai", visible
 uniquement si `statut === 'expire'`, gated `notifications.envoyer`,
 `NotificationEssaiController::reactiverEssai()`) : redonne 7 jours d'essai Basique.
@@ -935,6 +940,10 @@ sans consentement explicite).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-13** — **Ajout de la colonne Téléphone dans la liste Utilisateurs** (voir
+  §5.17). Seul le numéro WhatsApp était visible ; le téléphone de profil
+  (`user.telephone`, saisi à l'inscription) n'apparaissait que sur la fiche
+  individuelle. Toujours visible, pas soumis à `whatsapp.voir`.
 - **2026-10-07** — **Confirmation des relances automatiques d'essai sur la page
   Notifications** (voir §5.17). La page ne montrait que la configuration de l'heure
   d'envoi, jamais une preuve que le rappel quotidien de 8h s'exécute réellement. Ajoute
