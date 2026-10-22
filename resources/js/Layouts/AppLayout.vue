@@ -390,6 +390,46 @@ const logout = () => {
             <main>
                 <slot />
             </main>
+
+            <!-- Bouton flottant "Ajouter un produit" : visible sur toutes les pages du
+                 tableau de bord (pas seulement Produits/Index.vue), avec une animation de
+                 balancement récurrente -- des utilisateurs ont du mal à trouver comment
+                 ajouter un produit, ce bouton doit être impossible à manquer. -->
+            <Link
+                v-if="boutiqueCouranteId"
+                :href="route('produits.create')"
+                title="Ajouter un nouveau produit"
+                aria-label="Ajouter un nouveau produit"
+                class="group fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4 animate-balancement"
+            >
+                <span class="text-2xl leading-none">+</span>
+                <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Ajouter un nouveau produit</span>
+            </Link>
         </div>
     </div>
 </template>
+
+<style scoped>
+@keyframes balancement {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(-14deg); }
+    40% { transform: rotate(10deg); }
+    60% { transform: rotate(-6deg); }
+    80% { transform: rotate(3deg); }
+}
+
+.animate-balancement {
+    animation: balancement 1s ease-in-out infinite;
+    transform-origin: bottom center;
+}
+
+.animate-balancement:hover {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-balancement {
+        animation: none;
+    }
+}
+</style>
