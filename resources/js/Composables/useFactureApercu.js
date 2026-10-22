@@ -66,13 +66,14 @@ export function useFactureApercu(form, { clients = () => [], boutique = () => ({
         const totalTva = lignes.reduce((acc, l) => acc + l.montant_tva, 0);
         const remise = Number(form.remise) || 0;
 
-        const type = form.type === 'proforma' ? 'proforma' : 'facture';
+        const typeLabels = { facture: 'Facture', proforma: 'Proforma', recu: 'Reçu' };
+        const type = form.type ?? 'facture';
 
         return {
             meta: {
                 numero: numeroPrevisualise,
                 type,
-                type_label: type === 'proforma' ? 'Proforma' : 'Facture',
+                type_label: typeLabels[type] ?? 'Facture',
                 statut: form.statut ?? 'brouillon',
                 date_emission: form.date_emission || null,
                 date_echeance: form.date_echeance || null,

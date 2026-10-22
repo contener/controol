@@ -27,7 +27,7 @@ const { formatMontant } = useCurrencyFormat();
                 </div>
             </div>
             <div class="text-right shrink-0">
-                <h2 class="text-2xl font-bold tracking-[0.15em]">FACTURE</h2>
+                <h2 class="text-2xl font-bold tracking-[0.15em]">{{ apercu.meta.type_label.toUpperCase() }}</h2>
                 <div class="w-16 h-0.5 bg-white/30 ml-auto mt-2"></div>
                 <div class="text-slate-300 mt-3 space-y-0.5 text-xs">
                     <div class="text-sm font-semibold text-white">N° {{ apercu.meta.numero }}</div>

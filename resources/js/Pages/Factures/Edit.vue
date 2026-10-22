@@ -37,7 +37,8 @@ const submit = () => {
     form.put(route('factures.update', props.facture.id));
 };
 
-const typeLabel = props.facture.type === 'proforma' ? 'le proforma' : 'la facture';
+const typeLabels = { proforma: 'le proforma', recu: 'le reçu' };
+const typeLabel = typeLabels[props.facture.type] ?? 'la facture';
 </script>
 
 <template>

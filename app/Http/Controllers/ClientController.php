@@ -28,14 +28,34 @@ class ClientController extends Controller
             ->when($request->string('etiquette')->toString(), function ($query, $etiquette) {
                 $query->where('etiquette', $etiquette);
             })
-            ->withCount('factures')
+            // Trois compteurs distincts (pas un seul "factures" global) pour que la liste
+            // révèle directement qui a des reçus/factures/proformas -- utile pour cibler les
+            // relances (ex. un client avec un reçu mais pas de facture n'a payé que
+            // partiellement).
+            ->when($request->filled('avecFactures'), function ($query) use ($request) {
+                $aCeType = fn ($q) => $q->whereHas('factures', fn ($qf) => $qf->where('type', 'facture'));
+                $request->boolean('avecFactures') ? $query->where($aCeType) : $query->whereNot($aCeType);
+            })
+            ->when($request->filled('avecProformas'), function ($query) use ($request) {
+                $aCeType = fn ($q) => $q->whereHas('factures', fn ($qf) => $qf->where('type', 'proforma'));
+                $request->boolean('avecProformas') ? $query->where($aCeType) : $query->whereNot($aCeType);
+            })
+            ->when($request->filled('avecRecus'), function ($query) use ($request) {
+                $aCeType = fn ($q) => $q->whereHas('factures', fn ($qf) => $qf->where('type', 'recu'));
+                $request->boolean('avecRecus') ? $query->where($aCeType) : $query->whereNot($aCeType);
+            })
+            ->withCount([
+                'factures as factures_count' => fn ($q) => $q->where('type', 'facture'),
+                'factures as proformas_count' => fn ($q) => $q->where('type', 'proforma'),
+                'factures as recus_count' => fn ($q) => $q->where('type', 'recu'),
+            ])
             ->orderBy('nom')
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('Clients/Index', [
             'clients' => $clients,
-            'filtres' => $request->only(['recherche', 'etiquette']),
+            'filtres' => $request->only(['recherche', 'etiquette', 'avecFactures', 'avecProformas', 'avecRecus']),
         ]);
     }
 

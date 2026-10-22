@@ -6,12 +6,14 @@ enum TypeFacture: string
 {
     case Facture = 'facture';
     case Proforma = 'proforma';
+    case Recu = 'recu';
 
     public function label(): string
     {
         return match ($this) {
             self::Facture => 'Facture',
             self::Proforma => 'Proforma',
+            self::Recu => 'Reçu',
         };
     }
 
@@ -25,6 +27,7 @@ enum TypeFacture: string
         return match ($this) {
             self::Facture => 'FAC',
             self::Proforma => 'PRO',
+            self::Recu => 'REC',
         };
     }
 }

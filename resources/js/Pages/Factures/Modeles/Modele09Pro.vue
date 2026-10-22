@@ -45,11 +45,11 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
                 </div>
             </div>
             <div class="text-right">
-                <h2 class="text-lg font-bold uppercase tracking-wide text-blue-900">Facture</h2>
+                <h2 class="text-lg font-bold uppercase tracking-wide text-blue-900">{{ apercu.meta.type_label }}</h2>
                 <span class="inline-block text-xs font-bold px-2.5 py-0.5 rounded mt-1" :class="statutClasse">{{ statutLabel }}</span>
                 <table class="mt-2 ml-auto text-xs">
                     <tbody>
-                        <tr><td class="text-slate-400 pr-3 text-right">N° facture</td><td class="font-medium">{{ apercu.meta.numero }}</td></tr>
+                        <tr><td class="text-slate-400 pr-3 text-right">N° document</td><td class="font-medium">{{ apercu.meta.numero }}</td></tr>
                         <tr v-if="apercu.client.numero_fiscal"><td class="text-slate-400 pr-3 text-right">NUI client</td><td class="font-medium">{{ apercu.client.numero_fiscal }}</td></tr>
                         <tr><td class="text-slate-400 pr-3 text-right">Émission</td><td class="font-medium">{{ apercu.meta.date_emission || '—' }}</td></tr>
                         <tr v-if="apercu.meta.date_echeance"><td class="text-slate-400 pr-3 text-right">Échéance</td><td class="font-medium">{{ apercu.meta.date_echeance }}</td></tr>

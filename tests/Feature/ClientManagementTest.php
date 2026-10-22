@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Boutique;
 use App\Models\Client;
+use App\Models\Facture;
+use App\Models\Produit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\CreatesBoutique;
@@ -125,6 +127,61 @@ class ClientManagementTest extends TestCase
 
         $response->assertNotFound();
         $this->assertDatabaseHas('clients', ['id' => $clientB->id, 'nom' => 'Client de B']);
+    }
+
+    private function creerFacture(int $boutiqueId, int $clientId, string $type): Facture
+    {
+        return Facture::create([
+            'boutique_id' => $boutiqueId,
+            'client_id' => $clientId,
+            'type' => $type,
+            'numero' => strtoupper($type).'-test-'.uniqid(),
+            'statut' => 'brouillon',
+            'date_emission' => now()->toDateString(),
+            'sous_total' => 100,
+            'remise' => 0,
+            'total_tva' => 20,
+            'total_ttc' => 120,
+        ]);
+    }
+
+    /**
+     * Trois compteurs indépendants (pas un seul "factures" global) : un client avec
+     * un reçu mais pas encore de facture (paiement partiel non régularisé) doit
+     * rester distinguable d'un client qui a une vraie facture.
+     */
+    public function test_clients_list_shows_independent_counts_per_document_type(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique();
+        $client = Client::create(['boutique_id' => $user->current_boutique_id, 'nom' => 'Client Mixte', 'etiquette' => 'client']);
+        $this->creerFacture($user->current_boutique_id, $client->id, 'facture');
+        $this->creerFacture($user->current_boutique_id, $client->id, 'facture');
+        $this->creerFacture($user->current_boutique_id, $client->id, 'proforma');
+        $this->creerFacture($user->current_boutique_id, $client->id, 'recu');
+        $this->actingAs($user);
+
+        $response = $this->get('/clients');
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('clients.data.0.factures_count', 2)
+            ->where('clients.data.0.proformas_count', 1)
+            ->where('clients.data.0.recus_count', 1));
+    }
+
+    public function test_filter_by_recu_presence_isolates_the_right_clients(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique();
+        $avecRecu = Client::create(['boutique_id' => $user->current_boutique_id, 'nom' => 'Avec reçu', 'etiquette' => 'client']);
+        $sansRecu = Client::create(['boutique_id' => $user->current_boutique_id, 'nom' => 'Sans reçu', 'etiquette' => 'client']);
+        $this->creerFacture($user->current_boutique_id, $avecRecu->id, 'recu');
+        $this->creerFacture($user->current_boutique_id, $sansRecu->id, 'facture');
+        $this->actingAs($user);
+
+        $avec = $this->get('/clients?avecRecus=1');
+        $avec->assertInertia(fn ($page) => $page->has('clients.data', 1)->where('clients.data.0.nom', 'Avec reçu'));
+
+        $sans = $this->get('/clients?avecRecus=0');
+        $sans->assertInertia(fn ($page) => $page->has('clients.data', 1)->where('clients.data.0.nom', 'Sans reçu'));
     }
 
     public function test_authenticated_user_without_current_boutique_sees_no_cross_tenant_data(): void

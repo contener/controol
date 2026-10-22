@@ -27,10 +27,11 @@ const statutClasses = {
     annulee: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
 };
 
-const typeLabels = { facture: 'Facture', proforma: 'Proforma' };
+const typeLabels = { facture: 'Facture', proforma: 'Proforma', recu: 'Reçu' };
 const typeClasses = {
     facture: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300',
     proforma: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300',
+    recu: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
 };
 
 const changerStatut = (event) => {
@@ -42,7 +43,8 @@ const changerStatut = (event) => {
 };
 
 const supprimer = () => {
-    const libelle = props.facture.type === 'proforma' ? 'le proforma' : 'la facture';
+    const libelles = { proforma: 'le proforma', recu: 'le reçu' };
+    const libelle = libelles[props.facture.type] ?? 'la facture';
     if (confirm(`Supprimer ${libelle} ${props.facture.numero} ?`)) {
         router.delete(route('factures.destroy', props.facture.id));
     }

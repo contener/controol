@@ -19,7 +19,7 @@ const { formatMontant } = useCurrencyFormat();
                 <span>{{ [apercu.boutique.adresse, [apercu.boutique.ville, apercu.boutique.pays].filter(Boolean).join(', ')].filter(Boolean).join(' — ') }}</span>
             </p>
             <div class="mt-6 flex justify-center gap-2 flex-wrap">
-                <span class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide">Facture {{ apercu.meta.numero }}</span>
+                <span class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide">{{ apercu.meta.type_label }} {{ apercu.meta.numero }}</span>
                 <span v-if="apercu.meta.date_emission" class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-medium">Émise le {{ apercu.meta.date_emission }}</span>
                 <span v-if="apercu.meta.date_echeance" class="bg-white/15 rounded-full px-4 py-1.5 text-xs font-medium">Échéance {{ apercu.meta.date_echeance }}</span>
             </div>

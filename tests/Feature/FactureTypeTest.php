@@ -138,6 +138,74 @@ class FactureTypeTest extends TestCase
         $this->assertDatabaseCount('mouvements_stock', 0);
     }
 
+    public function test_recu_gets_its_own_rec_prefixed_sequence(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu']))->assertRedirect();
+
+        $facture = Facture::latest('id')->first();
+        $this->assertSame('recu', $facture->type->value);
+        $this->assertStringStartsWith('REC-', $facture->numero);
+    }
+
+    /**
+     * Contrairement au proforma (document indicatif), un reçu prouve qu'une
+     * marchandise est sortie contre un paiement (même partiel) -- il doit donc
+     * consommer le stock exactement comme une facture.
+     */
+    public function test_recu_consumes_stock_like_facture(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client, $produit] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, $produit->id, ['type' => 'recu']))->assertRedirect();
+
+        $this->assertSame(47, $produit->fresh()->quantite_stock);
+        $this->assertDatabaseCount('mouvements_stock', 1);
+    }
+
+    public function test_index_filters_by_type_recu(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'facture']));
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu']));
+
+        $response = $this->get('/factures?type=recu');
+
+        $response->assertInertia(fn ($page) => $page
+            ->component('Factures/Index')
+            ->has('factures.data', 1)
+            ->where('factures.data.0.type', 'recu'));
+    }
+
+    public function test_pdf_meta_exposes_recu_type_and_label(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu']));
+        $facture = Facture::latest('id')->first();
+
+        $apercu = app(\App\Support\FactureApercuBuilder::class)->construire($facture);
+
+        $this->assertSame('recu', $apercu['meta']['type']);
+        $this->assertSame('Reçu', $apercu['meta']['type_label']);
+
+        $this->get(route('factures.pdf', $facture))->assertOk();
+    }
+
     public function test_type_is_immutable_after_creation(): void
     {
         $user = $this->creerUtilisateurAvecBoutique('pro');

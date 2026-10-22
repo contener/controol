@@ -18,7 +18,7 @@ const { formatMontant } = useCurrencyFormat();
             </div>
             <div class="text-right border border-white/30 rounded-md px-5 py-2.5 shrink-0 bg-white/5">
                 <div class="text-[10px] uppercase tracking-widest text-slate-300">Référence</div>
-                <div class="font-bold text-lg">FACTURE N° {{ apercu.meta.numero }}</div>
+                <div class="font-bold text-lg">{{ apercu.meta.type_label.toUpperCase() }} N° {{ apercu.meta.numero }}</div>
             </div>
         </div>
 

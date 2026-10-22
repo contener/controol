@@ -33,7 +33,10 @@ const props = defineProps({
 const typeOptions = [
     { value: 'facture', label: 'Facture', description: 'Document de vente final, numéroté FAC-.' },
     { value: 'proforma', label: 'Proforma', description: 'Devis indicatif, numéroté PRO-, ne touche jamais au stock.' },
+    { value: 'recu', label: 'Reçu', description: 'Émis pour un paiement partiel, numéroté REC-, comportement de stock identique à une facture.' },
 ];
+
+const couleurType = { proforma: 'yellow', recu: 'green' };
 
 // Le NUI est une propriété de la boutique, pas de la facture — le modifier ici met à
 // jour la boutique elle-même (via boutiques.nui) et s'appliquera à toutes ses futures
@@ -94,7 +97,7 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
         <section>
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Type de document</h3>
 
-            <div v-if="!modification" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div v-if="!modification" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                     v-for="option in typeOptions"
                     :key="option.value"
@@ -114,7 +117,7 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
             </div>
 
             <div v-else class="flex items-center gap-2">
-                <Badge :couleur="form.type === 'proforma' ? 'yellow' : 'blue'">
+                <Badge :couleur="couleurType[form.type] ?? 'blue'">
                     {{ typeOptions.find((o) => o.value === form.type)?.label ?? 'Facture' }}
                 </Badge>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Le type ne peut plus être modifié après la création du document.</p>
