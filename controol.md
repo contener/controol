@@ -219,7 +219,7 @@ plus le même projet.
   live Vue — voir §5.5).
 
 ### Facturation
-- **`factures`** : `boutique_id, client_id, type (facture|proforma, immuable après
+- **`factures`** : `boutique_id, client_id, type (facture|proforma|recu, immuable après
   création), numero (unique par boutique, format PREFIX-ANNEE-0000), statut
   (brouillon|envoyee|payee|annulee), modele_id (1-10), date_emission, date_echeance,
   sous_total/remise/total_tva/total_ttc, notes, garantie (texte libre par facture,
@@ -228,7 +228,7 @@ plus le même projet.
   description, quantite, prix_unitaire, tva_taux, remise_ligne, montant_ht/tva/ttc,
   ordre`.
 - **`compteurs_facture`** : `boutique_id, annee, type, dernier_numero` — unique par
-  `(boutique_id, annee, type)`, séquence séparée Facture/Proforma. Génération
+  `(boutique_id, annee, type)`, séquence séparée Facture/Proforma/Reçu. Génération
   concurrente-safe (`lockForUpdate()` + transaction).
 - **`depenses`** : `boutique_id, categorie (texte libre, liste suggérée côté UI
   seulement), montant, description, date_depense, created_by`.
@@ -449,17 +449,42 @@ boutiques") sans jamais s'effacer.
 
 ### 5.4 Clients
 CRUD simple avec étiquette `prospect`/`client` stockée, plus un **segment calculé**
-(jamais persisté) à l'affichage : `prospect` (étiquette), sinon `regulier` (≥3
-factures envoyées/payées), sinon `actif` (dernière facture payée/envoyée < 90 jours),
-sinon `nouveau`.
+(jamais persisté) à l'affichage, utilisé par les dashboards propriétaire/boutique
+(`ClientSegmentationService`, pas sur la liste Clients elle-même) : `prospect`
+(étiquette), sinon `regulier` (≥3 factures envoyées/payées), sinon `actif` (dernière
+facture payée/envoyée < 90 jours), sinon `nouveau`.
+
+**Visibilité par type de document** (2026-10-23, `ClientController::index()`) :
+distinct du segment comportemental ci-dessus — une simple question de présence, pour
+faciliter les relances (ex. un client avec un Reçu mais aucune Facture n'a payé
+partiellement et n'a pas régularisé). Trois compteurs indépendants (`factures_count`/
+`proformas_count`/`recus_count`, via `withCount` avec fermeture par type) affichés en
+colonnes sur `Clients/Index.vue`, plus trois filtres tri-état "Tous/Avec/Sans"
+(`avecFactures`/`avecProformas`/`avecRecus`, via `where`/`whereNot` avec une fermeture
+`whereHas` partagée) — même motif exact que les filtres `avecBoutique`/`avecProduit`
+déjà construits sur `Admin\UtilisateurController::index()`.
 
 ### 5.5 Facturation (module le plus complexe)
 - Numérotation `PREFIX-ANNEE-0000` par boutique, séquence séparée par année ET par
-  type (`FAC-2026-0001`, `PRO-2026-0001`), génération verrouillée (jamais de doublon
-  concurrent).
-- **Facture vs Proforma** : champ `type`, immuable après création. Une Proforma ne
-  touche jamais le stock (indicative uniquement) ; une Facture consomme le stock à la
-  création et le restitue à la modification/suppression/annulation.
+  type (`FAC-2026-0001`, `PRO-2026-0001`, `REC-2026-0001`), génération verrouillée
+  (jamais de doublon concurrent).
+- **Facture / Proforma / Reçu** (`App\Enums\TypeFacture`, 2026-10-23) : champ `type`,
+  immuable après création. Une Proforma ne touche jamais le stock (indicative
+  uniquement) ; une Facture **et un Reçu** consomment le stock à la création et le
+  restituent à la modification/suppression/annulation (`FactureService::doitGererStock()`
+  = `! $facture->estProforma()` — un Reçu est traité comme une Facture, puisqu'il
+  prouve qu'une marchandise est sortie contre un paiement, même partiel ; seul le
+  Proforma, document indicatif, en est exclu). Le Reçu est un document pair de la
+  Facture/Proforma — mêmes lignes/totaux/numérotation/gabarits PDF, **pas** un système
+  de suivi de "reste à payer" : aucun lien vers une Facture d'origine, aucun montant
+  encaissé chiffré — volontairement hors périmètre, non demandé.
+  Filtre de type sur `Factures/Index.vue` déjà piloté par le backend
+  (`TypeFacture::cases()`), aucun changement nécessaire pour ajouter une 3e option. En
+  ajoutant le Reçu, correction au passage d'un bug préexistant : 4 des 10 composants
+  Vue d'aperçu live de modèle de facture (`Modele02Classique/04Modern/06Corporate/09Pro.vue`)
+  affichaient le mot "Facture" en dur sans jamais lire `apercu.meta.type_label` — déjà
+  mal affiché pour les Proformas avant ce correctif. Les 10 gabarits Blade PDF, eux,
+  étaient déjà corrects (pilotés par `type_label`).
 - Lignes libres (`produit_id` nullable) ou liées à un produit. Calcul ligne : `HT =
   (quantité × prix unitaire) − remise ligne`, `TVA = HT × taux/100`, `TTC = HT + TVA`.
   Totaux facture : `sous_total = Σ HT`, `total_tva = Σ TVA`, `total_ttc = sous_total +
@@ -983,6 +1008,15 @@ sans consentement explicite).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-23** — **Ajout des Reçus, troisième type de document aux côtés de
+  Facture/Proforma** (voir §5.5). Émis quand un client ne règle que partiellement —
+  même structure qu'une facture (lignes/totaux/numérotation REC- indépendante, aucune
+  migration nécessaire), consomme le stock comme une facture (contrairement au
+  proforma, purement indicatif). Filtre de type et aperçu PDF/live déjà pilotés par
+  l'enum, avec correction au passage d'un bug préexistant qui affichait "Facture" en
+  dur sur 4 des 10 modèles d'aperçu live (déjà incorrect pour les proformas). Clients :
+  trois compteurs + trois filtres "Tous/Avec/Sans" par type de document, pour repérer
+  les clients à relancer.
 - **2026-10-22** — **Boutons flottants rendus déplaçables + corrections mobiles** (voir
   §5.3). Signalé : le bouton "Voir ma boutique" semblait défiler avec la page sur
   téléphone (fixed Tailwind à l'intérieur du layout → piège, corrigé en téléportant les
