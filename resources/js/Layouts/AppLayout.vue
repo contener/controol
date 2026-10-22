@@ -11,6 +11,7 @@ import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import FlashMessages from '@/Components/FlashMessages.vue';
 import NotificationBell from '@/Components/NotificationBell.vue';
 import InstallAppBanner from '@/Components/InstallAppBanner.vue';
+import BoutonFlottantDeplacable from '@/Components/BoutonFlottantDeplacable.vue';
 
 defineProps({
     title: String,
@@ -131,11 +132,11 @@ const logout = () => {
                                             <template v-for="boutique in mesBoutiques" :key="boutique.id">
                                                 <form @submit.prevent="switchBoutique(boutique)">
                                                     <DropdownLink as="button">
-                                                        <div class="flex items-center">
-                                                            <svg v-if="boutique.id === boutiqueCouranteId" class="me-2 size-5 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                        <div class="flex items-center min-w-0">
+                                                            <svg v-if="boutique.id === boutiqueCouranteId" class="me-2 size-5 shrink-0 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
-                                                            <div>{{ boutique.nom }}</div>
+                                                            <div class="truncate">{{ boutique.nom }}</div>
                                                         </div>
                                                     </DropdownLink>
                                                 </form>
@@ -317,11 +318,11 @@ const logout = () => {
                                 <img class="size-10 rounded-full object-cover" :src="$page.props.auth.user.profile_photo_url" :alt="$page.props.auth.user.name">
                             </div>
 
-                            <div>
-                                <div class="font-medium text-base text-slate-800 dark:text-slate-100">
+                            <div class="min-w-0">
+                                <div class="font-medium text-base text-slate-800 dark:text-slate-100 truncate">
                                     {{ $page.props.auth.user.name }}
                                 </div>
-                                <div class="font-medium text-sm text-slate-500 dark:text-slate-400">
+                                <div class="font-medium text-sm text-slate-500 dark:text-slate-400 truncate">
                                     {{ $page.props.auth.user.email }}
                                 </div>
                             </div>
@@ -357,11 +358,11 @@ const logout = () => {
                             <template v-for="boutique in mesBoutiques" :key="boutique.id">
                                 <form @submit.prevent="switchBoutique(boutique)">
                                     <ResponsiveNavLink as="button">
-                                        <div class="flex items-center">
-                                            <svg v-if="boutique.id === boutiqueCouranteId" class="me-2 size-5 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <div class="flex items-center min-w-0">
+                                            <svg v-if="boutique.id === boutiqueCouranteId" class="me-2 size-5 shrink-0 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            <div>{{ boutique.nom }}</div>
+                                            <div class="truncate">{{ boutique.nom }}</div>
                                         </div>
                                     </ResponsiveNavLink>
                                 </form>
@@ -392,60 +393,80 @@ const logout = () => {
             </main>
 
             <!-- Bouton flottant "Voir ma boutique" : ouvre directement la boutique s'il n'y
-                 en a qu'une, propose un choix s'il y en a plusieurs -- empilé au-dessus du
-                 bouton "Ajouter un produit", même animation de balancement pour la même
-                 raison (visibilité). -->
-            <a
-                v-if="mesBoutiques.length === 1"
-                :href="route('public.boutique', mesBoutiques[0].slug)"
-                target="_blank"
-                title="Voir ma boutique"
-                aria-label="Voir ma boutique"
-                class="group fixed bottom-24 right-6 z-50 flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4 animate-balancement"
-            >
-                <span class="text-2xl leading-none">🏪</span>
-                <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Voir ma boutique</span>
-            </a>
-
-            <Dropdown v-else-if="mesBoutiques.length > 1" align="right" position="top" class="fixed bottom-24 right-6 z-50">
-                <template #trigger>
-                    <button
-                        type="button"
+                 en a qu'une, propose un choix s'il y en a plusieurs. Déplaçable
+                 indépendamment du bouton "Ajouter un produit" (souris ou tactile, voir
+                 BoutonFlottantDeplacable.vue) -- position par défaut juste au-dessus de
+                 celui-ci. Téléporté dans <body>, donc toujours réellement fixe à l'écran
+                 (indépendant de tout ancêtre de la page en cours), contrairement à la
+                 version précédente positionnée en Tailwind `fixed` à l'intérieur de ce
+                 layout, qui pouvait sembler défiler avec la page sur certains mobiles.
+                 Masqué tant que le menu mobile est ouvert (showingNavigationDropdown) :
+                 en z-50, au-dessus du panneau du menu (z-40), il recouvrait sinon ses
+                 dernières entrées (sélecteur de boutique, "Gérer mes boutiques") sans
+                 jamais s'effacer -- impossible à distinguer d'un élément "coupé". -->
+            <BoutonFlottantDeplacable v-if="mesBoutiques.length > 0 && !showingNavigationDropdown" storage-key="voir_boutique" :default-bottom="96" :default-right="24">
+                <template #default="{ dragging }">
+                    <a
+                        v-if="mesBoutiques.length === 1"
+                        :href="route('public.boutique', mesBoutiques[0].slug)"
+                        target="_blank"
                         title="Voir ma boutique"
                         aria-label="Voir ma boutique"
-                        class="group flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4 animate-balancement"
+                        class="group flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4"
+                        :class="{ 'animate-balancement': !dragging }"
                     >
                         <span class="text-2xl leading-none">🏪</span>
                         <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Voir ma boutique</span>
-                    </button>
-                </template>
-                <template #content>
-                    <a
-                        v-for="boutique in mesBoutiques"
-                        :key="boutique.id"
-                        :href="route('public.boutique', boutique.slug)"
-                        target="_blank"
-                        class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap"
-                    >
-                        🏪 {{ boutique.nom }}
                     </a>
+
+                    <Dropdown v-else align="right" position="top">
+                        <template #trigger>
+                            <button
+                                type="button"
+                                title="Voir ma boutique"
+                                aria-label="Voir ma boutique"
+                                class="group flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4"
+                                :class="{ 'animate-balancement': !dragging }"
+                            >
+                                <span class="text-2xl leading-none">🏪</span>
+                                <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Voir ma boutique</span>
+                            </button>
+                        </template>
+                        <template #content>
+                            <a
+                                v-for="boutique in mesBoutiques"
+                                :key="boutique.id"
+                                :href="route('public.boutique', boutique.slug)"
+                                target="_blank"
+                                class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap"
+                            >
+                                🏪 {{ boutique.nom }}
+                            </a>
+                        </template>
+                    </Dropdown>
                 </template>
-            </Dropdown>
+            </BoutonFlottantDeplacable>
 
             <!-- Bouton flottant "Ajouter un produit" : visible sur toutes les pages du
                  tableau de bord (pas seulement Produits/Index.vue), avec une animation de
                  balancement récurrente -- des utilisateurs ont du mal à trouver comment
-                 ajouter un produit, ce bouton doit être impossible à manquer. -->
-            <Link
-                v-if="boutiqueCouranteId"
-                :href="route('produits.create')"
-                title="Ajouter un nouveau produit"
-                aria-label="Ajouter un nouveau produit"
-                class="group fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4 animate-balancement"
-            >
-                <span class="text-2xl leading-none">+</span>
-                <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Ajouter un nouveau produit</span>
-            </Link>
+                 ajouter un produit, ce bouton doit être impossible à manquer. Déplaçable
+                 indépendamment du bouton "Voir ma boutique" ci-dessus. Masqué tant que le
+                 menu mobile est ouvert, même raison que ci-dessus. -->
+            <BoutonFlottantDeplacable v-if="boutiqueCouranteId && !showingNavigationDropdown" storage-key="ajouter_produit" :default-bottom="24" :default-right="24">
+                <template #default="{ dragging }">
+                    <Link
+                        :href="route('produits.create')"
+                        title="Ajouter un nouveau produit"
+                        aria-label="Ajouter un nouveau produit"
+                        class="group flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4"
+                        :class="{ 'animate-balancement': !dragging }"
+                    >
+                        <span class="text-2xl leading-none">+</span>
+                        <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Ajouter un nouveau produit</span>
+                    </Link>
+                </template>
+            </BoutonFlottantDeplacable>
         </div>
     </div>
 </template>
