@@ -427,6 +427,26 @@ que le panneau s'ouvre vers le haut depuis un déclencheur ancré en bas d'écra
 que de sortir de l'écran comme le ferait l'ouverture vers le bas par défaut ; **aucune
 boutique** → bouton absent (rien à montrer).
 
+**Boutons flottants déplaçables** (2026-10-22, `resources/js/Components/BoutonFlottantDeplacable.vue`
+— **⚠️ piège déjà rencontré, à ne jamais réintroduire** : un `position: fixed`
+positionné par simples classes Tailwind à l'intérieur de `AppLayout.vue` pouvait
+sembler défiler avec la page sur certains navigateurs mobiles. Les deux boutons
+flottants ("Voir ma boutique", "Ajouter un produit") sont donc **téléportés
+directement dans `<body>`** (`<Teleport to="body">`), ce qui les rend indépendants de
+tout ancêtre de la page affichée — garantit un vrai `position: fixed` relatif au
+viewport, quelle que soit la page. Déplaçables à la souris (ordinateur) ou au doigt
+(téléphone/tablette) via Pointer Events, avec un seuil de déplacement (6px) pour
+distinguer un tap/clic normal (qui déclenche toujours l'action du bouton) d'un
+glissement réel (qui déplace le bouton et supprime le clic qui suivrait sinon, via
+`@click.capture` + `preventDefault`/`stopPropagation`). Position persistée par bouton,
+séparément, dans `localStorage` (`fab_position_<storageKey>`) — chaque bouton se
+déplace indépendamment et retrouve sa place après un rechargement ; si le stockage est
+indisponible (navigation privée, quota), repli silencieux sur la position par défaut,
+jamais d'erreur bloquante. **Masqués tant que le menu mobile est ouvert**
+(`showingNavigationDropdown`) : en `z-50`, au-dessus du panneau du menu (`z-40`), ils
+recouvraient sinon ses dernières entrées (sélecteur de boutique, lien "Gérer mes
+boutiques") sans jamais s'effacer.
+
 ### 5.4 Clients
 CRUD simple avec étiquette `prospect`/`client` stockée, plus un **segment calculé**
 (jamais persisté) à l'affichage : `prospect` (étiquette), sinon `regulier` (≥3
@@ -962,6 +982,14 @@ sans consentement explicite).
 
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
+
+- **2026-10-22** — **Boutons flottants rendus déplaçables + corrections mobiles** (voir
+  §5.3). Signalé : le bouton "Voir ma boutique" semblait défiler avec la page sur
+  téléphone (fixed Tailwind à l'intérieur du layout → piège, corrigé en téléportant les
+  boutons directement dans `<body>`), et le menu mobile ouvert se faisait recouvrir par
+  ces boutons (masqués désormais pendant que le menu est ouvert). Ajout du
+  glisser-déposer (souris/tactile, position persistée par bouton dans `localStorage`)
+  pour que chacun puisse se repositionner où il le souhaite.
 
 - **2026-10-22** — **Bouton flottant "Ajouter un produit" sur toutes les pages**
   (voir §5.3). Jusque-là, seule la page Produits & Services permettait d'ajouter un
