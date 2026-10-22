@@ -404,6 +404,18 @@ depuis `currentBoutique` — un propriétaire de plusieurs boutiques ajoutant un
 depuis la page publique d'une boutique qui n'est pas sa boutique "courante" en session
 ne doit jamais voir le produit atterrir dans la mauvaise boutique.
 
+**Bouton flottant global "Ajouter un produit"** (2026-10-22, `AppLayout.vue`) :
+contrairement au bouton flottant de la page boutique publique ci-dessus (qui crée
+directement via `storeDepuisBoutique()`), celui-ci est un simple `<Link>` vers
+`route('produits.create')` (le formulaire complet du tableau de bord), visible sur
+**toutes** les pages authentifiées dès qu'une boutique courante est sélectionnée
+(`boutiqueCouranteId`, déjà calculé dans `AppLayout.vue`) — ajouté après un constat
+que des utilisateurs avaient du mal à trouver comment ajouter un produit. Animation
+`@keyframes balancement` (CSS pur, 1s, infinie, mise en pause au survol, désactivée si
+`prefers-reduced-motion`) pour attirer l'attention sans dépendance JS supplémentaire.
+Première animation CSS personnalisée du projet (`tailwind.config.js` n'en définissait
+aucune jusque-là).
+
 ### 5.4 Clients
 CRUD simple avec étiquette `prospect`/`client` stockée, plus un **segment calculé**
 (jamais persisté) à l'affichage : `prospect` (étiquette), sinon `regulier` (≥3
@@ -940,6 +952,11 @@ sans consentement explicite).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-22** — **Bouton flottant "Ajouter un produit" sur toutes les pages**
+  (voir §5.3). Jusque-là, seule la page Produits & Services permettait d'ajouter un
+  produit ; constat que des utilisateurs avaient du mal à la trouver. Ajouté dans
+  `AppLayout.vue` (visible dès qu'une boutique est sélectionnée, quelle que soit la
+  page), avec une animation de balancement continue pour attirer l'œil.
 - **2026-10-13** — **Ajout de la colonne Téléphone dans la liste Utilisateurs** (voir
   §5.17). Seul le numéro WhatsApp était visible ; le téléphone de profil
   (`user.telephone`, saisi à l'inscription) n'apparaissait que sur la fiche
