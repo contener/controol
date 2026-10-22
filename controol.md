@@ -416,6 +416,17 @@ que des utilisateurs avaient du mal à trouver comment ajouter un produit. Anima
 Première animation CSS personnalisée du projet (`tailwind.config.js` n'en définissait
 aucune jusque-là).
 
+**Bouton flottant global "Voir ma boutique"** (2026-10-22, `AppLayout.vue`) : empilé
+juste au-dessus du bouton "Ajouter un produit" (`bottom-24` vs `bottom-6`), même
+animation de balancement. Comportement conditionnel sur `mesBoutiques.length` (déjà
+partagé par `HandleInertiaRequests`, pas de nouvelle donnée backend) : **une seule
+boutique** → lien direct vers `route('public.boutique', slug)` (nouvel onglet) ;
+**plusieurs** → un choix via `Dropdown.vue`, étendu avec un nouveau prop
+`position="top"` (défaut `"bottom"`, comportement des usages existants inchangé) pour
+que le panneau s'ouvre vers le haut depuis un déclencheur ancré en bas d'écran, plutôt
+que de sortir de l'écran comme le ferait l'ouverture vers le bas par défaut ; **aucune
+boutique** → bouton absent (rien à montrer).
+
 ### 5.4 Clients
 CRUD simple avec étiquette `prospect`/`client` stockée, plus un **segment calculé**
 (jamais persisté) à l'affichage : `prospect` (étiquette), sinon `regulier` (≥3
@@ -957,6 +968,10 @@ changement de comportement significatif)*
   produit ; constat que des utilisateurs avaient du mal à la trouver. Ajouté dans
   `AppLayout.vue` (visible dès qu'une boutique est sélectionnée, quelle que soit la
   page), avec une animation de balancement continue pour attirer l'œil.
+- **2026-10-22** — **Bouton flottant "Voir ma boutique" sur toutes les pages** (voir
+  §5.3). Empilé au-dessus du bouton "Ajouter un produit", même animation. Ouvre
+  directement la boutique si l'utilisateur n'en a qu'une, propose un choix sinon
+  (`Dropdown.vue` étendu avec un nouveau prop `position="top"`, rétrocompatible).
 - **2026-10-13** — **Ajout de la colonne Téléphone dans la liste Utilisateurs** (voir
   §5.17). Seul le numéro WhatsApp était visible ; le téléphone de profil
   (`user.telephone`, saisi à l'inscription) n'apparaissait que sur la fiche
