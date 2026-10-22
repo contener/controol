@@ -14,6 +14,13 @@ const props = defineProps({
         type: Array,
         default: () => ['py-1', 'bg-white', 'dark:bg-slate-800', 'dark:border', 'dark:border-slate-700'],
     },
+    // 'bottom' (par défaut, nav du haut) ou 'top' -- nécessaire pour un déclencheur
+    // ancré en bas de l'écran (ex. bouton flottant), dont le panneau doit s'ouvrir
+    // vers le haut plutôt que de sortir de l'écran.
+    position: {
+        type: String,
+        default: 'bottom',
+    },
 });
 
 let open = ref(false);
@@ -33,7 +40,25 @@ const widthClass = computed(() => {
     }[props.width.toString()];
 });
 
+const positionClasses = computed(() => (props.position === 'top' ? 'bottom-full mb-2' : 'mt-2'));
+
+// Classes Tailwind écrites en toutes lettres (jamais interpolées dans un template
+// string) -- le scanner JIT de Tailwind lit le code source tel quel, une classe
+// construite dynamiquement (`origin-${x}-left`) ne serait jamais détectée et son CSS
+// ne serait jamais généré.
 const alignmentClasses = computed(() => {
+    if (props.position === 'top') {
+        if (props.align === 'left') {
+            return 'ltr:origin-bottom-left rtl:origin-bottom-right start-0';
+        }
+
+        if (props.align === 'right') {
+            return 'ltr:origin-bottom-right rtl:origin-bottom-left end-0';
+        }
+
+        return 'origin-bottom';
+    }
+
     if (props.align === 'left') {
         return 'ltr:origin-top-left rtl:origin-top-right start-0';
     }
@@ -65,8 +90,8 @@ const alignmentClasses = computed(() => {
         >
             <div
                 v-show="open"
-                class="absolute z-50 mt-2 rounded-md shadow-lg"
-                :class="[widthClass, alignmentClasses]"
+                class="absolute z-50 rounded-md shadow-lg"
+                :class="[widthClass, positionClasses, alignmentClasses]"
                 style="display: none;"
                 @click="open = false"
             >

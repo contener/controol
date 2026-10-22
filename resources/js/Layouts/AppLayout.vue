@@ -391,6 +391,47 @@ const logout = () => {
                 <slot />
             </main>
 
+            <!-- Bouton flottant "Voir ma boutique" : ouvre directement la boutique s'il n'y
+                 en a qu'une, propose un choix s'il y en a plusieurs -- empilé au-dessus du
+                 bouton "Ajouter un produit", même animation de balancement pour la même
+                 raison (visibilité). -->
+            <a
+                v-if="mesBoutiques.length === 1"
+                :href="route('public.boutique', mesBoutiques[0].slug)"
+                target="_blank"
+                title="Voir ma boutique"
+                aria-label="Voir ma boutique"
+                class="group fixed bottom-24 right-6 z-50 flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4 animate-balancement"
+            >
+                <span class="text-2xl leading-none">🏪</span>
+                <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Voir ma boutique</span>
+            </a>
+
+            <Dropdown v-else-if="mesBoutiques.length > 1" align="right" position="top" class="fixed bottom-24 right-6 z-50">
+                <template #trigger>
+                    <button
+                        type="button"
+                        title="Voir ma boutique"
+                        aria-label="Voir ma boutique"
+                        class="group flex items-center gap-2 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all h-14 px-4 animate-balancement"
+                    >
+                        <span class="text-2xl leading-none">🏪</span>
+                        <span class="hidden group-hover:inline text-sm font-medium whitespace-nowrap pr-1">Voir ma boutique</span>
+                    </button>
+                </template>
+                <template #content>
+                    <a
+                        v-for="boutique in mesBoutiques"
+                        :key="boutique.id"
+                        :href="route('public.boutique', boutique.slug)"
+                        target="_blank"
+                        class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap"
+                    >
+                        🏪 {{ boutique.nom }}
+                    </a>
+                </template>
+            </Dropdown>
+
             <!-- Bouton flottant "Ajouter un produit" : visible sur toutes les pages du
                  tableau de bord (pas seulement Produits/Index.vue), avec une animation de
                  balancement récurrente -- des utilisateurs ont du mal à trouver comment
