@@ -885,6 +885,65 @@ Inertia), rattachement automatique anonyme → compte, export CSV, notifications
 automatiques (le cahier des charges lui-même les place au conditionnel/les déconseille
 sans consentement explicite).
 
+### 5.19 Collaborateurs de boutique (accès multi-utilisateur, 2026-10-23)
+
+Jusqu'ici, une boutique n'était jamais gérée que par son créateur
+(`Boutique.user_id`, propriétaire unique). À partir du plan Basique (5 000 FCFA,
+`plans.personnel_boutique`), le propriétaire peut créer des comptes et leur donner
+accès à la gestion complète de sa boutique.
+
+**Table de liaison pure** `boutique_collaborateurs` (`boutique_id`, `user_id`,
+unique sur la paire) — pas de colonne rôle/permission en v1 : un collaborateur a un
+accès complet aux opérations courantes (Clients, Produits, Factures, Dépenses,
+Stock, Conversations, Destinations/Campagnes sociales), via
+`Boutique::estGereePar(User $user): bool` (= propriétaire OU présent dans
+`collaborateurs()`), réutilisé par les 7 Policies concernées à la place de
+`$user->id === $boutique->user_id`. **Restent strictement réservées au
+propriétaire** (`BoutiquePolicy` inchangée) : modifier/supprimer la boutique
+elle-même, gérer l'abonnement, et gérer les collaborateurs — un collaborateur ne
+peut jamais en ajouter/retirer un autre (`BoutiqueCollaborateurController`, chaque
+action vérifie explicitement la propriété stricte, jamais `estGereePar()` seul,
+pour éviter toute chaîne d'escalade de privilège).
+
+**Création directe, pas d'invitation par e-mail** (`StoreCollaborateurRequest`, même
+schéma que `StoreAdministrateurRequest` côté Super Admin) : le propriétaire saisit
+nom/e-mail/téléphone/mot de passe. Le compte créé a `email_verified_at` déjà
+renseigné (le propriétaire s'en porte garant) et `current_boutique_id` pointant
+immédiatement sur la boutique — **aucun essai gratuit ni abonnement propre créé**,
+le compte opère sous le plan du propriétaire.
+
+**Correctif central : `User::planActif()`** résout désormais via le propriétaire de
+la boutique courante quand l'utilisateur n'en est pas lui-même le propriétaire —
+corrige d'un coup toutes les vérifications de fonctionnalités payantes déjà
+existantes dans le projet (marketplace, audience, limites de quotas...), sans avoir
+à toucher chacune individuellement. `abonnementActif()` reste volontairement
+inchangé (un collaborateur consultant "Mon abonnement" doit voir son absence réelle
+d'abonnement personnel, pas celui du propriétaire).
+
+**⚠️ Piège rencontré et corrigé** : `planActif()` ne doit jamais s'appuyer sur
+`$this->currentBoutique` (la relation Eloquent) pour lire `user_id` — plusieurs
+endroits du projet préchargent déjà cette relation avec une liste de colonnes
+restreinte (ex. `Admin\UtilisateurController` : `with('currentBoutique:id,whatsapp')`,
+pour l'affichage du numéro WhatsApp), qui n'inclut pas `user_id`. S'appuyer sur la
+relation telle quelle renvoyait un `user_id` null et provoquait une erreur fatale
+("Call to a member function planActif() on null") dès qu'un Super Admin consultait
+la liste des utilisateurs. Corrigé par une requête dédiée sur la seule colonne
+nécessaire (`Boutique::whereKey(...)->value('user_id')`), jamais la relation.
+
+**Révocation immédiate** (`BoutiqueCollaborateurController::destroy()`) : détache la
+liaison et, si le compte retiré avait cette boutique comme `current_boutique_id`, le
+remet à `null` sur-le-champ — même principe que la désactivation d'un compte, qui
+purge ses sessions actives, plutôt qu'un nettoyage paresseux à la prochaine requête.
+
+**Jetstream "Teams" délibérément ignoré** : présent dans le code (migrations,
+modèles, pages Vue, Actions) mais jamais branché (`Features::teams()` désactivé,
+trait `HasTeams` absent de `User`, routes jamais enregistrées) — réactiver le
+flag planterait immédiatement (`CreateTeam` appelle `$user->switchTeam()`,
+inexistant sur ce `User`). Son modèle de données ne correspond de toute façon pas à
+celui de ce projet (`User hasMany Boutique`, pas une Team autonome). Code mort
+laissé en place (hors périmètre de cette fonctionnalité), à nettoyer un jour si
+l'occasion se présente.
+
 ---
 
 ## 6. Design & UI
@@ -1008,6 +1067,15 @@ sans consentement explicite).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-23** — **Collaborateurs de boutique : accès multi-utilisateur à partir
+  du plan Basique** (voir §5.19). Une boutique n'était gérée que par son créateur ;
+  le propriétaire peut désormais créer des comptes et leur donner un accès complet
+  (sauf boutique/abonnement/gestion des collaborateurs, réservés au propriétaire).
+  Jetstream "Teams" (présent mais jamais branché) volontairement ignoré — mécanisme
+  propre construit à la place. Correctif central sur `User::planActif()` (résout via
+  le propriétaire pour un collaborateur) avec un piège corrigé au passage : ne jamais
+  s'appuyer sur la relation `currentBoutique` déjà préchargée ailleurs avec des
+  colonnes restreintes.
 - **2026-10-23** — **Ajout des Reçus, troisième type de document aux côtés de
   Facture/Proforma** (voir §5.5). Émis quand un client ne règle que partiellement —
   même structure qu'une facture (lignes/totaux/numérotation REC- indépendante, aucune
