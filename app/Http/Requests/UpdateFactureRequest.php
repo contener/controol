@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\TypeFacture;
 use App\Policies\FacturePolicy;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,6 +34,9 @@ class UpdateFactureRequest extends FormRequest
             'date_emission' => ['required', 'date'],
             'date_echeance' => ['nullable', 'date', 'after_or_equal:date_emission'],
             'remise' => ['nullable', 'numeric', 'min:0'],
+            // type n'est jamais soumis ici (immuable, voir authorize()) -- la
+            // boutique n'est connue que via le modèle déjà résolu par la route.
+            'montant_avance' => ['nullable', 'numeric', 'min:0', Rule::requiredIf(fn () => $this->route('facture')->type === TypeFacture::Recu)],
             'notes' => ['nullable', 'string'],
             'garantie' => ['nullable', 'string', 'max:1000'],
             'modele_id' => ['nullable', 'integer', 'between:1,10'],

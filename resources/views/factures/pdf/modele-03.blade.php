@@ -115,6 +115,7 @@
     <table class="totaux total-chip">
         <tr><td>Total TTC</td><td class="text-right">{{ number_format($apercu['totaux']['total_ttc'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
     </table>
+    @include('factures.pdf._recap_paiement_recu')
 
     <div class="paiement">
         <strong>Modalités de paiement</strong><br>

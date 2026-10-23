@@ -90,6 +90,10 @@ const appliquerProduit = (ligne) => {
 const sousTotal = computed(() => props.form.lignes.reduce((acc, l) => acc + calculerLigne(l).montant_ht, 0));
 const totalTva = computed(() => props.form.lignes.reduce((acc, l) => acc + calculerLigne(l).montant_tva, 0));
 const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props.form.remise) || 0));
+
+// Propre aux Reçus (preuve de paiement partiel) -- jamais négatif, même formule que
+// Facture::resteAPayer() côté serveur.
+const resteAPayer = computed(() => Math.max(0, totalTtc.value - (Number(props.form.montant_avance) || 0)));
 </script>
 
 <template>
@@ -158,9 +162,27 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
                     <InputError :message="form.errors.date_emission" class="mt-2" />
                 </div>
                 <div>
-                    <InputLabel for="date_echeance" value="Date d'échéance" />
+                    <InputLabel for="date_echeance" :value="form.type === 'recu' ? 'Date limite pour le reste' : 'Date d\'échéance'" />
                     <TextInput id="date_echeance" v-model="form.date_echeance" type="date" class="mt-1 block w-full" />
                     <InputError :message="form.errors.date_echeance" class="mt-2" />
+                </div>
+            </div>
+        </section>
+
+        <section v-if="form.type === 'recu'">
+            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Paiement</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <InputLabel for="montant_avance" value="Avance versée *" />
+                    <TextInput id="montant_avance" v-model="form.montant_avance" type="number" step="0.01" min="0" class="mt-1 block w-full" required />
+                    <InputError :message="form.errors.montant_avance" class="mt-2" />
+                </div>
+                <div>
+                    <InputLabel value="Reste à payer" />
+                    <div class="mt-1 h-10 flex items-center px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        {{ formatMontant(resteAPayer) }}
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Calculé automatiquement : total − avance.</p>
                 </div>
             </div>
         </section>
@@ -242,6 +264,10 @@ const totalTtc = computed(() => sousTotal.value + totalTva.value - (Number(props
                 <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">TVA</span><span class="text-slate-900 dark:text-slate-100">{{ formatMontant(totalTva) }}</span></div>
                 <div class="flex justify-between"><span class="text-slate-500 dark:text-slate-400">Remise</span><span class="text-slate-900 dark:text-slate-100">- {{ formatMontant(form.remise) }}</span></div>
                 <div class="flex justify-between font-semibold text-base border-t border-slate-200 dark:border-slate-700 pt-1 mt-1"><span>Total TTC</span><span>{{ formatMontant(totalTtc) }}</span></div>
+                <template v-if="form.type === 'recu'">
+                    <div class="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-1 mt-1"><span class="text-slate-500 dark:text-slate-400">Avance versée</span><span class="text-slate-900 dark:text-slate-100">{{ formatMontant(form.montant_avance || 0) }}</span></div>
+                    <div class="flex justify-between font-semibold"><span>Reste à payer</span><span>{{ formatMontant(resteAPayer) }}</span></div>
+                </template>
             </div>
         </section>
     </div>

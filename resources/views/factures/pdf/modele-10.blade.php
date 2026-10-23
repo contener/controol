@@ -154,9 +154,12 @@
             <tr><td>Remise</td><td class="text-right">- {{ number_format($apercu['totaux']['remise'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
             <tr><td>TVA</td><td class="text-right">{{ number_format($apercu['totaux']['total_tva'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
             <tr class="total-final"><td>Total TTC</td><td class="text-right">{{ number_format($totalTtc, 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
-            <tr class="paye"><td>Montant payé</td><td class="text-right">{{ number_format($montantPaye, 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
-            <tr class="solde {{ $soldeRestant > 0 ? 'solde-du' : 'solde-ok' }}"><td>Solde restant</td><td class="text-right">{{ number_format($soldeRestant, 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
+            @unless(($apercu['meta']['type'] ?? null) === 'recu')
+                <tr class="paye"><td>Montant payé</td><td class="text-right">{{ number_format($montantPaye, 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
+                <tr class="solde {{ $soldeRestant > 0 ? 'solde-du' : 'solde-ok' }}"><td>Solde restant</td><td class="text-right">{{ number_format($soldeRestant, 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
+            @endunless
         </table>
+        @include('factures.pdf._recap_paiement_recu')
 
         <div class="paiement">
             <div class="lbl">Méthode de paiement</div>

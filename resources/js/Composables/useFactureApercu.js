@@ -65,6 +65,12 @@ export function useFactureApercu(form, { clients = () => [], boutique = () => ({
         const sousTotal = lignes.reduce((acc, l) => acc + l.montant_ht, 0);
         const totalTva = lignes.reduce((acc, l) => acc + l.montant_tva, 0);
         const remise = Number(form.remise) || 0;
+        const totalTtc = sousTotal + totalTva - remise;
+
+        // Propres aux Reçus -- jamais négatif (une avance saisie au-delà du total ne
+        // doit jamais afficher un "reste" négatif), même formule que Facture::resteAPayer().
+        const montantAvance = form.montant_avance !== '' && form.montant_avance != null ? Number(form.montant_avance) : null;
+        const resteAPayer = Math.max(0, totalTtc - (montantAvance ?? 0));
 
         const typeLabels = { facture: 'Facture', proforma: 'Proforma', recu: 'Reçu' };
         const type = form.type ?? 'facture';
@@ -97,7 +103,9 @@ export function useFactureApercu(form, { clients = () => [], boutique = () => ({
                 sous_total: sousTotal,
                 remise,
                 total_tva: totalTva,
-                total_ttc: sousTotal + totalTva - remise,
+                total_ttc: totalTtc,
+                montant_avance: montantAvance,
+                reste_a_payer: resteAPayer,
             },
             notes: form.notes || null,
             garantie: form.garantie || null,

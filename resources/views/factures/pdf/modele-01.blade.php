@@ -70,6 +70,7 @@
         @include('factures.pdf._client')
         @include('factures.pdf._lignes')
         @include('factures.pdf._totaux')
+        @include('factures.pdf._recap_paiement_recu')
 
         @if($apercu['notes'])
             <div style="margin-top: 24px;">

@@ -1,5 +1,6 @@
 <script setup>
 import { useCurrencyFormat } from '@/Composables/useCurrencyFormat';
+import RecapitulatifPaiementRecu from './Partials/RecapitulatifPaiementRecu.vue';
 
 const props = defineProps({
     apercu: Object,
@@ -88,6 +89,7 @@ const { formatMontant } = useCurrencyFormat();
                 <span class="text-sm tracking-wide">Total TTC</span>
                 <span class="text-amber-800 font-bold">{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span>
             </div>
+            <RecapitulatifPaiementRecu :apercu="apercu" />
         </div>
 
         <!-- Conditions de paiement -->

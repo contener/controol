@@ -143,6 +143,7 @@
             <tr><td>Remise</td><td class="text-right">- {{ number_format($apercu['totaux']['remise'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
             <tr class="total-final"><td>Total TTC</td><td class="text-right">{{ number_format($apercu['totaux']['total_ttc'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
         </table>
+        @include('factures.pdf._recap_paiement_recu')
 
         <div class="conditions">
             <div class="conditions-label">Conditions générales</div>

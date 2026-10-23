@@ -27,6 +27,7 @@ class Facture extends Model
         'remise',
         'total_tva',
         'total_ttc',
+        'montant_avance',
         'notes',
         'garantie',
         'created_by',
@@ -43,6 +44,7 @@ class Facture extends Model
             'remise' => 'decimal:2',
             'total_tva' => 'decimal:2',
             'total_ttc' => 'decimal:2',
+            'montant_avance' => 'decimal:2',
         ];
     }
 
@@ -95,5 +97,17 @@ class Facture extends Model
     public function estProforma(): bool
     {
         return $this->type === TypeFacture::Proforma;
+    }
+
+    /**
+     * Propre aux Reçus : jamais stocké (même principe que partout ailleurs dans ce
+     * projet pour une donnée dérivable -- EssaiUtilisateur::statut(), Suivi::estActif()...),
+     * toujours recalculé à la volée depuis le total et l'avance versée. Ne descend
+     * jamais sous zéro (une avance saisie par erreur au-delà du total ne doit jamais
+     * afficher un "reste" négatif).
+     */
+    public function resteAPayer(): float
+    {
+        return max(0.0, (float) $this->total_ttc - (float) ($this->montant_avance ?? 0));
     }
 }

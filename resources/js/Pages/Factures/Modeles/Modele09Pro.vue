@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useCurrencyFormat } from '@/Composables/useCurrencyFormat';
+import RecapitulatifPaiementRecu from './Partials/RecapitulatifPaiementRecu.vue';
 
 const props = defineProps({
     apercu: Object,
@@ -121,6 +122,7 @@ const statutClasse = computed(() => statutClasses[props.apercu.meta.statut] || '
                 <div class="flex justify-between text-slate-500"><span>TVA</span><span>{{ formatMontant(apercu.totaux.total_tva, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between text-slate-500"><span>Remise</span><span>- {{ formatMontant(apercu.totaux.remise, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between items-center font-bold text-base bg-blue-900 text-white rounded-md px-3 py-2 mt-1"><span>Total TTC</span><span>{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span></div>
+                <RecapitulatifPaiementRecu :apercu="apercu" class="!w-full" />
             </div>
         </div>
 

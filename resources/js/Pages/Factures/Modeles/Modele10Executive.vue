@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useCurrencyFormat } from '@/Composables/useCurrencyFormat';
+import RecapitulatifPaiementRecu from './Partials/RecapitulatifPaiementRecu.vue';
 
 const props = defineProps({
     apercu: Object,
@@ -104,9 +105,12 @@ const soldeRestant = computed(() => props.apercu.totaux.total_ttc - montantPaye.
                 <div class="flex justify-between text-slate-500"><span>Remise</span><span>- {{ formatMontant(apercu.totaux.remise, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between text-slate-500"><span>TVA</span><span>{{ formatMontant(apercu.totaux.total_tva, apercu.meta.devise) }}</span></div>
                 <div class="flex justify-between items-center font-bold text-lg bg-slate-900 text-white rounded-md px-3 py-2.5 mt-1 border-t-2 border-amber-500"><span>Total TTC</span><span>{{ formatMontant(apercu.totaux.total_ttc, apercu.meta.devise) }}</span></div>
-                <div class="flex justify-between text-slate-500 pt-1"><span>Montant payé</span><span>{{ formatMontant(montantPaye, apercu.meta.devise) }}</span></div>
-                <div class="flex justify-between font-semibold" :class="soldeRestant > 0 ? 'text-amber-600' : 'text-green-600'"><span>Solde restant</span><span>{{ formatMontant(soldeRestant, apercu.meta.devise) }}</span></div>
+                <template v-if="apercu.meta.type !== 'recu'">
+                    <div class="flex justify-between text-slate-500 pt-1"><span>Montant payé</span><span>{{ formatMontant(montantPaye, apercu.meta.devise) }}</span></div>
+                    <div class="flex justify-between font-semibold" :class="soldeRestant > 0 ? 'text-amber-600' : 'text-green-600'"><span>Solde restant</span><span>{{ formatMontant(soldeRestant, apercu.meta.devise) }}</span></div>
+                </template>
             </div>
+            <RecapitulatifPaiementRecu :apercu="apercu" />
 
             <div class="mt-8 border border-slate-200 rounded-md p-4">
                 <div class="text-xs font-bold text-slate-900 uppercase mb-1">Méthode de paiement</div>

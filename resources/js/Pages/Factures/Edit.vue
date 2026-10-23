@@ -18,6 +18,7 @@ const form = useForm({
     date_emission: props.facture.date_emission,
     date_echeance: props.facture.date_echeance ?? '',
     remise: props.facture.remise,
+    montant_avance: props.facture.montant_avance ?? '',
     notes: props.facture.notes ?? '',
     garantie: props.facture.garantie ?? '',
     statut: props.facture.statut,

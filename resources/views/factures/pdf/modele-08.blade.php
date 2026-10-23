@@ -120,6 +120,7 @@
                 @endif
             </div>
         </div>
+        @include('factures.pdf._recap_paiement_recu')
 
         @if($apercu['notes'])
             <div class="center muted small" style="margin-top: 40px;">

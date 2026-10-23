@@ -68,6 +68,10 @@ class FactureApercuBuilder
                 'remise' => (float) $facture->remise,
                 'total_tva' => (float) $facture->total_tva,
                 'total_ttc' => (float) $facture->total_ttc,
+                // Propres aux Reçus -- présents (mais sans effet visuel, les modèles ne
+                // les affichent que si meta.type === 'recu') pour les autres types.
+                'montant_avance' => $facture->montant_avance !== null ? (float) $facture->montant_avance : null,
+                'reste_a_payer' => $facture->resteAPayer(),
             ],
             'notes' => $facture->notes,
             'garantie' => $facture->garantie,

@@ -258,6 +258,131 @@ class FactureTypeTest extends TestCase
             ->where('factures.data.0.type', 'proforma'));
     }
 
+    public function test_montant_avance_is_required_for_recu(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu']))
+            ->assertSessionHasErrors('montant_avance');
+
+        $this->assertSame(0, Facture::withoutGlobalScopes()->count());
+    }
+
+    public function test_montant_avance_is_not_required_for_facture_or_proforma(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'facture']))->assertRedirect();
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'proforma']))->assertRedirect();
+
+        $this->assertSame(2, Facture::withoutGlobalScopes()->count());
+    }
+
+    public function test_reste_a_payer_is_computed_from_total_and_avance(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        // Total TTC attendu : 3 * 100 * 1.20 = 360.
+        $this->post('/factures', $this->payload($client->id, null, [
+            'type' => 'recu',
+            'montant_avance' => 100,
+        ]))->assertRedirect();
+
+        $facture = Facture::latest('id')->first();
+        $this->assertSame(100.0, (float) $facture->montant_avance);
+        $this->assertEqualsWithDelta(260.0, $facture->resteAPayer(), 0.01);
+    }
+
+    /**
+     * Une avance saisie au-delà du total ne doit jamais produire un "reste" négatif
+     * (voir la docblock de Facture::resteAPayer()).
+     */
+    public function test_reste_a_payer_never_goes_negative(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, [
+            'type' => 'recu',
+            'montant_avance' => 999999,
+        ]))->assertRedirect();
+
+        $facture = Facture::latest('id')->first();
+        $this->assertSame(0.0, $facture->resteAPayer());
+    }
+
+    public function test_pdf_meta_exposes_avance_and_reste_a_payer_for_recu(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, [
+            'type' => 'recu',
+            'montant_avance' => 100,
+            'date_echeance' => now()->addDays(7)->toDateString(),
+        ]));
+        $facture = Facture::latest('id')->first();
+
+        $apercu = app(\App\Support\FactureApercuBuilder::class)->construire($facture);
+
+        $this->assertSame(100.0, $apercu['totaux']['montant_avance']);
+        $this->assertEqualsWithDelta(260.0, $apercu['totaux']['reste_a_payer'], 0.01);
+        $this->assertNotNull($apercu['meta']['date_echeance']);
+
+        $this->get(route('factures.pdf', $facture))->assertOk();
+    }
+
+    public function test_pdf_meta_exposes_null_montant_avance_for_facture(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'facture']));
+        $facture = Facture::latest('id')->first();
+
+        $apercu = app(\App\Support\FactureApercuBuilder::class)->construire($facture);
+
+        $this->assertNull($apercu['totaux']['montant_avance']);
+        $this->assertEqualsWithDelta(360.0, $apercu['totaux']['reste_a_payer'], 0.01);
+    }
+
+    public function test_montant_avance_is_required_when_updating_a_recu(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, null, [
+            'type' => 'recu',
+            'montant_avance' => 100,
+        ]));
+        $facture = Facture::latest('id')->first();
+
+        $payloadSansAvance = $this->payload($client->id);
+        unset($payloadSansAvance['type']);
+
+        $this->put("/factures/{$facture->id}", $payloadSansAvance)
+            ->assertSessionHasErrors('montant_avance');
+
+        $this->assertSame(100.0, (float) $facture->fresh()->montant_avance, 'La mise à jour rejetée ne doit pas avoir modifié le reçu.');
+    }
+
     public function test_pdf_meta_exposes_type_and_type_label(): void
     {
         $user = $this->creerUtilisateurAvecBoutique('pro');

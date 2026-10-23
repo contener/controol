@@ -31,6 +31,10 @@ class StoreFactureRequest extends FormRequest
             'date_emission' => ['required', 'date'],
             'date_echeance' => ['nullable', 'date', 'after_or_equal:date_emission'],
             'remise' => ['nullable', 'numeric', 'min:0'],
+            // Propre aux Reçus (preuve de paiement partiel) -- obligatoire seulement
+            // pour ce type, ignoré sinon. Le "reste à payer" n'est jamais saisi ici,
+            // toujours recalculé (voir Facture::resteAPayer()).
+            'montant_avance' => ['nullable', 'numeric', 'min:0', Rule::requiredIf(fn () => $this->input('type') === 'recu')],
             'notes' => ['nullable', 'string'],
             'garantie' => ['nullable', 'string', 'max:1000'],
             'statut' => ['nullable', 'in:brouillon,envoyee,payee,annulee'],

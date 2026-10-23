@@ -24,6 +24,7 @@ const form = useForm({
     date_emission: today,
     date_echeance: '',
     remise: 0,
+    montant_avance: '',
     notes: '',
     garantie: '',
     statut: 'brouillon',

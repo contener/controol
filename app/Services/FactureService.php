@@ -33,6 +33,10 @@ class FactureService
                 'date_emission' => $dateEmission,
                 'date_echeance' => $data['date_echeance'] ?? null,
                 'remise' => $data['remise'] ?? 0,
+                // Propre aux Reçus (voir StoreFactureRequest) -- toujours accepté tel
+                // quel, jamais recalculé ici (contrairement à sous_total/total_tva/
+                // total_ttc, dérivés des lignes par recalculerTotaux()).
+                'montant_avance' => $data['montant_avance'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'garantie' => $data['garantie'] ?? null,
                 'created_by' => $user->id,
@@ -69,6 +73,7 @@ class FactureService
                 'date_emission' => $data['date_emission'],
                 'date_echeance' => $data['date_echeance'] ?? null,
                 'remise' => $data['remise'] ?? 0,
+                'montant_avance' => $data['montant_avance'] ?? null,
                 'notes' => $data['notes'] ?? null,
                 'garantie' => $data['garantie'] ?? null,
                 'modele_id' => $data['modele_id'] ?? $facture->modele_id->value,

@@ -70,6 +70,7 @@
         @include('factures.pdf._client')
         @include('factures.pdf._lignes')
         @include('factures.pdf._totaux')
+        @include('factures.pdf._recap_paiement_recu')
 
         <div class="paiement">
             <strong>Coordonnées de paiement</strong><br>

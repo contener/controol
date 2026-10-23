@@ -121,6 +121,7 @@
         <table class="total-final">
             <tr><td><span class="label-final">Total TTC</span></td><td class="text-right montant">{{ number_format($apercu['totaux']['total_ttc'], 2, ',', ' ') }} {{ $apercu['meta']['devise'] }}</td></tr>
         </table>
+        @include('factures.pdf._recap_paiement_recu')
 
         <div class="conditions">
             <div class="label-gold">Conditions de paiement</div>
