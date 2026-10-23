@@ -930,6 +930,21 @@ relation telle quelle renvoyait un `user_id` null et provoquait une erreur fatal
 la liste des utilisateurs. Corrigé par une requête dédiée sur la seule colonne
 nécessaire (`Boutique::whereKey(...)->value('user_id')`), jamais la relation.
 
+**⚠️ Deuxième piège rencontré et corrigé (routage)** : les routes `equipe.*`
+(nommées `boutique.collaborateurs.*`) ont d'abord été enregistrées sous le chemin
+`/boutique/collaborateurs` — **404 systématique en production**, car
+`/boutique/{slug}` (page boutique publique, enregistrée plus haut dans
+`routes/web.php`) est un segment joker qui interceptait silencieusement toute
+requête `/boutique/XXX` en premier ; "collaborateurs" était alors traité comme un
+slug de boutique inexistant (`resoudreBoutique()` lève une `ModelNotFoundException`
+→ 404 Laravel standard, indiscernable d'un vrai problème de route sans inspecter la
+réponse). Corrigé en déplaçant le chemin vers `/equipe` (nom de route inchangé).
+**Règle à retenir : ne jamais préfixer une nouvelle route authentifiée par
+`/boutique/...`** tant que `/boutique/{slug}` existe comme route publique à ce
+niveau — toujours vérifier `php artisan route:list` ET une requête réelle
+(`curl`), jamais l'un sans l'autre, avant de considérer une nouvelle route comme
+fonctionnelle.
+
 **Révocation immédiate** (`BoutiqueCollaborateurController::destroy()`) : détache la
 liaison et, si le compte retiré avait cette boutique comme `current_boutique_id`, le
 remet à `null` sur-le-champ — même principe que la désactivation d'un compte, qui
@@ -1067,6 +1082,11 @@ l'occasion se présente.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-23** — **Correction du 404 sur la page Équipe** (voir §5.19) : le
+  chemin `/boutique/collaborateurs` entrait en collision avec la route publique
+  `/boutique/{slug}` (segment joker, interceptait la requête en premier). Déplacé
+  vers `/equipe` — nom de route inchangé. Règle retenue : jamais de nouvelle route
+  authentifiée préfixée par `/boutique/...`.
 - **2026-10-23** — **Collaborateurs de boutique : accès multi-utilisateur à partir
   du plan Basique** (voir §5.19). Une boutique n'était gérée que par son créateur ;
   le propriétaire peut désormais créer des comptes et leur donner un accès complet
