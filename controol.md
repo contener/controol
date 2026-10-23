@@ -907,32 +907,63 @@ Inertia), rattachement automatique anonyme → compte, export CSV, notifications
 automatiques (le cahier des charges lui-même les place au conditionnel/les déconseille
 sans consentement explicite).
 
-### 5.19 Collaborateurs de boutique (accès multi-utilisateur, 2026-10-23)
+### 5.19 Collaborateurs de boutique (accès multi-utilisateur, 2026-10-23 ; permissions granulaires, 2026-10-24)
 
 Jusqu'ici, une boutique n'était jamais gérée que par son créateur
 (`Boutique.user_id`, propriétaire unique). À partir du plan Basique (5 000 FCFA,
 `plans.personnel_boutique`), le propriétaire peut créer des comptes et leur donner
-accès à la gestion complète de sa boutique.
+accès à la gestion de sa boutique.
 
-**Table de liaison pure** `boutique_collaborateurs` (`boutique_id`, `user_id`,
-unique sur la paire) — pas de colonne rôle/permission en v1 : un collaborateur a un
-accès complet aux opérations courantes (Clients, Produits, Factures, Dépenses,
-Stock, Conversations, Destinations/Campagnes sociales), via
-`Boutique::estGereePar(User $user): bool` (= propriétaire OU présent dans
-`collaborateurs()`), réutilisé par les 7 Policies concernées à la place de
-`$user->id === $boutique->user_id`. **Restent strictement réservées au
-propriétaire** (`BoutiquePolicy` inchangée) : modifier/supprimer la boutique
-elle-même, gérer l'abonnement, et gérer les collaborateurs — un collaborateur ne
-peut jamais en ajouter/retirer un autre (`BoutiqueCollaborateurController`, chaque
-action vérifie explicitement la propriété stricte, jamais `estGereePar()` seul,
-pour éviter toute chaîne d'escalade de privilège).
+**Permissions granulaires, jamais d'accès automatique** (2026-10-24) : `boutique_collaborateurs`
+porte une colonne booléenne par fonctionnalité importante (`Boutique::PERMISSIONS_COLLABORATEUR` :
+`acces_dashboard`, `acces_clients`, `acces_produits`, `acces_factures`,
+`acces_depenses`, `acces_audience`, `acces_messagerie`), **toutes à `false` par
+défaut**. Le propriétaire coche explicitement, à la création d'un collaborateur ou
+plus tard (`PATCH /equipe/{collaborateur}`), ce à quoi chacun a accès — v1 donnait un
+accès complet et automatique dès l'ajout, ce n'était pas souhaité.
+`Boutique::autoriseCollaborateurPour(User $user, string $permission): bool` (+ 7
+méthodes dédiées `autoriseDashboard()`/`autoriseClients()`/...) est le point unique
+réutilisé par `ClientPolicy`/`ProduitPolicy`/`FacturePolicy`/`DepensePolicy`/
+`ConversationPolicy` (remplace `$modele->boutique->estGereePar($user)` par
+`$modele->boutique->autoriseXxx($user)`) ainsi que par `AudienceController` et
+`DashboardController` (qui n'ont pas de Policy dédiée) — le propriétaire a toujours
+un accès total, quelle que soit la permission testée.
+`Boutique::estGereePar()` (propriétaire OU collaborateur, sans distinction de
+fonctionnalité) reste disponible et utilisé pour les deux cas volontairement **non**
+granulaires : `CampagneSocialePolicy`/`DestinationSocialePolicy` (hors périmètre de
+cette demande, décision explicite) et le bouton "Suivre" masqué sur la page boutique
+publique (`PublicBoutiqueController::estProprietaire`) — à ne pas confondre avec
+`peutAjouterProduit` (même contrôleur), lui gouverné par `autoriseProduits()`.
+Dashboard et Audience affichent un état "accès refusé" convivial (jamais un 403 brut)
+distinct du message "passez à un plan supérieur" : la cause ici est une permission
+non accordée par le propriétaire, pas une limite de plan — important pour le
+Dashboard puisque c'est la page d'accueil post-connexion (`config/fortify.php
+'home'`), un 403 y bloquerait un collaborateur dès la connexion sans lui donner
+aucune indication. Nav (`AppLayout.vue`, desktop + mobile) masque les liens
+correspondants via `peutAcceder(permission)` (confort d'affichage seulement, les
+Policies/contrôleurs font toujours foi côté serveur) en lisant
+`mesBoutiques[].permissions` (partagé par `HandleInertiaRequests::share()`, toujours
+tout à `true` pour un propriétaire).
+**Migration des comptes déjà créés** : le(s) collaborateur(s) existant(s) avant cette
+migration sont grandfathered à `true` sur les 7 permissions (mise à jour de données
+dans la migration elle-même) — seuls les **nouveaux** collaborateurs démarrent sans
+aucun accès ; sans ce choix, un vrai compte déjà en service se serait retrouvé bloqué
+sans prévenir du jour au lendemain.
+**Restent strictement réservées au propriétaire** (`BoutiquePolicy` inchangée) :
+modifier/supprimer la boutique elle-même, gérer l'abonnement, et gérer les
+collaborateurs (y compris leurs permissions) — un collaborateur ne peut jamais en
+ajouter/retirer un autre ni modifier ses propres permissions
+(`BoutiqueCollaborateurController`/`UpdateCollaborateurPermissionsRequest`, chaque
+action vérifie explicitement la propriété stricte, jamais `estGereePar()` seul, pour
+éviter toute chaîne d'escalade de privilège).
 
 **Création directe, pas d'invitation par e-mail** (`StoreCollaborateurRequest`, même
 schéma que `StoreAdministrateurRequest` côté Super Admin) : le propriétaire saisit
-nom/e-mail/téléphone/mot de passe. Le compte créé a `email_verified_at` déjà
-renseigné (le propriétaire s'en porte garant) et `current_boutique_id` pointant
-immédiatement sur la boutique — **aucun essai gratuit ni abonnement propre créé**,
-le compte opère sous le plan du propriétaire.
+nom/e-mail/téléphone/mot de passe + les permissions à cocher (toutes optionnelles,
+absentes = `false`). Le compte créé a `email_verified_at` déjà renseigné (le
+propriétaire s'en porte garant) et `current_boutique_id` pointant immédiatement sur
+la boutique — **aucun essai gratuit ni abonnement propre créé**, le compte opère
+sous le plan du propriétaire.
 
 **Correctif central : `User::planActif()`** résout désormais via le propriétaire de
 la boutique courante quand l'utilisateur n'en est pas lui-même le propriétaire —
@@ -971,6 +1002,21 @@ fonctionnelle.
 liaison et, si le compte retiré avait cette boutique comme `current_boutique_id`, le
 remet à `null` sur-le-champ — même principe que la désactivation d'un compte, qui
 purge ses sessions actives, plutôt qu'un nettoyage paresseux à la prochaine requête.
+
+**⚠️ Troisième piège rencontré et corrigé (cache de routes périmé)** : après avoir
+ajouté la route `PATCH /equipe/{collaborateur}` et déployé le code, les tests de
+cette route échouaient en production avec un 405 (Method Not Allowed) alors que
+`php artisan route:list` en local comme à distance montrait bien la route
+enregistrée. Cause : un déploiement précédent avait exécuté `php artisan
+route:cache`, et ce cache (`bootstrap/cache/routes-v7.php`) n'est **jamais régénéré
+automatiquement** par un `git pull` — il continuait de servir l'ancienne liste de
+routes (sans le nouveau `PATCH`) jusqu'à ce qu'on l'invalide explicitement. Corrigé
+par `php artisan route:clear` puis un nouveau `route:cache`. **Règle à retenir : si
+une route fraîchement ajoutée renvoie 405/404 en production alors qu'elle existe
+bien dans le code et dans `route:list`, toujours suspecter un cache de routes/config
+périmé avant de chercher ailleurs — `route:clear` + `route:cache` (et `config:clear`
++ `config:cache` si le doute porte sur la config) à chaque déploiement qui ajoute une
+route ou change `config/`.**
 
 **Jetstream "Teams" délibérément ignoré** : présent dans le code (migrations,
 modèles, pages Vue, Actions) mais jamais branché (`Features::teams()` désactivé,
@@ -1104,6 +1150,16 @@ l'occasion se présente.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-24** — **Permissions granulaires par collaborateur** (voir §5.19). Ajouter
+  un collaborateur donnait jusqu'ici un accès complet et automatique à tout
+  (clients, produits, factures, dépenses, audience, messagerie, dashboard) ; le
+  propriétaire doit désormais cocher explicitement, par collaborateur, chaque
+  fonctionnalité accordée (7 permissions, toutes à `false` par défaut, modifiables
+  après coup via `PATCH /equipe/{collaborateur}`). Le collaborateur déjà existant en
+  production a été grandfathered à accès complet pour ne pas le bloquer sans
+  prévenir. Piège rencontré : un cache de routes périmé (`route:cache` d'un
+  déploiement précédent) a fait échouer la nouvelle route `PATCH` avec un 405 jusqu'à
+  `route:clear` + recache.
 - **2026-10-24** — **Avance / reste à payer sur les Reçus** (voir §5.5). Le Reçu ne
   permettait pas d'enregistrer un paiement partiel ; ajout de `montant_avance`
   (colonne nullable, obligatoire seulement pour ce type) et de
