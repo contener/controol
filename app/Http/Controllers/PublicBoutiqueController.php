@@ -84,7 +84,10 @@ class PublicBoutiqueController extends Controller
                 ? Suivi::where('boutique_id', $boutique->id)->where('user_id', $utilisateur->id)->whereNull('desabonne_a')->exists()
                 : false,
             'visiteurABoutique' => $utilisateur ? $utilisateur->boutiques()->exists() : false,
-            'estProprietaire' => $utilisateur ? $utilisateur->id === $boutique->user_id : false,
+            // "Propriétaire" ici veut dire "peut gérer cette boutique" : un collaborateur
+            // profite aussi du bouton d'ajout rapide de produit depuis cette page publique
+            // (voir StoreProduitDepuisBoutiqueRequest, déjà ouvert aux collaborateurs).
+            'estProprietaire' => $utilisateur ? $boutique->estGereePar($utilisateur) : false,
         ]);
     }
 

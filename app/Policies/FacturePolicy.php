@@ -15,7 +15,7 @@ class FacturePolicy
 
     public function view(User $user, Facture $facture): bool
     {
-        return $user->id === $facture->boutique->user_id;
+        return $facture->boutique->estGereePar($user);
     }
 
     public function create(User $user): bool
@@ -25,12 +25,12 @@ class FacturePolicy
 
     public function update(User $user, Facture $facture): bool
     {
-        return $user->id === $facture->boutique->user_id && $facture->estModifiable();
+        return $facture->boutique->estGereePar($user) && $facture->estModifiable();
     }
 
     public function delete(User $user, Facture $facture): bool
     {
-        return $user->id === $facture->boutique->user_id && $facture->estSupprimable();
+        return $facture->boutique->estGereePar($user) && $facture->estSupprimable();
     }
 
     /**

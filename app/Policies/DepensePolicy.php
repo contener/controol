@@ -14,7 +14,7 @@ class DepensePolicy
 
     public function view(User $user, Depense $depense): bool
     {
-        return $user->id === $depense->boutique->user_id;
+        return $depense->boutique->estGereePar($user);
     }
 
     public function create(User $user): bool
@@ -24,11 +24,11 @@ class DepensePolicy
 
     public function update(User $user, Depense $depense): bool
     {
-        return $user->id === $depense->boutique->user_id;
+        return $depense->boutique->estGereePar($user);
     }
 
     public function delete(User $user, Depense $depense): bool
     {
-        return $user->id === $depense->boutique->user_id;
+        return $depense->boutique->estGereePar($user);
     }
 }

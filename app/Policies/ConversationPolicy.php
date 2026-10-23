@@ -14,17 +14,17 @@ class ConversationPolicy
 
     public function view(User $user, Conversation $conversation): bool
     {
-        return $user->id === $conversation->boutique->user_id;
+        return $conversation->boutique->estGereePar($user);
     }
 
     public function reply(User $user, Conversation $conversation): bool
     {
-        return $user->id === $conversation->boutique->user_id;
+        return $conversation->boutique->estGereePar($user);
     }
 
     public function updateStatut(User $user, Conversation $conversation): bool
     {
-        return $user->id === $conversation->boutique->user_id;
+        return $conversation->boutique->estGereePar($user);
     }
 
     public function create(User $user): bool

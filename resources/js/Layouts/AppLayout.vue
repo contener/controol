@@ -83,6 +83,9 @@ const logout = () => {
                                 <NavLink :href="route('audience.index')" :active="route().current('audience.*')">
                                     👥 {{ t('nav.audience') }}
                                 </NavLink>
+                                <NavLink v-if="boutiqueCourante?.est_proprietaire" :href="route('boutique.collaborateurs.index')" :active="route().current('boutique.collaborateurs.*')">
+                                    🔑 {{ t('nav.team') }}
+                                </NavLink>
                                 <NavLink :href="route('stock.index')" :active="route().current('stock.*')">
                                     {{ t('nav.stock') }}
                                 </NavLink>
@@ -137,6 +140,9 @@ const logout = () => {
                                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
                                                             <div class="truncate">{{ boutique.nom }}</div>
+                                                            <span v-if="!boutique.est_proprietaire" class="ms-2 shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                                                                {{ t('nav.collaborator') }}
+                                                            </span>
                                                         </div>
                                                     </DropdownLink>
                                                 </form>
@@ -288,6 +294,9 @@ const logout = () => {
                         <ResponsiveNavLink :href="route('audience.index')" :active="route().current('audience.*')">
                             👥 {{ t('nav.audience') }}
                         </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="boutiqueCourante?.est_proprietaire" :href="route('boutique.collaborateurs.index')" :active="route().current('boutique.collaborateurs.*')">
+                            🔑 {{ t('nav.team') }}
+                        </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('stock.index')" :active="route().current('stock.*')">
                             {{ t('nav.stock') }}
                         </ResponsiveNavLink>
@@ -363,6 +372,9 @@ const logout = () => {
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             <div class="truncate">{{ boutique.nom }}</div>
+                                            <span v-if="!boutique.est_proprietaire" class="ms-2 shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+                                                {{ t('nav.collaborator') }}
+                                            </span>
                                         </div>
                                     </ResponsiveNavLink>
                                 </form>

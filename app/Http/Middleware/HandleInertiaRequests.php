@@ -57,7 +57,18 @@ class HandleInertiaRequests extends Middleware
                     return [];
                 }
 
-                return $user->boutiques()->orderBy('nom')->get(['id', 'nom', 'slug', 'statut']);
+                // Fusionne les boutiques possédées et celles où l'utilisateur est
+                // collaborateur (voir Boutique::collaborateurs()) -- sinon le
+                // sélecteur de boutique d'AppLayout.vue resterait vide pour un
+                // collaborateur malgré un accès réel. est_proprietaire distingue les
+                // deux côté Vue (badge, et visibilité du lien de gestion de l'équipe).
+                $possedees = $user->boutiques()->get(['id', 'nom', 'slug', 'statut'])
+                    ->map(fn ($b) => [...$b->only(['id', 'nom', 'slug', 'statut']), 'est_proprietaire' => true]);
+
+                $collaborees = $user->boutiquesCollaborateur()->get(['boutiques.id', 'boutiques.nom', 'boutiques.slug', 'boutiques.statut'])
+                    ->map(fn ($b) => [...$b->only(['id', 'nom', 'slug', 'statut']), 'est_proprietaire' => false]);
+
+                return $possedees->concat($collaborees)->sortBy('nom')->values();
             },
             'messagesNonLus' => function () use ($request) {
                 $user = $request->user();

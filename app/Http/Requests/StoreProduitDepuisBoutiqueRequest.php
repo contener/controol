@@ -24,7 +24,7 @@ class StoreProduitDepuisBoutiqueRequest extends FormRequest
 
     public function authorize(): bool
     {
-        return $this->boutique() !== null && $this->user()->id === $this->boutique()->user_id;
+        return $this->boutique() !== null && $this->boutique()->estGereePar($this->user());
     }
 
     public function boutique(): ?Boutique

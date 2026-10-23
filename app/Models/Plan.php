@@ -25,6 +25,7 @@ class Plan extends Model
         'modeles_facture_avances',
         'chatbot_whatsapp',
         'audience',
+        'personnel_boutique',
         'ordre',
     ];
 
@@ -37,6 +38,7 @@ class Plan extends Model
             'modeles_facture_avances' => 'boolean',
             'chatbot_whatsapp' => 'boolean',
             'audience' => 'boolean',
+            'personnel_boutique' => 'boolean',
         ];
     }
 }

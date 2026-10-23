@@ -14,7 +14,7 @@ class CampagneSocialePolicy
 
     public function view(User $user, CampagneSociale $campagneSociale): bool
     {
-        return $user->id === $campagneSociale->boutique->user_id;
+        return $campagneSociale->boutique->estGereePar($user);
     }
 
     public function create(User $user): bool
@@ -24,6 +24,6 @@ class CampagneSocialePolicy
 
     public function update(User $user, CampagneSociale $campagneSociale): bool
     {
-        return $user->id === $campagneSociale->boutique->user_id;
+        return $campagneSociale->boutique->estGereePar($user);
     }
 }

@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -162,6 +163,15 @@ class User extends Authenticatable
         return $this->hasMany(Boutique::class);
     }
 
+    /**
+     * Boutiques dont cet utilisateur est collaborateur (pas propriétaire) -- distinct
+     * de boutiques() qui ne liste que celles qu'il a lui-même créées.
+     */
+    public function boutiquesCollaborateur(): BelongsToMany
+    {
+        return $this->belongsToMany(Boutique::class, 'boutique_collaborateurs')->withTimestamps();
+    }
+
     public function currentBoutique(): BelongsTo
     {
         return $this->belongsTo(Boutique::class, 'current_boutique_id');
@@ -214,14 +224,30 @@ class User extends Authenticatable
         return $this->abonnements()->actuellementActif()->orderByDesc('date_debut')->orderByDesc('id')->first();
     }
 
+    /**
+     * Un collaborateur n'a et n'aura jamais son propre abonnement (voir
+     * Boutique::collaborateurs()) -- il opère sous le plan du propriétaire de sa
+     * boutique courante. Correction au point unique : toutes les vérifications déjà
+     * existantes dans le projet qui appellent planActif() en profitent automatiquement,
+     * sans avoir à toucher chacune individuellement. abonnementActif() lui-même reste
+     * volontairement inchangé : une page "Mon abonnement" consultée par un
+     * collaborateur doit continuer de refléter son absence réelle d'abonnement
+     * personnel, pas celui du propriétaire.
+     */
     public function planActif(): ?Plan
     {
+        $boutique = $this->currentBoutique;
+
+        if ($boutique && $boutique->user_id !== $this->id) {
+            return $boutique->proprietaire->planActif();
+        }
+
         return $this->abonnementActif()?->plan;
     }
 
     public function switchBoutique(Boutique $boutique): void
     {
-        if ($boutique->user_id !== $this->id) {
+        if (! $boutique->estGereePar($this)) {
             return;
         }
 

@@ -14,7 +14,7 @@ class ClientPolicy
 
     public function view(User $user, Client $client): bool
     {
-        return $user->id === $client->boutique->user_id;
+        return $client->boutique->estGereePar($user);
     }
 
     public function create(User $user): bool
@@ -24,11 +24,11 @@ class ClientPolicy
 
     public function update(User $user, Client $client): bool
     {
-        return $user->id === $client->boutique->user_id;
+        return $client->boutique->estGereePar($user);
     }
 
     public function delete(User $user, Client $client): bool
     {
-        return $user->id === $client->boutique->user_id;
+        return $client->boutique->estGereePar($user);
     }
 }

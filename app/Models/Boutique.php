@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -89,6 +90,28 @@ class Boutique extends Model
     public function suivis(): HasMany
     {
         return $this->hasMany(Suivi::class);
+    }
+
+    /**
+     * Comptes créés par le propriétaire pour l'aider à gérer cette boutique au
+     * quotidien (plan Basique/Pro, voir plans.personnel_boutique) -- table de liaison
+     * pure, aucune colonne rôle/permission en v1 : un collaborateur a un accès complet
+     * aux opérations courantes (voir estGereePar()), seules la boutique elle-même,
+     * l'abonnement et la gestion des collaborateurs restent réservés au propriétaire.
+     */
+    public function collaborateurs(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'boutique_collaborateurs')->withTimestamps();
+    }
+
+    /**
+     * Point unique réutilisé par toutes les Policies de cette boutique (Client,
+     * Produit, Facture, Dépense, DestinationSociale, CampagneSociale, Conversation) --
+     * jamais dupliquer "propriétaire OU collaborateur" dans chaque Policy séparément.
+     */
+    public function estGereePar(User $user): bool
+    {
+        return $user->id === $this->user_id || $this->collaborateurs()->whereKey($user->id)->exists();
     }
 
     public function nombreAbonnes(): int

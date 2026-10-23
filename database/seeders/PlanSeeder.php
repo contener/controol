@@ -26,6 +26,7 @@ class PlanSeeder extends Seeder
                 'modeles_facture_avances' => false,
                 'chatbot_whatsapp' => false,
                 'audience' => false,
+                'personnel_boutique' => false,
                 'ordre' => 1,
             ],
             [
@@ -46,6 +47,7 @@ class PlanSeeder extends Seeder
                 'modeles_facture_avances' => true,
                 'chatbot_whatsapp' => false,
                 'audience' => true,
+                'personnel_boutique' => true,
                 'ordre' => 2,
             ],
             [
@@ -65,6 +67,7 @@ class PlanSeeder extends Seeder
                 'modeles_facture_avances' => true,
                 'chatbot_whatsapp' => true,
                 'audience' => true,
+                'personnel_boutique' => true,
                 'ordre' => 3,
             ],
         ];

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ParrainageController as AdminParrainageController
 use App\Http\Controllers\Admin\UtilisateurController as AdminUtilisateurController;
 use App\Http\Controllers\AbonnementController;
 use App\Http\Controllers\AudienceController;
+use App\Http\Controllers\BoutiqueCollaborateurController;
 use App\Http\Controllers\BoutiqueController;
 use App\Http\Controllers\CampagneSocialeController;
 use App\Http\Controllers\ClientController;
@@ -102,6 +103,12 @@ Route::middleware([
         Route::resource('produits', ProduitController::class)->except(['show']);
         Route::patch('/produits/{produit}/marketplace', [ProduitController::class, 'updateMarketplace'])->name('produits.marketplace');
         Route::resource('depenses', DepenseController::class)->except(['show']);
+
+        Route::prefix('boutique/collaborateurs')->name('boutique.collaborateurs.')->group(function () {
+            Route::get('/', [BoutiqueCollaborateurController::class, 'index'])->name('index');
+            Route::post('/', [BoutiqueCollaborateurController::class, 'store'])->name('store');
+            Route::delete('/{collaborateur}', [BoutiqueCollaborateurController::class, 'destroy'])->name('destroy');
+        });
 
         Route::prefix('audience')->name('audience.')->group(function () {
             Route::get('/', [AudienceController::class, 'index'])->name('index');

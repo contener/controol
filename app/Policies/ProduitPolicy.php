@@ -14,7 +14,7 @@ class ProduitPolicy
 
     public function view(User $user, Produit $produit): bool
     {
-        return $user->id === $produit->boutique->user_id;
+        return $produit->boutique->estGereePar($user);
     }
 
     public function create(User $user): bool
@@ -24,11 +24,11 @@ class ProduitPolicy
 
     public function update(User $user, Produit $produit): bool
     {
-        return $user->id === $produit->boutique->user_id;
+        return $produit->boutique->estGereePar($user);
     }
 
     public function delete(User $user, Produit $produit): bool
     {
-        return $user->id === $produit->boutique->user_id;
+        return $produit->boutique->estGereePar($user);
     }
 }
