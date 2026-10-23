@@ -475,9 +475,8 @@ déjà construits sur `Admin\UtilisateurController::index()`.
   = `! $facture->estProforma()` — un Reçu est traité comme une Facture, puisqu'il
   prouve qu'une marchandise est sortie contre un paiement, même partiel ; seul le
   Proforma, document indicatif, en est exclu). Le Reçu est un document pair de la
-  Facture/Proforma — mêmes lignes/totaux/numérotation/gabarits PDF, **pas** un système
-  de suivi de "reste à payer" : aucun lien vers une Facture d'origine, aucun montant
-  encaissé chiffré — volontairement hors périmètre, non demandé.
+  Facture/Proforma — mêmes lignes/totaux/numérotation/gabarits PDF — **aucun lien vers
+  une Facture d'origine** (toujours hors périmètre, non demandé).
   Filtre de type sur `Factures/Index.vue` déjà piloté par le backend
   (`TypeFacture::cases()`), aucun changement nécessaire pour ajouter une 3e option. En
   ajoutant le Reçu, correction au passage d'un bug préexistant : 4 des 10 composants
@@ -485,6 +484,29 @@ déjà construits sur `Admin\UtilisateurController::index()`.
   affichaient le mot "Facture" en dur sans jamais lire `apercu.meta.type_label` — déjà
   mal affiché pour les Proformas avant ce correctif. Les 10 gabarits Blade PDF, eux,
   étaient déjà corrects (pilotés par `type_label`).
+- **Avance / reste à payer sur les Reçus** (`montant_avance`, 2026-10-24) : colonne
+  `factures.montant_avance` (nullable), **obligatoire uniquement pour le type Reçu**
+  (`StoreFactureRequest`/`UpdateFactureRequest`, `Rule::requiredIf`). Le "reste à
+  payer" n'est **jamais stocké**, toujours recalculé via `Facture::resteAPayer()` =
+  `max(0, total_ttc − montant_avance)` (même principe que partout ailleurs dans ce
+  projet pour une donnée dérivable — `EssaiUtilisateur::statut()`,
+  `Suivi::estActif()`...), ne descend jamais sous zéro même si l'avance saisie dépasse
+  le total. La "date à laquelle il faut donner le reste" réutilise `date_echeance`
+  (déjà existant sur toute facture) — aucune nouvelle colonne de date. Dupliquer un
+  Reçu (`FactureController::duplicate()`) reporte `montant_avance` sur la copie,
+  explicitement — sans ça la copie serait un Reçu avec une avance `null`, état jamais
+  atteignable via le formulaire normal.
+  **Affichage** : un partiel Blade partagé (`factures/pdf/_recap_paiement_recu.blade.php`,
+  guardé par `meta.type === 'recu' && totaux.montant_avance !== null`) est inclus dans
+  les 10 gabarits PDF, et un composant Vue partagé
+  (`Factures/Modeles/Partials/RecapitulatifPaiementRecu.vue`, même garde) est inséré
+  dans les 10 composants d'aperçu live — contrairement au bloc "Facturé à" (voir plus
+  bas), ce nouveau bloc **est** factorisé une seule fois de chaque côté plutôt que
+  dupliqué 10 fois, parce qu'il est entièrement nouveau (pas de markup existant
+  propre à chaque modèle à adapter). Modèle 10 (Executive) avait déjà un bloc "Montant
+  payé / Solde restant" propre, piloté par `statut === 'payee'` (Facture/Proforma) —
+  masqué pour les Reçus (`@unless`/`v-if` sur `type !== 'recu'`) pour éviter d'afficher
+  deux récapitulatifs de paiement contradictoires sur ce modèle.
 - Lignes libres (`produit_id` nullable) ou liées à un produit. Calcul ligne : `HT =
   (quantité × prix unitaire) − remise ligne`, `TVA = HT × taux/100`, `TTC = HT + TVA`.
   Totaux facture : `sous_total = Σ HT`, `total_tva = Σ TVA`, `total_ttc = sous_total +
@@ -1082,6 +1104,14 @@ l'occasion se présente.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-24** — **Avance / reste à payer sur les Reçus** (voir §5.5). Le Reçu ne
+  permettait pas d'enregistrer un paiement partiel ; ajout de `montant_avance`
+  (colonne nullable, obligatoire seulement pour ce type) et de
+  `Facture::resteAPayer()` (calculé à la volée, jamais stocké). La date limite pour
+  le reste réutilise `date_echeance` existant. Un partiel Blade et un composant Vue
+  partagés affichent le récapitulatif dans les 10 modèles de facture (PDF + aperçu
+  live) sans dupliquer le balisage 10 fois ; duplication d'un Reçu corrigée au passage
+  pour reporter `montant_avance` sur la copie.
 - **2026-10-23** — **Correction du 404 sur la page Équipe** (voir §5.19) : le
   chemin `/boutique/collaborateurs` entrait en collision avec la route publique
   `/boutique/{slug}` (segment joker, interceptait la requête en premier). Déplacé
