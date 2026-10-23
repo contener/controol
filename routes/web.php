@@ -104,7 +104,15 @@ Route::middleware([
         Route::patch('/produits/{produit}/marketplace', [ProduitController::class, 'updateMarketplace'])->name('produits.marketplace');
         Route::resource('depenses', DepenseController::class)->except(['show']);
 
-        Route::prefix('boutique/collaborateurs')->name('boutique.collaborateurs.')->group(function () {
+        // Chemin "equipe", jamais "boutique/collaborateurs" : /boutique/{slug} (page
+        // boutique publique, enregistrée plus haut) est un segment joker qui
+        // intercepterait silencieusement toute requête vers /boutique/XXX avant même
+        // d'atteindre ce groupe -- "collaborateurs" serait alors traité comme un slug
+        // de boutique inexistant, provoquant un 404 (ModelNotFoundException de
+        // resoudreBoutique()) au lieu d'atteindre ce contrôleur. Le nom de route reste
+        // "boutique.collaborateurs.*" (inchangé côté Vue/contrôleur/tests, seul le
+        // chemin change).
+        Route::prefix('equipe')->name('boutique.collaborateurs.')->group(function () {
             Route::get('/', [BoutiqueCollaborateurController::class, 'index'])->name('index');
             Route::post('/', [BoutiqueCollaborateurController::class, 'store'])->name('store');
             Route::delete('/{collaborateur}', [BoutiqueCollaborateurController::class, 'destroy'])->name('destroy');

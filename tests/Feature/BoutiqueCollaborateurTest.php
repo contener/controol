@@ -26,7 +26,7 @@ class BoutiqueCollaborateurTest extends TestCase
     {
         $proprietaire = $this->creerUtilisateurAvecBoutique('gratuit', []);
 
-        $response = $this->actingAs($proprietaire)->post('/boutique/collaborateurs', $this->payload());
+        $response = $this->actingAs($proprietaire)->post('/equipe', $this->payload());
 
         $response->assertStatus(403);
         $this->assertDatabaseMissing('users', ['email' => 'employe@example.com']);
@@ -37,7 +37,7 @@ class BoutiqueCollaborateurTest extends TestCase
         $proprietaire = $this->creerUtilisateurAvecBoutique('pro');
         $proprietaire->planActif()->update(['personnel_boutique' => true]);
 
-        $response = $this->actingAs($proprietaire)->post('/boutique/collaborateurs', $this->payload());
+        $response = $this->actingAs($proprietaire)->post('/equipe', $this->payload());
 
         $response->assertRedirect();
         $collaborateur = User::where('email', 'employe@example.com')->firstOrFail();
@@ -57,7 +57,7 @@ class BoutiqueCollaborateurTest extends TestCase
         $proprietaire->currentBoutique->collaborateurs()->attach($collaborateur->id);
         $collaborateur->forceFill(['current_boutique_id' => $proprietaire->current_boutique_id])->save();
 
-        $response = $this->actingAs($collaborateur)->post('/boutique/collaborateurs', $this->payload(['email' => 'autre@example.com']));
+        $response = $this->actingAs($collaborateur)->post('/equipe', $this->payload(['email' => 'autre@example.com']));
 
         $response->assertStatus(403);
         $this->assertDatabaseMissing('users', ['email' => 'autre@example.com']);
@@ -113,7 +113,7 @@ class BoutiqueCollaborateurTest extends TestCase
         $boutique->collaborateurs()->attach($collaborateur->id);
         $collaborateur->forceFill(['current_boutique_id' => $boutique->id])->save();
 
-        $response = $this->actingAs($proprietaire)->delete("/boutique/collaborateurs/{$collaborateur->id}");
+        $response = $this->actingAs($proprietaire)->delete("/equipe/{$collaborateur->id}");
 
         $response->assertRedirect();
         $this->assertDatabaseMissing('boutique_collaborateurs', ['boutique_id' => $boutique->id, 'user_id' => $collaborateur->id]);
@@ -135,7 +135,7 @@ class BoutiqueCollaborateurTest extends TestCase
         $collaborateur = User::factory()->create();
         $proprietaireB->currentBoutique->collaborateurs()->attach($collaborateur->id);
 
-        $response = $this->actingAs($proprietaireA)->delete("/boutique/collaborateurs/{$collaborateur->id}");
+        $response = $this->actingAs($proprietaireA)->delete("/equipe/{$collaborateur->id}");
 
         $response->assertStatus(404);
         $this->assertDatabaseHas('boutique_collaborateurs', ['boutique_id' => $proprietaireB->current_boutique_id, 'user_id' => $collaborateur->id]);
