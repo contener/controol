@@ -1093,12 +1093,46 @@ l'occasion se présente.
   équivalents du `public/` Laravel : `index.php`, assets buildés, lien symbolique
   vers le stockage public).
 - Procédure de mise à jour : `git push` → pull côté serveur → `php artisan migrate
-  --force` si nécessaire → `route:clear`/`config:clear`/`view:clear` → si le
-  frontend a changé, `npm run build` en local puis upload du dossier `build/` sous un
-  nom temporaire, vérification que le nombre de fichiers correspond exactement au
-  build local, puis **bascule atomique** (renommage) vers le nom final — jamais un
-  upload direct qui pourrait laisser le site dans un état incohérent pendant le
-  transfert.
+  --force` si nécessaire → `route:clear`/`config:clear`/`view:clear` (puis
+  `route:cache`/`config:cache` si l'environnement en dépendait déjà avant le
+  déploiement — voir le piège §5.19 sur le cache de routes périmé) → si le frontend a
+  changé, `npm run build` en local puis synchronisation vers **`public_html/build`
+  directement, jamais `controool_app/public/build`** (voir ⚠️ ci-dessous) :
+  upload sous un nom temporaire À L'INTÉRIEUR de `public_html` (ex.
+  `public_html/build_new`), vérification que le nombre de fichiers correspond
+  exactement au build local, puis **bascule atomique** (renommage) vers `build` —
+  jamais un upload direct qui pourrait laisser le site dans un état incohérent
+  pendant le transfert, et jamais une bascule faite dans `controool_app/public/`.
+- **⚠️ Piège grave rencontré (2026-10-24), à ne plus jamais reproduire** :
+  `controool_app/public/build` n'est **pas** le dossier servi — `public_html/index.php`
+  appelle `$app->usePublicPath(__DIR__)`, donc en production Laravel sert les assets
+  depuis `public_html/build`, un dossier **physiquement distinct**.
+  `controool_app/public/build` n'est censé être qu'un **lien symbolique**
+  (`build -> ../../public_html/build`), gardé uniquement pour que les commandes
+  `php artisan`/tests lancées depuis `controool_app` (qui, elles, utilisent le
+  public path par défaut) trouvent quand même le vrai `manifest.json` sans erreur
+  "Vite manifest not found". **Faire `mv build build_old && mv build_new build`
+  DANS `controool_app/public/` renomme le lien symbolique lui-même** (et non son
+  cible) puis le remplace par un vrai dossier indépendant — cassant silencieusement
+  le lien vers `public_html/build` sans aucune erreur visible : chaque déploiement
+  suivant continue de se dérouler sans erreur (migrations, tests, caches, upload...)
+  mais **le nouveau code JS/Vue n'atteint plus jamais le site réel**, qui continue de
+  servir l'ancien bundle indéfiniment. C'est exactement ce qui s'est produit : deux
+  déploiements frontend complets (Reçus, puis permissions collaborateurs) ont
+  semblé réussir (aucune erreur à aucune étape) mais n'ont jamais été visibles en
+  production, jusqu'à ce qu'un utilisateur signale "je ne vois pas les
+  fonctionnalités". Diagnostic : comparer `stat -c '%y' public_html/build
+  controool_app/public/build` (dates différentes = désynchronisation) et vérifier
+  avec `ls -la controool_app/public/` que `build` est bien listé `lrwxrwxrwx` (lien),
+  jamais `drwxr-xr-x` (vrai dossier) — remède :
+  `rm -rf controool_app/public/build && ln -s ../../public_html/build
+  controool_app/public/build`, puis resynchroniser `public_html/build` avec le
+  dernier build réel. **Règle définitive : la bascule atomique d'un déploiement
+  s'exécute toujours À L'INTÉRIEUR de `public_html` (créer/renommer `build_new`
+  puis `build` là-bas), jamais depuis `controool_app/public/`, et toujours vérifier
+  après coup via une requête HTTPS réelle sur un fichier précis du nouveau build
+  (pas seulement `manifest.json`, qui peut lui-même être périmé) que son contenu
+  contient bien le nouveau code.**
 - Avant toute mise en production d'un changement touchant la base de données : script
   PHP autonome enveloppé dans une transaction (`DB::beginTransaction()` /
   `DB::rollBack()` dans un `finally`) exécuté sur le serveur réel pour valider la
@@ -1110,16 +1144,16 @@ l'occasion se présente.
   (sans `--no-dev`) installe `phpunit`/`mockery`, tourne contre SQLite en mémoire
   (`phpunit.xml`, jamais la vraie base) — **toujours revenir ensuite à
   `composer install --no-dev --no-interaction --no-scripts`** pour ne pas laisser les
-  dépendances de développement en production. Deux pièges connus de cet hébergement :
+  dépendances de développement en production. Pièges connus de cet hébergement :
   (1) `proc_open` y est désactivé — tout ce qui l'utilise (`composer` post-install
   scripts, `php artisan test`, `php artisan about`) échoue ; lancer `php artisan
   package:discover --ansi` manuellement après un changement de dépendances (en ayant
   d'abord supprimé `bootstrap/cache/{packages,services,config}.php` s'ils référencent
   un package qui vient de disparaître), et `php vendor/bin/phpunit` directement plutôt
-  que `php artisan test`. (2) Les assets compilés ne vivent jamais dans
-  `controool_app/public/build` (uniquement dans `public_html/build`, voir plus haut) —
-  un lien symbolique `ln -s ../../public_html/build public/build` dans `controool_app`
-  élimine les échecs "Vite manifest not found" des tests qui rendent une page Inertia.
+  que `php artisan test`. (2) `controool_app/public/build` doit rester un **lien
+  symbolique** vers `public_html/build`, jamais un vrai dossier — voir le ⚠️ piège
+  grave détaillé plus haut dans cette section, qui explique comment une bascule
+  atomique mal placée le détruit silencieusement.
 - **Ne jamais inscrire de mot de passe/identifiant de connexion réel dans ce fichier
   ni dans le dépôt Git** — à conserver séparément (gestionnaire de mots de passe). Ce
   document décrit la structure et la procédure, pas les accès eux-mêmes.
@@ -1150,6 +1184,15 @@ l'occasion se présente.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-24** — **Correctif critique de déploiement : lien symbolique
+  `public/build` cassé** (voir §8). Une bascule atomique (`mv build build_old && mv
+  build_new build`) exécutée par erreur dans `controool_app/public/` au lieu de
+  `public_html/` a transformé le lien symbolique `build -> ../../public_html/build`
+  en un vrai dossier indépendant, désynchronisant silencieusement les deux
+  déploiements frontend précédents (Reçus, permissions collaborateurs) : aucune
+  étape n'a échoué, mais le nouveau code n'a jamais atteint le site réel jusqu'à ce
+  qu'un utilisateur signale ne pas voir les nouvelles fonctionnalités. Lien
+  symbolique restauré, `public_html/build` resynchronisé avec le dernier build.
 - **2026-10-24** — **Permissions granulaires par collaborateur** (voir §5.19). Ajouter
   un collaborateur donnait jusqu'ici un accès complet et automatique à tout
   (clients, produits, factures, dépenses, audience, messagerie, dashboard) ; le
