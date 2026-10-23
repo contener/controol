@@ -179,6 +179,9 @@ class FactureController extends Controller
             'date_emission' => now()->toDateString(),
             'date_echeance' => null,
             'remise' => $facture->remise,
+            // Un Reçu doit toujours avoir une avance renseignée (voir StoreFactureRequest) --
+            // creer() n'est pas filtré par cette validation ici, donc on la reporte explicitement.
+            'montant_avance' => $facture->montant_avance,
             'notes' => $facture->notes,
             'statut' => 'brouillon',
             'modele_id' => $modeleId,

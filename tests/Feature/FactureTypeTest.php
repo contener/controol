@@ -145,7 +145,7 @@ class FactureTypeTest extends TestCase
         [$client] = $this->creerClientEtProduit($boutiqueId);
         $this->actingAs($user);
 
-        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu']))->assertRedirect();
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu', 'montant_avance' => 50]))->assertRedirect();
 
         $facture = Facture::latest('id')->first();
         $this->assertSame('recu', $facture->type->value);
@@ -164,7 +164,7 @@ class FactureTypeTest extends TestCase
         [$client, $produit] = $this->creerClientEtProduit($boutiqueId);
         $this->actingAs($user);
 
-        $this->post('/factures', $this->payload($client->id, $produit->id, ['type' => 'recu']))->assertRedirect();
+        $this->post('/factures', $this->payload($client->id, $produit->id, ['type' => 'recu', 'montant_avance' => 50]))->assertRedirect();
 
         $this->assertSame(47, $produit->fresh()->quantite_stock);
         $this->assertDatabaseCount('mouvements_stock', 1);
@@ -178,7 +178,7 @@ class FactureTypeTest extends TestCase
         $this->actingAs($user);
 
         $this->post('/factures', $this->payload($client->id, null, ['type' => 'facture']));
-        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu']));
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu', 'montant_avance' => 50]));
 
         $response = $this->get('/factures?type=recu');
 
@@ -195,7 +195,7 @@ class FactureTypeTest extends TestCase
         [$client] = $this->creerClientEtProduit($boutiqueId);
         $this->actingAs($user);
 
-        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu']));
+        $this->post('/factures', $this->payload($client->id, null, ['type' => 'recu', 'montant_avance' => 50]));
         $facture = Facture::latest('id')->first();
 
         $apercu = app(\App\Support\FactureApercuBuilder::class)->construire($facture);
@@ -238,6 +238,24 @@ class FactureTypeTest extends TestCase
         $this->assertNotSame($original->id, $copie->id);
         $this->assertSame('proforma', $copie->type->value);
         $this->assertStringStartsWith('PRO-', $copie->numero);
+    }
+
+    public function test_duplicating_a_recu_preserves_its_montant_avance(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $boutiqueId = $user->current_boutique_id;
+        [$client, $produit] = $this->creerClientEtProduit($boutiqueId);
+        $this->actingAs($user);
+
+        $this->post('/factures', $this->payload($client->id, $produit->id, ['type' => 'recu', 'montant_avance' => 150]));
+        $original = Facture::latest('id')->first();
+
+        $this->post("/factures/{$original->id}/dupliquer")->assertRedirect();
+
+        $copie = Facture::latest('id')->first();
+        $this->assertNotSame($original->id, $copie->id);
+        $this->assertSame('recu', $copie->type->value);
+        $this->assertSame(150.0, (float) $copie->montant_avance, 'Un Reçu dupliqué doit toujours conserver une avance renseignée (jamais null).');
     }
 
     public function test_index_filters_by_type(): void
