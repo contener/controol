@@ -93,25 +93,98 @@ class Boutique extends Model
     }
 
     /**
+     * Les 7 fonctionnalités importantes dont l'accès se donne/retire individuellement
+     * par collaborateur (voir autoriseCollaborateurPour()) -- une colonne booléenne par
+     * entrée, jamais une table de permissions générique (sur-ingénierie pour 7 cases
+     * fixes). Toujours false par défaut à la création d'un collaborateur : le
+     * propriétaire doit cocher explicitement, jamais un accès automatique.
+     */
+    public const PERMISSIONS_COLLABORATEUR = [
+        'acces_dashboard',
+        'acces_clients',
+        'acces_produits',
+        'acces_factures',
+        'acces_depenses',
+        'acces_audience',
+        'acces_messagerie',
+    ];
+
+    /**
      * Comptes créés par le propriétaire pour l'aider à gérer cette boutique au
      * quotidien (plan Basique/Pro, voir plans.personnel_boutique) -- table de liaison
-     * pure, aucune colonne rôle/permission en v1 : un collaborateur a un accès complet
-     * aux opérations courantes (voir estGereePar()), seules la boutique elle-même,
-     * l'abonnement et la gestion des collaborateurs restent réservés au propriétaire.
+     * avec une colonne par permission (voir PERMISSIONS_COLLABORATEUR). La boutique
+     * elle-même, l'abonnement et la gestion des collaborateurs restent réservés au
+     * seul propriétaire, jamais une permission accordable.
      */
     public function collaborateurs(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'boutique_collaborateurs')->withTimestamps();
+        return $this->belongsToMany(User::class, 'boutique_collaborateurs')
+            ->withTimestamps()
+            ->withPivot(self::PERMISSIONS_COLLABORATEUR);
     }
 
     /**
-     * Point unique réutilisé par toutes les Policies de cette boutique (Client,
-     * Produit, Facture, Dépense, DestinationSociale, CampagneSociale, Conversation) --
-     * jamais dupliquer "propriétaire OU collaborateur" dans chaque Policy séparément.
+     * Point unique réutilisé par les Policies qui n'ont volontairement pas de
+     * permission dédiée (DestinationSociale, CampagneSociale -- hors périmètre de la
+     * demande de permissions granulaires) et par les endroits qui ont seulement besoin
+     * de savoir "propriétaire OU collaborateur quelconque", sans distinction de
+     * fonctionnalité (ex. masquer le bouton "Suivre" sur la page publique).
      */
     public function estGereePar(User $user): bool
     {
         return $user->id === $this->user_id || $this->collaborateurs()->whereKey($user->id)->exists();
+    }
+
+    /**
+     * Point unique réutilisé par les Policies/contrôleurs des 7 fonctionnalités
+     * importantes (Dashboard, Clients, Produits/Stock, Factures, Dépenses, Audience,
+     * Messagerie) -- le propriétaire a toujours accès à tout ; un collaborateur
+     * uniquement si la permission correspondante a été explicitement cochée pour lui.
+     */
+    public function autoriseCollaborateurPour(User $user, string $permission): bool
+    {
+        if ($user->id === $this->user_id) {
+            return true;
+        }
+
+        $pivot = $this->collaborateurs()->whereKey($user->id)->first()?->pivot;
+
+        return $pivot !== null && (bool) $pivot->{$permission};
+    }
+
+    public function autoriseDashboard(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_dashboard');
+    }
+
+    public function autoriseClients(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_clients');
+    }
+
+    public function autoriseProduits(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_produits');
+    }
+
+    public function autoriseFactures(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_factures');
+    }
+
+    public function autoriseDepenses(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_depenses');
+    }
+
+    public function autoriseAudience(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_audience');
+    }
+
+    public function autoriseMessagerie(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_messagerie');
     }
 
     public function nombreAbonnes(): int

@@ -10,27 +10,27 @@ class FacturePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->currentBoutique !== null;
+        return $user->currentBoutique?->autoriseFactures($user) ?? false;
     }
 
     public function view(User $user, Facture $facture): bool
     {
-        return $facture->boutique->estGereePar($user);
+        return $facture->boutique->autoriseFactures($user);
     }
 
     public function create(User $user): bool
     {
-        return $user->currentBoutique !== null;
+        return $user->currentBoutique?->autoriseFactures($user) ?? false;
     }
 
     public function update(User $user, Facture $facture): bool
     {
-        return $facture->boutique->estGereePar($user) && $facture->estModifiable();
+        return $facture->boutique->autoriseFactures($user) && $facture->estModifiable();
     }
 
     public function delete(User $user, Facture $facture): bool
     {
-        return $facture->boutique->estGereePar($user) && $facture->estSupprimable();
+        return $facture->boutique->autoriseFactures($user) && $facture->estSupprimable();
     }
 
     /**

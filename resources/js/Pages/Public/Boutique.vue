@@ -21,6 +21,7 @@ const props = defineProps({
     estAbonne: { type: Boolean, default: false },
     visiteurABoutique: { type: Boolean, default: false },
     estProprietaire: { type: Boolean, default: false },
+    peutAjouterProduit: { type: Boolean, default: false },
     produitsAimes: { type: Array, default: () => [] },
 });
 
@@ -261,7 +262,7 @@ const conversationPourModal = computed(() => {
             />
 
             <AjouterProduitModal
-                v-if="estProprietaire"
+                v-if="peutAjouterProduit"
                 :show="ajoutProduitOuvert"
                 :boutique-slug="boutique.slug"
                 @close="ajoutProduitOuvert = false"
@@ -290,7 +291,7 @@ const conversationPourModal = computed(() => {
         />
 
         <button
-            v-if="estProprietaire"
+            v-if="peutAjouterProduit"
             type="button"
             title="Ajouter un nouveau produit"
             aria-label="Ajouter un nouveau produit"

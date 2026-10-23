@@ -13,11 +13,24 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request, BoutiqueStatsService $statsService): Response
     {
-        $boutique = $request->user()->currentBoutique;
+        $user = $request->user();
+        $boutique = $user->currentBoutique;
 
         if (! $boutique) {
             return Inertia::render('Dashboard', [
                 'aucuneBoutique' => true,
+                'essaiActif' => $this->essaiActif($request),
+            ]);
+        }
+
+        // Le Dashboard est la page d'accueil par défaut après connexion (config/fortify.php
+        // 'home') -- un collaborateur sans la permission "Dashboard" doit donc voir un
+        // état d'accès refusé "doux" ici plutôt qu'un 403 brut, sans quoi il resterait
+        // bloqué dès la connexion sans aucune indication de quoi faire.
+        if (! $boutique->autoriseDashboard($user)) {
+            return Inertia::render('Dashboard', [
+                'accesRefuse' => true,
+                'boutique' => $boutique->only(['id', 'nom', 'slug', 'devise', 'statut']),
                 'essaiActif' => $this->essaiActif($request),
             ]);
         }

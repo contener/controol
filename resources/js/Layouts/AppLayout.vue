@@ -27,6 +27,12 @@ const mesConversationsNonLues = computed(() => page.props.mesConversationsNonLue
 const boutiqueCouranteId = computed(() => page.props.auth.user?.current_boutique_id);
 const boutiqueCourante = computed(() => mesBoutiques.value.find((b) => b.id === boutiqueCouranteId.value));
 
+// N'affiche/masque les liens que par confort -- les Policies/contrôleurs (voir
+// Boutique::autoriseCollaborateurPour()) font toujours foi, jamais cette visibilité
+// seule. Pas de boutique courante résolue (pendant un chargement partiel) : on
+// affiche par défaut plutôt que de faire disparaître tout le menu.
+const peutAcceder = (permission) => boutiqueCourante.value?.permissions?.[permission] ?? true;
+
 // N'affiche/masque des liens que par confort — le backend (EnsureAdminAccess /
 // EnsureAdminPermission / super_admin) fait toujours foi, jamais cette visibilité seule.
 const estSuperAdmin = computed(() => page.props.auth.user?.role === 'super_admin');
@@ -68,34 +74,34 @@ const logout = () => {
                                 <NavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                                     {{ t('nav.global_view') }}
                                 </NavLink>
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                                <NavLink v-if="peutAcceder('dashboard')" :href="route('dashboard')" :active="route().current('dashboard')">
                                     {{ t('nav.dashboard') }}
                                 </NavLink>
                                 <NavLink :href="route('marketplace.index')" :active="route().current('marketplace.*')" class="font-semibold">
                                     🛍️ {{ t('nav.marketplace') }}
                                 </NavLink>
-                                <NavLink :href="route('clients.index')" :active="route().current('clients.*')">
+                                <NavLink v-if="peutAcceder('clients')" :href="route('clients.index')" :active="route().current('clients.*')">
                                     {{ t('nav.clients') }}
                                 </NavLink>
-                                <NavLink :href="route('produits.index')" :active="route().current('produits.*')">
+                                <NavLink v-if="peutAcceder('produits')" :href="route('produits.index')" :active="route().current('produits.*')">
                                     {{ t('nav.products') }}
                                 </NavLink>
-                                <NavLink :href="route('audience.index')" :active="route().current('audience.*')">
+                                <NavLink v-if="peutAcceder('audience')" :href="route('audience.index')" :active="route().current('audience.*')">
                                     👥 {{ t('nav.audience') }}
                                 </NavLink>
                                 <NavLink v-if="boutiqueCourante?.est_proprietaire" :href="route('boutique.collaborateurs.index')" :active="route().current('boutique.collaborateurs.*')">
                                     🔑 {{ t('nav.team') }}
                                 </NavLink>
-                                <NavLink :href="route('stock.index')" :active="route().current('stock.*')">
+                                <NavLink v-if="peutAcceder('produits')" :href="route('stock.index')" :active="route().current('stock.*')">
                                     {{ t('nav.stock') }}
                                 </NavLink>
-                                <NavLink :href="route('factures.index')" :active="route().current('factures.*')">
+                                <NavLink v-if="peutAcceder('factures')" :href="route('factures.index')" :active="route().current('factures.*')">
                                     {{ t('nav.invoices') }}
                                 </NavLink>
-                                <NavLink :href="route('depenses.index')" :active="route().current('depenses.*')">
+                                <NavLink v-if="peutAcceder('depenses')" :href="route('depenses.index')" :active="route().current('depenses.*')">
                                     {{ t('nav.expenses') }}
                                 </NavLink>
-                                <NavLink :href="route('messages.index')" :active="route().current('messages.*')" class="relative">
+                                <NavLink v-if="peutAcceder('messagerie')" :href="route('messages.index')" :active="route().current('messages.*')" class="relative">
                                     {{ t('nav.messages') }}
                                     <span v-if="messagesNonLus > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
                                         {{ messagesNonLus > 99 ? '99+' : messagesNonLus }}
@@ -279,34 +285,34 @@ const logout = () => {
                         <ResponsiveNavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                             {{ t('nav.global_view') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
+                        <ResponsiveNavLink v-if="peutAcceder('dashboard')" :href="route('dashboard')" :active="route().current('dashboard')">
                             {{ t('nav.dashboard') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('marketplace.index')" :active="route().current('marketplace.*')">
                             🛍️ {{ t('nav.marketplace') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('clients.index')" :active="route().current('clients.*')">
+                        <ResponsiveNavLink v-if="peutAcceder('clients')" :href="route('clients.index')" :active="route().current('clients.*')">
                             {{ t('nav.clients') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('produits.index')" :active="route().current('produits.*')">
+                        <ResponsiveNavLink v-if="peutAcceder('produits')" :href="route('produits.index')" :active="route().current('produits.*')">
                             {{ t('nav.products') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('audience.index')" :active="route().current('audience.*')">
+                        <ResponsiveNavLink v-if="peutAcceder('audience')" :href="route('audience.index')" :active="route().current('audience.*')">
                             👥 {{ t('nav.audience') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="boutiqueCourante?.est_proprietaire" :href="route('boutique.collaborateurs.index')" :active="route().current('boutique.collaborateurs.*')">
                             🔑 {{ t('nav.team') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('stock.index')" :active="route().current('stock.*')">
+                        <ResponsiveNavLink v-if="peutAcceder('produits')" :href="route('stock.index')" :active="route().current('stock.*')">
                             {{ t('nav.stock') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('factures.index')" :active="route().current('factures.*')">
+                        <ResponsiveNavLink v-if="peutAcceder('factures')" :href="route('factures.index')" :active="route().current('factures.*')">
                             {{ t('nav.invoices') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('depenses.index')" :active="route().current('depenses.*')">
+                        <ResponsiveNavLink v-if="peutAcceder('depenses')" :href="route('depenses.index')" :active="route().current('depenses.*')">
                             {{ t('nav.expenses') }}
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('messages.index')" :active="route().current('messages.*')">
+                        <ResponsiveNavLink v-if="peutAcceder('messagerie')" :href="route('messages.index')" :active="route().current('messages.*')">
                             {{ t('nav.messages') }}
                             <span v-if="messagesNonLus > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
                                 {{ messagesNonLus > 99 ? '99+' : messagesNonLus }}

@@ -28,12 +28,19 @@ class AudienceController extends Controller
      */
     public function index(Request $request): Response
     {
-        $autorise = (bool) $request->user()->planActif()?->audience;
+        $user = $request->user();
+        $planAutorise = (bool) $user->planActif()?->audience;
+        $permissionAutorisee = $user->currentBoutique?->autoriseAudience($user) ?? false;
+        $autorise = $planAutorise && $permissionAutorisee;
         $statistiques = $this->statistiques();
 
         if (! $autorise) {
             return Inertia::render('Audience/Index', [
                 'autorise' => false,
+                // Un collaborateur sans la permission "Audience" voit un message différent
+                // de celui d'un propriétaire dont le plan ne couvre pas la fonctionnalité --
+                // lui suggérer de "passer à un plan supérieur" serait trompeur et inutile.
+                'accesRefuseParProprietaire' => $planAutorise && ! $permissionAutorisee,
                 'statistiques' => $statistiques,
                 'membres' => null,
                 'filtres' => [],
@@ -83,8 +90,14 @@ class AudienceController extends Controller
 
     public function show(Request $request, AudienceMembre $membre): Response|RedirectResponse
     {
-        if (! $request->user()->planActif()?->audience) {
+        $user = $request->user();
+
+        if (! $user->planActif()?->audience) {
             return redirect()->route('audience.index')->with('flash_error', "L'audience détaillée nécessite le plan Basique ou Pro.");
+        }
+
+        if (! $user->currentBoutique?->autoriseAudience($user)) {
+            return redirect()->route('audience.index')->with('flash_error', "Vous n'avez pas accès à l'audience. Demandez l'accès au propriétaire de la boutique.");
         }
 
         $membre->load(['user:id,name', 'interactions' => fn ($q) => $q->with('produit:id,nom,photo_path')->orderByDesc('created_at')]);
@@ -118,6 +131,7 @@ class AudienceController extends Controller
     public function relancerWhatsapp(Request $request, AudienceMembre $membre, AudienceService $audience): JsonResponse
     {
         abort_unless((bool) $request->user()->planActif()?->audience, 403, "Cette fonctionnalité nécessite le plan Basique ou Pro.");
+        abort_unless((bool) $request->user()->currentBoutique?->autoriseAudience($request->user()), 403, "Vous n'avez pas accès à l'audience.");
 
         $numero = $membre->contactAffiche();
         abort_if(! $numero, 422, "Aucun contact disponible pour cette personne.");
@@ -148,6 +162,7 @@ class AudienceController extends Controller
     public function relancerMessage(Request $request, AudienceMembre $membre): RedirectResponse
     {
         abort_unless((bool) $request->user()->planActif()?->audience, 403, "Cette fonctionnalité nécessite le plan Basique ou Pro.");
+        abort_unless((bool) $request->user()->currentBoutique?->autoriseAudience($request->user()), 403, "Vous n'avez pas accès à l'audience.");
 
         $data = $request->validate(['message' => ['required', 'string', 'max:2000']]);
 
@@ -190,6 +205,7 @@ class AudienceController extends Controller
     public function updateStatut(Request $request, AudienceMembre $membre): RedirectResponse
     {
         abort_unless((bool) $request->user()->planActif()?->audience, 403, "Cette fonctionnalité nécessite le plan Basique ou Pro.");
+        abort_unless((bool) $request->user()->currentBoutique?->autoriseAudience($request->user()), 403, "Vous n'avez pas accès à l'audience.");
 
         $data = $request->validate(['statut' => ['required', 'string', Rule::in(self::STATUTS)]]);
 

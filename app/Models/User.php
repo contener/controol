@@ -169,7 +169,9 @@ class User extends Authenticatable
      */
     public function boutiquesCollaborateur(): BelongsToMany
     {
-        return $this->belongsToMany(Boutique::class, 'boutique_collaborateurs')->withTimestamps();
+        return $this->belongsToMany(Boutique::class, 'boutique_collaborateurs')
+            ->withTimestamps()
+            ->withPivot(Boutique::PERMISSIONS_COLLABORATEUR);
     }
 
     public function currentBoutique(): BelongsTo

@@ -9,26 +9,26 @@ class ClientPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->currentBoutique !== null;
+        return $user->currentBoutique?->autoriseClients($user) ?? false;
     }
 
     public function view(User $user, Client $client): bool
     {
-        return $client->boutique->estGereePar($user);
+        return $client->boutique->autoriseClients($user);
     }
 
     public function create(User $user): bool
     {
-        return $user->currentBoutique !== null;
+        return $user->currentBoutique?->autoriseClients($user) ?? false;
     }
 
     public function update(User $user, Client $client): bool
     {
-        return $client->boutique->estGereePar($user);
+        return $client->boutique->autoriseClients($user);
     }
 
     public function delete(User $user, Client $client): bool
     {
-        return $client->boutique->estGereePar($user);
+        return $client->boutique->autoriseClients($user);
     }
 }

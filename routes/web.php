@@ -115,6 +115,7 @@ Route::middleware([
         Route::prefix('equipe')->name('boutique.collaborateurs.')->group(function () {
             Route::get('/', [BoutiqueCollaborateurController::class, 'index'])->name('index');
             Route::post('/', [BoutiqueCollaborateurController::class, 'store'])->name('store');
+            Route::patch('/{collaborateur}', [BoutiqueCollaborateurController::class, 'update'])->name('update');
             Route::delete('/{collaborateur}', [BoutiqueCollaborateurController::class, 'destroy'])->name('destroy');
         });
 

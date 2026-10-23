@@ -11,6 +11,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    accesRefuse: {
+        type: Boolean,
+        default: false,
+    },
     boutique: Object,
     stats: Object,
     essaiActif: {
@@ -61,6 +65,14 @@ const statutClasses = {
                 <Link :href="route('boutiques.create')">
                     <PrimaryButton>{{ t('dashboard.create_first_shop') }}</PrimaryButton>
                 </Link>
+            </div>
+        </div>
+
+        <div v-else-if="accesRefuse" class="py-8">
+            <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 text-center bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-10">
+                <span class="text-2xl">🔒</span>
+                <p class="text-slate-600 dark:text-slate-300 mt-2">Vous n'avez pas accès au tableau de bord de {{ boutique?.nom }}.</p>
+                <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">Demandez l'accès au propriétaire de la boutique (page Équipe).</p>
             </div>
         </div>
 

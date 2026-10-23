@@ -62,11 +62,37 @@ class HandleInertiaRequests extends Middleware
                 // sélecteur de boutique d'AppLayout.vue resterait vide pour un
                 // collaborateur malgré un accès réel. est_proprietaire distingue les
                 // deux côté Vue (badge, et visibilité du lien de gestion de l'équipe).
+                // permissions pilote l'affichage des liens de nav (Dashboard, Clients...) --
+                // toujours tout à true pour un propriétaire, jamais une simple convenance
+                // d'affichage côté client : les Policies/contrôleurs vérifient aussi, voir
+                // Boutique::autoriseCollaborateurPour().
+                $toutesPermissions = [
+                    'dashboard' => true,
+                    'clients' => true,
+                    'produits' => true,
+                    'factures' => true,
+                    'depenses' => true,
+                    'audience' => true,
+                    'messagerie' => true,
+                ];
+
                 $possedees = $user->boutiques()->get(['id', 'nom', 'slug', 'statut'])
-                    ->map(fn ($b) => [...$b->only(['id', 'nom', 'slug', 'statut']), 'est_proprietaire' => true]);
+                    ->map(fn ($b) => [...$b->only(['id', 'nom', 'slug', 'statut']), 'est_proprietaire' => true, 'permissions' => $toutesPermissions]);
 
                 $collaborees = $user->boutiquesCollaborateur()->get(['boutiques.id', 'boutiques.nom', 'boutiques.slug', 'boutiques.statut'])
-                    ->map(fn ($b) => [...$b->only(['id', 'nom', 'slug', 'statut']), 'est_proprietaire' => false]);
+                    ->map(fn ($b) => [
+                        ...$b->only(['id', 'nom', 'slug', 'statut']),
+                        'est_proprietaire' => false,
+                        'permissions' => [
+                            'dashboard' => (bool) $b->pivot->acces_dashboard,
+                            'clients' => (bool) $b->pivot->acces_clients,
+                            'produits' => (bool) $b->pivot->acces_produits,
+                            'factures' => (bool) $b->pivot->acces_factures,
+                            'depenses' => (bool) $b->pivot->acces_depenses,
+                            'audience' => (bool) $b->pivot->acces_audience,
+                            'messagerie' => (bool) $b->pivot->acces_messagerie,
+                        ],
+                    ]);
 
                 return $possedees->concat($collaborees)->sortBy('nom')->values();
             },

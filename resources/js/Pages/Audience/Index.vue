@@ -8,6 +8,7 @@ import SelectInput from '@/Components/SelectInput.vue';
 
 const props = defineProps({
     autorise: Boolean,
+    accesRefuseParProprietaire: { type: Boolean, default: false },
     statistiques: Object,
     membres: Object,
     filtres: Object,
@@ -86,7 +87,16 @@ const statutLabels = {
                         </div>
                     </div>
 
-                    <div v-if="!autorise" class="absolute inset-0 flex flex-col items-center justify-center text-center gap-2 px-4">
+                    <div v-if="!autorise && accesRefuseParProprietaire" class="absolute inset-0 flex flex-col items-center justify-center text-center gap-2 px-4">
+                        <span class="text-2xl">🔒</span>
+                        <p class="text-sm font-medium text-slate-700 dark:text-slate-200">
+                            Vous n'avez pas accès à l'audience
+                        </p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md">
+                            Demandez l'accès au propriétaire de cette boutique (page Équipe).
+                        </p>
+                    </div>
+                    <div v-else-if="!autorise" class="absolute inset-0 flex flex-col items-center justify-center text-center gap-2 px-4">
                         <span class="text-2xl">🔒</span>
                         <p class="text-sm font-medium text-slate-700 dark:text-slate-200">
                             Débloquez votre audience avec le plan Basique (5 000 FCFA/mois)

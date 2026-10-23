@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCollaborateurRequest;
+use App\Http\Requests\UpdateCollaborateurPermissionsRequest;
+use App\Models\Boutique;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,6 +30,7 @@ class BoutiqueCollaborateurController extends Controller
 
         return Inertia::render('Boutiques/Collaborateurs', [
             'autorise' => $autorise,
+            'permissionsDisponibles' => Boutique::PERMISSIONS_COLLABORATEUR,
             'collaborateurs' => $autorise
                 ? $boutique->collaborateurs()->orderBy('name')->get()->map(fn (User $u) => [
                     'id' => $u->id,
@@ -35,6 +38,7 @@ class BoutiqueCollaborateurController extends Controller
                     'email' => $u->email,
                     'telephone' => $u->telephone,
                     'ajoute_le' => $u->pivot->created_at->format('d/m/Y'),
+                    'permissions' => $this->permissionsDuPivot($u),
                 ])
                 : [],
         ]);
@@ -59,9 +63,21 @@ class BoutiqueCollaborateurController extends Controller
             'current_boutique_id' => $boutique->id,
         ])->save();
 
-        $boutique->collaborateurs()->attach($collaborateur->id);
+        // Chaque permission omise ou décochée reste à false (défaut colonne) -- jamais
+        // d'accès automatique, même pour les fonctionnalités non cochées explicitement.
+        $boutique->collaborateurs()->attach($collaborateur->id, $this->permissionsCochees($data));
 
         return back()->with('flash_success', "{$collaborateur->name} a été ajouté comme collaborateur de {$boutique->nom}.");
+    }
+
+    public function update(UpdateCollaborateurPermissionsRequest $request, User $collaborateur): RedirectResponse
+    {
+        $boutique = $request->user()->currentBoutique;
+        abort_unless($boutique->collaborateurs()->whereKey($collaborateur->id)->exists(), 404);
+
+        $boutique->collaborateurs()->updateExistingPivot($collaborateur->id, $this->permissionsCochees($request->validated()));
+
+        return back()->with('flash_success', "Accès de {$collaborateur->name} mis à jour.");
     }
 
     public function destroy(Request $request, User $collaborateur): RedirectResponse
@@ -81,5 +97,25 @@ class BoutiqueCollaborateurController extends Controller
         }
 
         return back()->with('flash_success', "{$collaborateur->name} n'a plus accès à {$boutique->nom}.");
+    }
+
+    private function permissionsCochees(array $data): array
+    {
+        $permissions = [];
+        foreach (Boutique::PERMISSIONS_COLLABORATEUR as $colonne) {
+            $permissions[$colonne] = (bool) ($data[$colonne] ?? false);
+        }
+
+        return $permissions;
+    }
+
+    private function permissionsDuPivot(User $u): array
+    {
+        $permissions = [];
+        foreach (Boutique::PERMISSIONS_COLLABORATEUR as $colonne) {
+            $permissions[$colonne] = (bool) $u->pivot->{$colonne};
+        }
+
+        return $permissions;
     }
 }
