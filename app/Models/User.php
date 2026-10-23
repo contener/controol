@@ -233,13 +233,21 @@ class User extends Authenticatable
      * volontairement inchangé : une page "Mon abonnement" consultée par un
      * collaborateur doit continuer de refléter son absence réelle d'abonnement
      * personnel, pas celui du propriétaire.
+     *
+     * Requête dédiée sur une seule colonne (user_id) plutôt que
+     * $this->currentBoutique -- plusieurs endroits du projet pré-chargent déjà cette
+     * relation avec une liste de colonnes restreinte (ex. `with('currentBoutique:id,whatsapp')`
+     * dans Admin\UtilisateurController) qui n'inclut pas forcément user_id ; s'appuyer
+     * sur la relation telle quelle casserait silencieusement dans ces contextes.
      */
     public function planActif(): ?Plan
     {
-        $boutique = $this->currentBoutique;
+        if ($this->current_boutique_id) {
+            $proprietaireId = Boutique::whereKey($this->current_boutique_id)->value('user_id');
 
-        if ($boutique && $boutique->user_id !== $this->id) {
-            return $boutique->proprietaire->planActif();
+            if ($proprietaireId && $proprietaireId !== $this->id) {
+                return User::find($proprietaireId)?->planActif();
+            }
         }
 
         return $this->abonnementActif()?->plan;
