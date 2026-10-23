@@ -121,8 +121,11 @@ class BoutiqueCollaborateurTest extends TestCase
 
         // current_boutique_id a été remis à null -- EnsureBoutiqueSelected redirige
         // avant même d'atteindre la Policy, confirmant que l'accès est bien coupé.
+        // actingAs() réutilise l'instance PHP fournie telle quelle (ne la refetch jamais
+        // depuis la base) -- fresh() indispensable pour refléter la mise à jour faite par
+        // la requête DELETE précédente.
         Client::create(['boutique_id' => $boutique->id, 'nom' => 'Client X', 'etiquette' => 'client']);
-        $this->actingAs($collaborateur)->get('/clients')->assertRedirect(route('boutiques.create'));
+        $this->actingAs($collaborateur->fresh())->get('/clients')->assertRedirect(route('boutiques.create'));
     }
 
     public function test_collaborator_from_another_boutique_cannot_be_removed_by_a_different_owner(): void
