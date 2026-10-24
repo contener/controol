@@ -134,7 +134,7 @@ const logout = () => {
 
                                     <template #content>
                                         <div class="w-64">
-                                            <div class="block px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
+                                            <div class="block px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                                                 {{ t('nav.my_shops') }}
                                             </div>
 
@@ -188,7 +188,7 @@ const logout = () => {
 
                                     <template #content>
                                         <!-- Account Management -->
-                                        <div class="block px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
+                                        <div class="block px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                                             {{ t('nav.manage_account') }}
                                         </div>
 
@@ -366,7 +366,7 @@ const logout = () => {
                             <!-- Boutique Switcher -->
                             <div class="border-t border-slate-200 dark:border-slate-700" />
 
-                            <div class="block px-4 py-2 text-xs text-slate-400 dark:text-slate-500">
+                            <div class="block px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                                 {{ t('nav.my_shops') }}
                             </div>
 
