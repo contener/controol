@@ -60,7 +60,7 @@ const logout = () => {
             <nav class="sticky top-0 z-30 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex justify-between h-16">
+                    <div class="flex justify-between h-20">
                         <div class="flex min-w-0">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
@@ -77,7 +77,18 @@ const logout = () => {
                                  standard. Sans ceci, les liens en trop poussaient le sélecteur de
                                  boutique/menu de compte/cloche de notifications hors de l'écran,
                                  les rendant invisibles -- jamais acceptable pour des contrôles
-                                 essentiels, voir le défilement comme solution, pas le masquage. -->
+                                 essentiels, voir le défilement comme solution, pas le masquage.
+                                 Dès qu'un axe (ici x) passe à une valeur autre que visible, la spec
+                                 CSS force l'AUTRE axe (y) à devenir "auto" aussi -- sans assez de
+                                 hauteur dans la barre (voir h-20 plus haut, augmenté depuis h-16
+                                 pour cette raison précise), les emoji des liens (🛍️ 👥 🔑,
+                                 légèrement plus hauts que le texte) se retrouvaient rognés en
+                                 haut/bas au lieu de simplement déborder sans gêne comme avant.
+                                 Pas d'items-center ici volontairement : NavLink (inline-flex
+                                 items-center) centre déjà son propre contenu, et le wrapper doit
+                                 garder le stretch par défaut pour que la bordure active (border-b-2)
+                                 reste collée au bas de la barre -- un items-center ici la ferait
+                                 flotter au milieu de la barre au lieu de souligner son bord. -->
                             <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex overflow-x-auto min-w-0">
                                 <NavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                                     {{ t('nav.global_view') }}
@@ -298,7 +309,7 @@ const logout = () => {
                      cela, ce panneau grandissait à l'intérieur de la nav sticky et pouvait
                      dépasser la hauteur de l'écran, obligeant à faire défiler toute la page
                      pour atteindre les dernières options (changement de boutique, déconnexion). -->
-                <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shadow-lg">
+                <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden fixed inset-x-0 top-20 bottom-0 z-40 overflow-y-auto bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shadow-lg">
                     <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                             {{ t('nav.global_view') }}
