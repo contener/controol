@@ -61,7 +61,7 @@ const logout = () => {
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between h-16">
-                        <div class="flex">
+                        <div class="flex min-w-0">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
                                 <Link :href="route('dashboard')">
@@ -70,7 +70,15 @@ const logout = () => {
                             </div>
 
                             <!-- Navigation Links -->
-                            <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex">
+                            <!-- overflow-x-auto + min-w-0 (requis pour que le défilement s'applique
+                                 au lieu de déborder hors du conteneur, piège classique flexbox) : avec
+                                 toutes les fonctionnalités activées (plan Pro + propriétaire), une
+                                 douzaine de liens ne tient plus sur un écran d'ordinateur portable
+                                 standard. Sans ceci, les liens en trop poussaient le sélecteur de
+                                 boutique/menu de compte/cloche de notifications hors de l'écran,
+                                 les rendant invisibles -- jamais acceptable pour des contrôles
+                                 essentiels, voir le défilement comme solution, pas le masquage. -->
+                            <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex overflow-x-auto min-w-0">
                                 <NavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                                     {{ t('nav.global_view') }}
                                 </NavLink>
@@ -116,16 +124,23 @@ const logout = () => {
                             </div>
                         </div>
 
-                        <div class="hidden sm:flex sm:items-center sm:ms-6">
+                        <!-- shrink-0 : ces contrôles (changer de boutique, gérer le compte) ne
+                             doivent jamais être compressés ni poussés hors de l'écran par les
+                             liens de navigation qui défilent à côté -- toujours entièrement
+                             visibles, quel que soit le nombre de liens actifs. -->
+                        <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0">
                             <!-- Boutique Switcher -->
                             <div class="ms-3 relative">
                                 <Dropdown align="right" width="64">
                                     <template #trigger>
                                         <span class="inline-flex rounded-md">
                                             <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-100 focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-700 active:bg-slate-50 dark:active:bg-slate-700 transition ease-in-out duration-150">
-                                                🏪 {{ boutiqueCourante?.nom ?? t('nav.no_shop') }}
+                                                <!-- Nom de boutique borné (max-w + truncate) : un nom très
+                                                     long ne doit jamais élargir ce bouton au point de
+                                                     pousser le menu de compte/la cloche hors de l'écran. -->
+                                                <span class="truncate max-w-[9rem]">🏪 {{ boutiqueCourante?.nom ?? t('nav.no_shop') }}</span>
 
-                                                <svg class="ms-2 -me-0.5 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <svg class="ms-2 -me-0.5 size-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
                                                 </svg>
                                             </button>
@@ -177,9 +192,12 @@ const logout = () => {
 
                                         <span v-else class="inline-flex rounded-md">
                                             <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-slate-500 dark:text-slate-300 bg-white dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-100 focus:outline-none focus:bg-slate-50 dark:focus:bg-slate-700 active:bg-slate-50 dark:active:bg-slate-700 transition ease-in-out duration-150">
-                                                {{ $page.props.auth.user.name }}
+                                                <!-- Même principe que le nom de boutique ci-dessus : un nom
+                                                     d'utilisateur très long ne doit jamais pousser la cloche
+                                                     de notifications hors de l'écran. -->
+                                                <span class="truncate max-w-[9rem]">{{ $page.props.auth.user.name }}</span>
 
-                                                <svg class="ms-2 -me-0.5 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                <svg class="ms-2 -me-0.5 size-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                                                 </svg>
                                             </button>
@@ -242,7 +260,7 @@ const logout = () => {
                         </div>
 
                         <!-- Notifications (visible sur tous les écrans, pas seulement le menu desktop) -->
-                        <div class="flex items-center">
+                        <div class="flex items-center shrink-0">
                             <NotificationBell />
                         </div>
 
