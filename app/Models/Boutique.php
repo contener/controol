@@ -93,10 +93,10 @@ class Boutique extends Model
     }
 
     /**
-     * Les 7 fonctionnalités importantes dont l'accès se donne/retire individuellement
+     * Les 8 fonctionnalités importantes dont l'accès se donne/retire individuellement
      * par collaborateur (voir autoriseCollaborateurPour()) -- une colonne booléenne par
-     * entrée, jamais une table de permissions générique (sur-ingénierie pour 7 cases
-     * fixes). Toujours false par défaut à la création d'un collaborateur : le
+     * entrée, jamais une table de permissions générique (sur-ingénierie pour un nombre
+     * fixe de cas). Toujours false par défaut à la création d'un collaborateur : le
      * propriétaire doit cocher explicitement, jamais un accès automatique.
      */
     public const PERMISSIONS_COLLABORATEUR = [
@@ -107,6 +107,7 @@ class Boutique extends Model
         'acces_depenses',
         'acces_audience',
         'acces_messagerie',
+        'acces_vue_globale',
     ];
 
     /**
@@ -185,6 +186,11 @@ class Boutique extends Model
     public function autoriseMessagerie(User $user): bool
     {
         return $this->autoriseCollaborateurPour($user, 'acces_messagerie');
+    }
+
+    public function autoriseVueGlobale(User $user): bool
+    {
+        return $this->autoriseCollaborateurPour($user, 'acces_vue_globale');
     }
 
     public function nombreAbonnes(): int

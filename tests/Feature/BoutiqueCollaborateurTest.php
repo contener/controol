@@ -144,6 +144,53 @@ class BoutiqueCollaborateurTest extends TestCase
             ->assertInertia(fn ($page) => $page->component('Dashboard')->where('accesRefuse', true));
     }
 
+    /**
+     * La "Vue globale" (stats agrégées sur toutes les boutiques du propriétaire)
+     * était visible par tous les collaborateurs sans distinction -- devient une
+     * permission comme les autres, à false par défaut.
+     */
+    public function test_collaborator_without_the_permission_cannot_access_vue_globale(): void
+    {
+        $proprietaire = $this->creerUtilisateurAvecBoutique('pro');
+        $collaborateur = User::factory()->create();
+        $boutique = $proprietaire->currentBoutique;
+        $boutique->collaborateurs()->attach($collaborateur->id);
+        $collaborateur->forceFill(['current_boutique_id' => $boutique->id])->save();
+
+        $this->actingAs($collaborateur)->get('/compte/dashboard')->assertStatus(403);
+    }
+
+    public function test_owner_can_grant_vue_globale_to_a_collaborator(): void
+    {
+        $proprietaire = $this->creerUtilisateurAvecBoutique('pro');
+        $proprietaire->planActif()->update(['personnel_boutique' => true]);
+        $collaborateur = User::factory()->create();
+        $boutique = $proprietaire->currentBoutique;
+        $boutique->collaborateurs()->attach($collaborateur->id);
+        $collaborateur->forceFill(['current_boutique_id' => $boutique->id])->save();
+
+        $this->actingAs($proprietaire)->patch("/equipe/{$collaborateur->id}", ['acces_vue_globale' => true])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('boutique_collaborateurs', [
+            'boutique_id' => $boutique->id,
+            'user_id' => $collaborateur->id,
+            'acces_vue_globale' => true,
+        ]);
+        $this->actingAs($collaborateur->fresh())->get('/compte/dashboard')->assertOk();
+    }
+
+    /**
+     * Un propriétaire garde toujours un accès total, y compris à la vue globale de
+     * son propre compte -- cette permission ne concerne que les collaborateurs.
+     */
+    public function test_owner_always_has_access_to_vue_globale(): void
+    {
+        $proprietaire = $this->creerUtilisateurAvecBoutique('pro');
+
+        $this->actingAs($proprietaire)->get('/compte/dashboard')->assertOk();
+    }
+
     public function test_owner_can_grant_a_specific_permission_to_an_existing_collaborator(): void
     {
         $proprietaire = $this->creerUtilisateurAvecBoutique('pro');

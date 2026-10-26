@@ -74,6 +74,7 @@ class HandleInertiaRequests extends Middleware
                     'depenses' => true,
                     'audience' => true,
                     'messagerie' => true,
+                    'vue_globale' => true,
                 ];
 
                 $possedees = $user->boutiques()->get(['id', 'nom', 'slug', 'statut'])
@@ -91,6 +92,7 @@ class HandleInertiaRequests extends Middleware
                             'depenses' => (bool) $b->pivot->acces_depenses,
                             'audience' => (bool) $b->pivot->acces_audience,
                             'messagerie' => (bool) $b->pivot->acces_messagerie,
+                            'vue_globale' => (bool) $b->pivot->acces_vue_globale,
                         ],
                     ]);
 

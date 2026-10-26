@@ -11,8 +11,19 @@ class CompteDashboardController extends Controller
 {
     public function __invoke(Request $request, CompteStatsService $statsService): Response
     {
+        $user = $request->user();
+
+        // Permission dédiée (voir Boutique::PERMISSIONS_COLLABORATEUR) -- seulement
+        // vérifiée quand une boutique courante existe : un utilisateur sans boutique
+        // (ou le propriétaire de la sienne) garde toujours accès, même vide.
+        abort_if(
+            $user->currentBoutique && ! $user->currentBoutique->autoriseVueGlobale($user),
+            403,
+            "Vous n'avez pas accès à la vue globale. Demandez l'accès au propriétaire de la boutique."
+        );
+
         $stats = $statsService->pourCompte(
-            $request->user(),
+            $user,
             $request->string('debut')->toString() ?: null,
             $request->string('fin')->toString() ?: null,
         );

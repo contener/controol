@@ -90,7 +90,7 @@ const logout = () => {
                                  reste collée au bas de la barre -- un items-center ici la ferait
                                  flotter au milieu de la barre au lieu de souligner son bord. -->
                             <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex overflow-x-auto min-w-0">
-                                <NavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
+                                <NavLink v-if="peutAcceder('vue_globale')" :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                                     {{ t('nav.global_view') }}
                                 </NavLink>
                                 <NavLink v-if="peutAcceder('dashboard')" :href="route('dashboard')" :active="route().current('dashboard')">
@@ -311,7 +311,7 @@ const logout = () => {
                      pour atteindre les dernières options (changement de boutique, déconnexion). -->
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden fixed inset-x-0 top-20 bottom-0 z-40 overflow-y-auto bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 shadow-lg">
                     <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
+                        <ResponsiveNavLink v-if="peutAcceder('vue_globale')" :href="route('compte.dashboard')" :active="route().current('compte.dashboard')">
                             {{ t('nav.global_view') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="peutAcceder('dashboard')" :href="route('dashboard')" :active="route().current('dashboard')">

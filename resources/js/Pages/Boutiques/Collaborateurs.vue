@@ -13,7 +13,7 @@ const props = defineProps({
     collaborateurs: { type: Array, default: () => [] },
 });
 
-// Libellés d'affichage des 7 permissions (voir Boutique::PERMISSIONS_COLLABORATEUR) --
+// Libellés d'affichage des 8 permissions (voir Boutique::PERMISSIONS_COLLABORATEUR) --
 // seule la liste des clés vient du backend (permissionsDisponibles), les libellés
 // restent ici car c'est un texte d'affichage, pas une règle métier.
 const libelles = {
@@ -24,6 +24,7 @@ const libelles = {
     acces_depenses: 'Dépenses',
     acces_audience: 'Audience',
     acces_messagerie: 'Messagerie',
+    acces_vue_globale: 'Vue globale (toutes boutiques)',
 };
 
 const permissionsVides = () => Object.fromEntries(props.permissionsDisponibles.map((cle) => [cle, false]));
