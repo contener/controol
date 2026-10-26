@@ -907,27 +907,44 @@ Inertia), rattachement automatique anonyme → compte, export CSV, notifications
 automatiques (le cahier des charges lui-même les place au conditionnel/les déconseille
 sans consentement explicite).
 
-### 5.19 Collaborateurs de boutique (accès multi-utilisateur, 2026-10-23 ; permissions granulaires, 2026-10-24)
+### 5.19 Collaborateurs de boutique (accès multi-utilisateur, 2026-10-23 ; permissions granulaires, 2026-10-24 ; Vue globale ajoutée aux permissions, 2026-10-26)
 
 Jusqu'ici, une boutique n'était jamais gérée que par son créateur
 (`Boutique.user_id`, propriétaire unique). À partir du plan Basique (5 000 FCFA,
 `plans.personnel_boutique`), le propriétaire peut créer des comptes et leur donner
 accès à la gestion de sa boutique.
 
-**Permissions granulaires, jamais d'accès automatique** (2026-10-24) : `boutique_collaborateurs`
-porte une colonne booléenne par fonctionnalité importante (`Boutique::PERMISSIONS_COLLABORATEUR` :
+**Permissions granulaires, jamais d'accès automatique** (2026-10-24, étendu
+2026-10-26) : `boutique_collaborateurs` porte une colonne booléenne par
+fonctionnalité importante (`Boutique::PERMISSIONS_COLLABORATEUR` :
 `acces_dashboard`, `acces_clients`, `acces_produits`, `acces_factures`,
-`acces_depenses`, `acces_audience`, `acces_messagerie`), **toutes à `false` par
-défaut**. Le propriétaire coche explicitement, à la création d'un collaborateur ou
-plus tard (`PATCH /equipe/{collaborateur}`), ce à quoi chacun a accès — v1 donnait un
-accès complet et automatique dès l'ajout, ce n'était pas souhaité.
-`Boutique::autoriseCollaborateurPour(User $user, string $permission): bool` (+ 7
-méthodes dédiées `autoriseDashboard()`/`autoriseClients()`/...) est le point unique
-réutilisé par `ClientPolicy`/`ProduitPolicy`/`FacturePolicy`/`DepensePolicy`/
-`ConversationPolicy` (remplace `$modele->boutique->estGereePar($user)` par
-`$modele->boutique->autoriseXxx($user)`) ainsi que par `AudienceController` et
-`DashboardController` (qui n'ont pas de Policy dédiée) — le propriétaire a toujours
-un accès total, quelle que soit la permission testée.
+`acces_depenses`, `acces_audience`, `acces_messagerie`, `acces_vue_globale`),
+**toutes à `false` par défaut**. Le propriétaire coche explicitement, à la création
+d'un collaborateur ou plus tard (`PATCH /equipe/{collaborateur}`), ce à quoi chacun
+a accès — v1 donnait un accès complet et automatique dès l'ajout, ce n'était pas
+souhaité. `Boutique::autoriseCollaborateurPour(User $user, string $permission): bool`
+(+ 8 méthodes dédiées `autoriseDashboard()`/`autoriseClients()`/.../`autoriseVueGlobale()`)
+est le point unique réutilisé par `ClientPolicy`/`ProduitPolicy`/`FacturePolicy`/
+`DepensePolicy`/`ConversationPolicy` (remplace `$modele->boutique->estGereePar($user)`
+par `$modele->boutique->autoriseXxx($user)`) ainsi que par `AudienceController`,
+`DashboardController` et `CompteDashboardController` (qui n'ont pas de Policy dédiée)
+— le propriétaire a toujours un accès total, quelle que soit la permission testée.
+**`acces_vue_globale`** (2026-10-26) gouverne le lien "Vue globale"
+(`compte.dashboard`, stats agrégées sur **toutes** les boutiques possédées par le
+propriétaire) — jusqu'ici visible par tous les collaborateurs sans distinction,
+signalé par l'utilisateur comme devant être un accès accordable comme les autres.
+`CompteDashboardController` ne bloque que si une boutique courante existe ET que
+l'utilisateur n'en est pas le propriétaire ET n'a pas la permission — un utilisateur
+sans boutique du tout (n'en possède et ne collabore sur aucune) garde l'accès, car
+`pourCompte()` n'expose de toute façon que les boutiques qu'il possède lui-même
+(aucune fuite de données vers les autres boutiques d'un éventuel propriétaire).
+**Contrairement à la migration d'origine** (2026_10_24_100000, qui avait
+grandfathered les collaborateurs déjà créés à `true` sur les 7 permissions pour ne
+pas les bloquer sans prévenir), la migration ajoutant `acces_vue_globale`
+(2026_10_26_140000) **n'a délibérément grandfathered personne** : tous les
+collaborateurs déjà créés perdent cet accès tant que le propriétaire ne le recoche
+pas explicitement — c'était la demande explicite de l'utilisateur ("retire la vue
+globale des comptes des équipes"), pas un oubli.
 `Boutique::estGereePar()` (propriétaire OU collaborateur, sans distinction de
 fonctionnalité) reste disponible et utilisé pour les deux cas volontairement **non**
 granulaires : `CampagneSocialePolicy`/`DestinationSocialePolicy` (hors périmètre de
@@ -1184,6 +1201,30 @@ l'occasion se présente.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-10-26** — **"Vue globale" devient une permission accordable** (voir §5.19).
+  Visible jusqu'ici par tous les collaborateurs sans distinction ; devient une 8e
+  permission (`acces_vue_globale`), à `false` par défaut y compris pour les
+  collaborateurs déjà créés (pas de grandfathering, demande explicite).
+- **2026-10-24** (répertorié a posteriori, deux correctifs d'affichage de la barre de
+  navigation `AppLayout.vue` faits dans la foulée des permissions granulaires sans
+  mise à jour immédiate de ce fichier — corrigé ici) :
+  - **Débordement de la barre de nav masquant des contrôles** : avec toutes les
+    fonctionnalités activées (plan Pro + propriétaire), la douzaine de liens ne
+    tenait plus sur une largeur d'écran courante et poussait le sélecteur de
+    boutique/menu de compte/cloche de notifications hors de l'écran (invisibles).
+    Liens de navigation rendus défilables horizontalement (`overflow-x-auto` +
+    `min-w-0`, requis pour que le défilement s'applique au lieu de déborder) ; ces
+    trois contrôles passés en `shrink-0` pour ne plus jamais être compressés ni
+    poussés hors champ ; noms de boutique/utilisateur bornés (`max-w` + `truncate`)
+    pour ne plus pouvoir eux-mêmes provoquer le même débordement.
+  - **Effet de bord du correctif précédent** : `overflow-x-auto` seul force, selon la
+    spec CSS, l'axe y à devenir "auto" aussi dès que x n'est plus "visible" — sans
+    assez de hauteur, les emoji des liens (légèrement plus hauts que le texte)
+    devenaient rognés en haut/bas. Barre passée de `h-16` à `h-20` (+ le panneau
+    mobile repositionné en conséquence, `top-16` → `top-20`).
+  - **En-têtes de section peu lisibles** : "Gérer le compte"/"Mes boutiques" dans les
+    menus déroulants étaient en `text-slate-400` (contraste insuffisant, signalé par
+    l'utilisateur) — passés en gras, majuscules, `text-slate-500 dark:text-slate-400`.
 - **2026-10-24** — **Correctif critique de déploiement : lien symbolique
   `public/build` cassé** (voir §8). Une bascule atomique (`mv build build_old && mv
   build_new build`) exécutée par erreur dans `controool_app/public/` au lieu de
