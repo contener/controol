@@ -1044,6 +1044,42 @@ celui de ce projet (`User hasMany Boutique`, pas une Team autonome). Code mort
 laissé en place (hors périmètre de cette fonctionnalité), à nettoyer un jour si
 l'occasion se présente.
 
+### 5.20 Tableau de bord (statistiques boutique, bénéfice ajouté 2026-11-11)
+
+`DashboardController` → `BoutiqueStatsService::pourBoutique()` (construit entièrement
+côté serveur, jamais recalculé côté Vue) alimente `/dashboard` : clients (par
+segment, voir `ClientSegmentationService`), produits (actifs/épuisés/proches
+rupture), factures (total/aujourd'hui/ce mois/impayées/payées), finances, produits
+les plus vendus et factures récentes.
+
+**Bénéfice (marge brute)** : distinct du "résultat" (CA − dépenses de
+fonctionnement, déjà existant) — ici CA des lignes vendues moins leur **coût
+d'achat** (`Produit.prix_achat`). `BoutiqueStatsService::benefice()` utilise le
+prix d'achat **actuel** du produit (`facture_lignes` n'a pas de colonne prix_achat
+propre, donc aucun historique si ce prix change après la vente — simplification
+assumée, cohérente avec un outil de gestion courante plutôt qu'une comptabilité au
+centime près ; à corriger un jour en ajoutant cette colonne si une précision
+historique devient nécessaire). Une ligne libre (sans `produit_id`, ex. une
+prestation hors catalogue) n'a aucun coût connu : son `montant_ht` compte en
+entier comme bénéfice plutôt que de lui inventer un coût arbitraire. Même filtre
+de statut que le chiffre d'affaires déjà affiché (`envoyee`/`payee`, tous types de
+facture confondus y compris Proforma) — **volontairement**, pour que "bénéfice"
+reste une simple décomposition du même CA affiché ailleurs sur ce tableau de bord,
+jamais un nombre basé sur une autre population de factures (une Proforma marquée
+"payée" compte donc dans le CA/bénéfice du dashboard, un flou pré-existant non
+corrigé ici pour ne pas faire varier silencieusement un chiffre déjà affiché
+ailleurs — à surveiller si le besoin de précision comptable augmente).
+
+**Période personnalisable** : `resoudrePeriode()` (même principe que
+`CompteStatsService::pourCompte()`, dupliqué plutôt que partagé — un service de
+6 lignes ne justifie pas une abstraction commune) — par défaut le mois en cours,
+sélectionnable depuis `Dashboard.vue` (champs date, rechargement Inertia en
+arrière-plan, `preserveState`) sans jamais recharger toute la page. Expose CA,
+dépenses, bénéfice, résultat net, **marge %** (`benefice / ca × 100`) et **panier
+moyen** (`ca / nombre_factures`) sur la période choisie — répond à la demande
+explicite "le résultat sur une période, le bénéfice sur une période et d'autres
+éléments utiles pour suivre l'avancée des ventes".
+
 ---
 
 ## 6. Design & UI
@@ -1201,6 +1237,12 @@ l'occasion se présente.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-11** — **Bénéfice et période personnalisable sur le tableau de bord**
+  (voir §5.20). Le dashboard affichait CA/dépenses/"résultat" mais jamais le
+  bénéfice réel basé sur le coût d'achat des produits (`prix_achat`), ni de vue par
+  période — seulement des compteurs fixes jour/mois. Nouvelle tuile "Bénéfice
+  (mois)" + un bloc période personnalisable (CA, dépenses, bénéfice, résultat net,
+  marge %, panier moyen) réutilisant le principe déjà en place sur la Vue globale.
 - **2026-10-26** — **"Vue globale" devient une permission accordable** (voir §5.19).
   Visible jusqu'ici par tous les collaborateurs sans distinction ; devient une 8e
   permission (`acces_vue_globale`), à `false` par défaut y compris pour les
