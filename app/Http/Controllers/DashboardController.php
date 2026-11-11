@@ -37,7 +37,12 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'boutique' => $boutique->only(['id', 'nom', 'slug', 'devise', 'statut']),
-            'stats' => $statsService->pourBoutique($boutique),
+            'stats' => $statsService->pourBoutique(
+                $boutique,
+                $request->string('debut')->toString() ?: null,
+                $request->string('fin')->toString() ?: null,
+            ),
+            'filtres' => $request->only(['debut', 'fin']),
             'essaiActif' => $this->essaiActif($request),
         ]);
     }

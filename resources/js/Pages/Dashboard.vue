@@ -1,8 +1,11 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
 import { useI18n } from 'vue-i18n';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import TextInput from '@/Components/TextInput.vue';
+import InputLabel from '@/Components/InputLabel.vue';
 
 const { t } = useI18n();
 
@@ -17,10 +20,28 @@ const props = defineProps({
     },
     boutique: Object,
     stats: Object,
+    filtres: {
+        type: Object,
+        default: () => ({}),
+    },
     essaiActif: {
         type: Object,
         default: null,
     },
+});
+
+// Même principe que Compte/Dashboard.vue (Vue globale) : une période personnalisée,
+// par défaut le mois en cours (stats.periode.debut/fin renvoyés par le serveur),
+// rechargée en arrière-plan à chaque changement de date -- jamais de rechargement
+// complet de page pour ça.
+const debut = ref(props.filtres.debut ?? props.stats?.periode?.debut);
+const fin = ref(props.filtres.fin ?? props.stats?.periode?.fin);
+
+watch([debut, fin], () => {
+    router.get(route('dashboard'), { debut: debut.value, fin: fin.value }, {
+        preserveState: true,
+        replace: true,
+    });
 });
 
 const formatFcfa = (montant) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(montant);
@@ -78,7 +99,7 @@ const statutClasses = {
 
         <div v-else class="py-8">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.revenue_month') }}</div>
                         <div class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.finances.ca_mois) }}</div>
@@ -88,6 +109,10 @@ const statutClasses = {
                         <div class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.finances.depenses_mois) }}</div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.profit_month') }}</div>
+                        <div class="mt-2 text-2xl font-semibold" :class="stats.finances.benefice_mois >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.finances.benefice_mois) }}</div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.result_month') }}</div>
                         <div class="mt-2 text-2xl font-semibold" :class="stats.finances.resultat_mois >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.finances.resultat_mois) }}</div>
                     </div>
@@ -95,6 +120,53 @@ const statutClasses = {
                         <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.unpaid_invoices') }}</div>
                         <div class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ stats.factures.impayees }}</div>
                     </div>
+                </div>
+
+                <!-- Période personnalisée : même principe que Compte/Dashboard.vue (Vue
+                     globale), mais pour cette seule boutique -- répond directement à la
+                     demande "le résultat/bénéfice sur une période". -->
+                <div class="bg-white dark:bg-slate-800 shadow-sm sm:rounded-lg p-6">
+                    <div class="flex flex-wrap items-end justify-between gap-4 mb-4">
+                        <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100">{{ t('dashboard.period_title') }}</h3>
+                        <div class="flex items-end gap-3">
+                            <div>
+                                <InputLabel :value="t('dashboard.from')" />
+                                <TextInput v-model="debut" type="date" class="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel :value="t('dashboard.to')" />
+                                <TextInput v-model="fin" type="date" class="mt-1" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_revenue') }}</div>
+                            <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.periode.ca) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_expenses') }}</div>
+                            <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.periode.depenses) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_profit') }}</div>
+                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.benefice >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.periode.benefice) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_result') }}</div>
+                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.resultat >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.periode.resultat) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_margin') }}</div>
+                            <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ stats.periode.marge_pourcentage }} %</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_average_basket') }}</div>
+                            <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.periode.panier_moyen) }}</div>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-xs text-slate-400 dark:text-slate-500">{{ stats.periode.nombre_factures }} {{ t('dashboard.period_invoice_count') }}</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
