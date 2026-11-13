@@ -1178,12 +1178,22 @@ centralisés) ; `EtatAsync` (`lib/widgets/etat_async.dart`) habille chaque
 `FutureBuilder` (chargement/erreur/données) pour ne jamais répéter ces trois états
 dans chaque écran.
 
-**⚠️ Non vérifié en conditions réelles** : ce backend n'a jamais été déployé sur
-controol.fr avec ces changements — le déploiement SSH vers le serveur de
-production était bloqué par les permissions de la session qui a construit cette
-fonctionnalité (voir Historique). Les tests PHPUnit existent
-(`tests/Feature/Api/`) mais n'ont jamais tourné contre le vrai serveur. **À
-vérifier en priorité avant toute utilisation réelle de l'app mobile.**
+**Déployé et vérifié en conditions réelles (2026-11-13)** : suite de tests
+complète (`tests/Feature/Api/`) passée contre le vrai serveur de production
+(seuls les 5 échecs préexistants déjà connus subsistent) ; connexion/inscription
+réelles confirmées via l'application Flutter sur un appareil physique, données
+d'une vraie boutique récupérées via `GET /clients` avec un jeton réel.
+
+**Piège rencontré et corrigé lors de ce déploiement** : `Route::apiResource()`
+dans `routes/api.php` génère par défaut les mêmes noms de route
+(`produits.store`, `clients.index`, etc.) que les `Route::resource()`
+équivalents de `routes/web.php` — comme `api.php` est chargé après, ces noms
+écrasaient silencieusement ceux du web dans la table de routage, cassant tout
+`route('produits.store')`/`redirect()->route(...)` côté site (ex. : la création
+d'un produit redirigeait vers la mauvaise URL). Corrigé en englobant tout le
+fichier `api.php` dans `Route::name('api.')->group(...)`. **Toute nouvelle
+route API utilisant `Route::resource`/`apiResource` doit rester à l'intérieur
+de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 
 ---
 
@@ -1342,15 +1352,21 @@ vérifier en priorité avant toute utilisation réelle de l'app mobile.**
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-13** — **Déploiement de l'API mobile sur controol.fr + correctif de
+  collision de routes** (voir §5.21). Déploiement débloqué (règle de permission
+  Bash ajoutée pour la commande SSH de déploiement) puis mené à bien : bug réel
+  découvert et corrigé (`Route::apiResource` de `api.php` écrasait les noms de
+  route du web, cassant des redirections côté site), suite de tests complète
+  repassée contre le vrai serveur (seuls les 5 échecs préexistants connus
+  subsistent), connexion/inscription et synchronisation des données vérifiées
+  de bout en bout via l'application Flutter sur un appareil Android réel.
 - **2026-11-13** — **Modules métier complets sur l'API mobile + écrans Flutter**
   (voir §5.21). En suite directe de l'entrée précédente (même jour) : l'app
   Flutter n'avait qu'un écran de connexion ; elle couvre désormais Tableau de
   bord, Clients, Produits, Factures (avec lignes dynamiques et avance/reste des
   Reçus) et Dépenses, avec les endpoints API correspondants côté backend. APK de
   debug installé et lancé avec succès sur un appareil Android réel connecté en
-  USB. **Jamais déployé sur controol.fr** (SSH bloqué toute la session, voir
-  l'entrée précédente) — fonctionnellement non vérifié contre le vrai serveur.
-  Hors périmètre pour l'instant : Audience, collaborateurs/permissions,
+  USB. Hors périmètre pour l'instant : Audience, collaborateurs/permissions,
   Marketplace, Messagerie, Abonnements, Parrainage, Super Administrateur, photo
   produit, choix du modèle PDF de facture.
 - **2026-11-13** — **Démarrage de l'application mobile Flutter + API par jeton**
