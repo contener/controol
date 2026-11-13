@@ -1415,18 +1415,23 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
-- **2026-11-13** — **L'inscription crée la boutique** : `NouvelUtilisateurService::initialiser()`
-  crée désormais la première boutique de tout nouvel inscrit (formulaire web,
-  `/api/register` mobile, Google) et en fait sa boutique courante — plus d'écran
-  « Créez votre première boutique » après l'inscription. Nom saisi dans le
-  nouveau champ facultatif `nom_boutique` (Register.vue, écran d'inscription
-  mobile, validé par `CreateNewUser`), sinon « Boutique de {nom} » ; e-mail du
-  compte repris comme e-mail de la boutique ; suivi de
-  `InvitationBoutiqueService::apresCreationBoutique()` comme une création
-  manuelle. Les comptes collaborateurs (créés par un propriétaire) ne sont pas
-  concernés. Génération de slug unifiée dans `Boutique::genererSlugUnique()`
-  (web, API, inscription). L'état « aucune boutique » du tableau de bord reste
-  pour les comptes plus anciens qui n'en ont pas.
+- **2026-11-13** — **L'inscription est la création de la première boutique** :
+  formulaire d'inscription en **4 étapes horizontales** (Compte · Boutique ·
+  Coordonnées · Image & réseaux) sur le web (`Register.vue`) et sur mobile
+  (`register_screen.dart`, `PageView`), avec tous les champs de `BoutiqueForm.vue`
+  (logo et bannière compris). Les champs arrivent imbriqués sous `boutique.*`,
+  validés par `CreateNewUser` avec **`App\Support\ReglesBoutique`**, désormais seule
+  définition des règles d'une boutique (aussi utilisée par
+  `StoreBoutiqueRequest`/`UpdateBoutiqueRequest`) ; `boutique.nom` est obligatoire ;
+  logo/bannière compressés comme à la création classique. Une erreur serveur ramène
+  sur l'étape concernée. `NouvelUtilisateurService::initialiser($user, $boutique)`
+  crée la boutique (e-mail du compte par défaut), en fait la boutique courante et
+  appelle `InvitationBoutiqueService::apresCreationBoutique()`. Inscription Google :
+  pas de formulaire, boutique « Boutique de {nom} » à compléter ensuite. Plus d'écran
+  « Créez votre première boutique » après l'inscription ; les boutiques suivantes se
+  créent toujours depuis « Mes boutiques » (limite du plan). Comptes collaborateurs
+  non concernés. Slug unifié dans `Boutique::genererSlugUnique()`. L'état « aucune
+  boutique » du tableau de bord reste pour les comptes plus anciens qui n'en ont pas.
 
 - **2026-11-13** — **Refonte complète de l'app mobile : parité avec l'espace
   utilisateur du site** (voir §5.21, « Extension 2026-11-13 (soir) »). Nouveaux

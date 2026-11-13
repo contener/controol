@@ -7,6 +7,7 @@ use App\Models\Boutique;
 use App\Models\EssaiUtilisateur;
 use App\Models\Plan;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 
 /**
  * Effets de bord communs à toute création de compte, quel que soit le point d'entrée
@@ -18,36 +19,56 @@ use App\Models\User;
 class NouvelUtilisateurService
 {
     /**
-     * $nomBoutique : nom saisi à l'inscription (champ facultatif du formulaire web
-     * Register.vue et de l'app mobile) -- repli sur "Boutique de {nom}".
+     * $boutique : champs de la première boutique saisis dans le formulaire
+     * d'inscription en étapes (déjà validés par CreateNewUser via ReglesBoutique,
+     * logo/bannière en UploadedFile). Vide pour une inscription Google : repli
+     * sur "Boutique de {nom}", à compléter ensuite depuis "Mes boutiques".
      */
-    public function initialiser(User $user, ?string $nomBoutique = null): void
+    public function initialiser(User $user, array $boutique = []): void
     {
         $this->demarrerEssaiOuGratuit($user);
         app(InvitationBoutiqueService::class)->apresInscription($user);
         app(ParrainageService::class)->apresInscription($user);
-        $this->creerBoutiqueInitiale($user, $nomBoutique);
+        $this->creerBoutiqueInitiale($user, $boutique);
     }
 
     /**
-     * L'inscription vaut création de la boutique (2026-11-13) : plus d'écran
-     * "Créez votre première boutique" après l'inscription -- l'utilisateur arrive
-     * directement sur le tableau de bord de sa boutique, sur le web comme sur
-     * mobile, y compris via Google. Créée après l'abonnement (essai/gratuit) pour
-     * respecter la limite de boutiques du plan, et suivie de
-     * apresCreationBoutique() comme une création manuelle (journal d'invitation
-     * si l'inscription venait de la page d'une autre boutique). Les comptes
-     * collaborateurs créés par un propriétaire ne passent jamais par ici.
+     * L'inscription vaut création de la première boutique (2026-11-13) : plus
+     * d'écran "Créez votre première boutique" après l'inscription -- l'utilisateur
+     * arrive directement sur le tableau de bord de sa boutique, sur le web comme
+     * sur mobile, y compris via Google. Il pourra ensuite en créer d'autres depuis
+     * "Mes boutiques" (BoutiqueController, limite du plan). Créée après
+     * l'abonnement (essai/gratuit), et suivie de apresCreationBoutique() comme une
+     * création manuelle (journal d'invitation si l'inscription venait de la page
+     * d'une autre boutique). Les comptes collaborateurs créés par un propriétaire
+     * ne passent jamais par ici.
      */
-    protected function creerBoutiqueInitiale(User $user, ?string $nomBoutique): void
+    protected function creerBoutiqueInitiale(User $user, array $champs): void
     {
-        $nom = trim((string) $nomBoutique) ?: "Boutique de {$user->name}";
+        $nom = trim((string) ($champs['nom'] ?? '')) ?: "Boutique de {$user->name}";
+
+        $donnees = collect($champs)
+            ->only([
+                'description', 'categorie', 'adresse', 'ville', 'pays', 'telephone', 'whatsapp', 'email',
+                'devise', 'taux_tva_defaut', 'nui', 'note_pied_facture', 'facebook_url', 'instagram_url', 'telegram_url',
+            ])
+            ->filter(fn ($valeur) => $valeur !== null && $valeur !== '')
+            ->all();
+
+        if (($champs['logo'] ?? null) instanceof UploadedFile) {
+            $donnees['logo_path'] = $champs['logo']->store('boutiques/logos', 'public');
+        }
+
+        if (($champs['banniere'] ?? null) instanceof UploadedFile) {
+            $donnees['banniere_path'] = $champs['banniere']->store('boutiques/bannieres', 'public');
+        }
 
         $boutique = Boutique::create([
+            'email' => $user->email,
+            ...$donnees,
             'user_id' => $user->id,
             'nom' => $nom,
             'slug' => Boutique::genererSlugUnique($nom),
-            'email' => $user->email,
         ]);
 
         $user->switchBoutique($boutique);

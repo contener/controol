@@ -97,6 +97,7 @@ class AuthControllerTest extends TestCase
             'email' => 'nouveau@example.com',
             'password' => 'mot-de-passe-solide',
             'password_confirmation' => 'mot-de-passe-solide',
+            'boutique' => ['nom' => 'Ma boutique'],
         ]);
 
         $response->assertCreated()->assertJsonStructure(['token', 'user' => ['id', 'email']]);
@@ -121,10 +122,10 @@ class AuthControllerTest extends TestCase
 
         $token = $this->postJson('/api/register', [
             'name' => 'Nouvel Utilisateur',
-            'nom_boutique' => 'Ma Boutique Mobile',
             'email' => 'mobile@example.com',
             'password' => 'mot-de-passe-solide',
             'password_confirmation' => 'mot-de-passe-solide',
+            'boutique' => ['nom' => 'Ma Boutique Mobile', 'ville' => 'Douala', 'whatsapp' => '+237600000000'],
         ])->assertCreated()->json('token');
 
         $this->withHeader('Authorization', "Bearer {$token}")
@@ -140,6 +141,7 @@ class AuthControllerTest extends TestCase
             'email' => 'nouveau@example.com',
             'password' => 'mot-de-passe-solide',
             'password_confirmation' => 'autre-chose',
+            'boutique' => ['nom' => 'Ma boutique'],
         ])->assertStatus(422)->assertJsonValidationErrors('password');
 
         $this->assertDatabaseMissing('users', ['email' => 'nouveau@example.com']);
@@ -154,6 +156,7 @@ class AuthControllerTest extends TestCase
             'email' => $existant->email,
             'password' => 'mot-de-passe-solide',
             'password_confirmation' => 'mot-de-passe-solide',
+            'boutique' => ['nom' => 'Ma boutique'],
         ])->assertStatus(422)->assertJsonValidationErrors('email');
     }
 

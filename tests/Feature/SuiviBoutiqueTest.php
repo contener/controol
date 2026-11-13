@@ -187,6 +187,7 @@ class SuiviBoutiqueTest extends TestCase
             'email' => 'fan@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'boutique' => ['nom' => 'Ma boutique'],
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
         ]);
 
@@ -216,6 +217,7 @@ class SuiviBoutiqueTest extends TestCase
             'email' => 'organique@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'boutique' => ['nom' => 'Ma boutique'],
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
         ]);
 

@@ -34,6 +34,7 @@ class ParrainageTest extends TestCase
             'email' => $email,
             'password' => 'password',
             'password_confirmation' => 'password',
+            'boutique' => ['nom' => 'Ma boutique'],
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
         ], $overrides));
 
@@ -92,7 +93,7 @@ class ParrainageTest extends TestCase
 
         $response = $this->withSession(['parrainage_code' => $code])->post('/register', [
             'name' => 'Filleul Direct', 'email' => 'filleul-direct@example.com',
-            'password' => 'password', 'password_confirmation' => 'password',
+            'password' => 'password', 'password_confirmation' => 'password', 'boutique' => ['nom' => 'Ma boutique'],
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
         ]);
         $response->assertRedirect();

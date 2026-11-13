@@ -21,6 +21,7 @@ class AbonnementTest extends TestCase
             'email' => $email,
             'password' => 'password',
             'password_confirmation' => 'password',
+            'boutique' => ['nom' => 'Ma boutique'],
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature(),
         ]);
 
