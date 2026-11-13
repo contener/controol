@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,7 +17,9 @@ class AuthControllerTest extends TestCase
 
     public function test_login_with_valid_credentials_returns_a_usable_token(): void
     {
-        $user = User::factory()->create(['password' => bcrypt('mot-de-passe-solide')]);
+        // two_factor_confirmed_at à null : la factory l'active par défaut (voir
+        // UserFactory), ce qui bloquerait sinon la connexion via le contrôle 2FA.
+        $user = User::factory()->create(['password' => bcrypt('mot-de-passe-solide'), 'two_factor_confirmed_at' => null]);
 
         $response = $this->postJson('/api/login', [
             'email' => $user->email,
@@ -85,6 +88,10 @@ class AuthControllerTest extends TestCase
 
     public function test_register_creates_an_account_and_returns_a_usable_token(): void
     {
+        // NouvelUtilisateurService ne démarre un essai/plan que si un Plan existe en
+        // base -- un test RefreshDatabase n'en a aucun par défaut (voir EssaiBasiqueTest).
+        Plan::create(['code' => 'gratuit', 'nom' => 'Gratuit', 'prix' => 0, 'devise' => 'XAF']);
+
         $response = $this->postJson('/api/register', [
             'name' => 'Nouvel Utilisateur',
             'email' => 'nouveau@example.com',
@@ -133,7 +140,7 @@ class AuthControllerTest extends TestCase
 
     public function test_logout_revokes_the_current_token(): void
     {
-        $user = User::factory()->create(['password' => bcrypt('mot-de-passe-solide')]);
+        $user = User::factory()->create(['password' => bcrypt('mot-de-passe-solide'), 'two_factor_confirmed_at' => null]);
 
         $token = $this->postJson('/api/login', [
             'email' => $user->email,

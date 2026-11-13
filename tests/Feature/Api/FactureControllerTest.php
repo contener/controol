@@ -85,8 +85,13 @@ class FactureControllerTest extends TestCase
         $this->actingAs($user, 'sanctum')
             ->getJson("/api/factures/{$facture->id}")
             ->assertOk()
-            ->assertJsonPath('apercu.totaux.montant_avance', 100.0)
-            ->assertJsonPath('apercu.totaux.reste_a_payer', 200.0);
+            // Entiers, pas floats : json_encode() de PHP écrit un float sans partie
+            // décimale comme un entier JSON (100, pas 100.0), donc json_decode() de
+            // la réponse le relit comme un int -- la valeur est correcte, seul le
+            // type PHP d'origine (float, voir FactureApercuBuilder) ne survit pas
+            // l'aller-retour JSON.
+            ->assertJsonPath('apercu.totaux.montant_avance', 100)
+            ->assertJsonPath('apercu.totaux.reste_a_payer', 200);
     }
 
     public function test_user_cannot_view_a_facture_from_another_boutique(): void
@@ -103,8 +108,9 @@ class FactureControllerTest extends TestCase
         ]);
         $facture = Facture::latest('id')->first();
 
+        // 404, pas 403 : même scope global BelongsToBoutique que ClientControllerTest.
         $this->actingAs($proprietaireA, 'sanctum')
             ->getJson("/api/factures/{$facture->id}")
-            ->assertStatus(403);
+            ->assertStatus(404);
     }
 }

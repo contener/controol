@@ -39,9 +39,12 @@ class ClientControllerTest extends TestCase
         $proprietaireB = $this->creerUtilisateurAvecBoutique('pro');
         $clientB = Client::create(['boutique_id' => $proprietaireB->current_boutique_id, 'nom' => 'Client B', 'etiquette' => 'client']);
 
+        // 404, pas 403 : le scope global BelongsToBoutique rend le client d'une autre
+        // boutique invisible à la résolution du modèle (voir ClientManagementTest,
+        // même comportement côté web -- évite de révéler l'existence de la ressource).
         $this->actingAs($proprietaireA, 'sanctum')
             ->getJson("/api/clients/{$clientB->id}")
-            ->assertStatus(403);
+            ->assertStatus(404);
     }
 
     public function test_update_and_delete_a_client_via_the_api(): void
