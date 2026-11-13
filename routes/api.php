@@ -12,43 +12,51 @@ use App\Http\Controllers\Api\WhatsappConnectorWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Authentification par jeton (app mobile Flutter) -- voir AuthController, même
-// vérification d'identifiants que FortifyServiceProvider::authenticateUsing()
-// (web), même limiteur de débit ("login", 5/minute par e-mail+IP).
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
-Route::post('/register', [AuthController::class, 'register']);
+// Toutes les routes de ce fichier sont nommées "api.*" -- Route::apiResource()
+// génère sinon les mêmes noms (produits.store, clients.index, ...) que les
+// Route::resource() équivalents de web.php, et écrase silencieusement ces noms
+// dans la table de routage (route('produits.store') se mettrait à résoudre vers
+// l'API au lieu du web, cassant les redirections du site -- bug réel constaté
+// au déploiement du 2026-11-13, voir controol.md §5.21).
+Route::name('api.')->group(function () {
+    // Authentification par jeton (app mobile Flutter) -- voir AuthController, même
+    // vérification d'identifiants que FortifyServiceProvider::authenticateUsing()
+    // (web), même limiteur de débit ("login", 5/minute par e-mail+IP).
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/register', [AuthController::class, 'register']);
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    })->middleware('auth:sanctum');
 
-// Appelé uniquement par le service indépendant whatsapp-connector/ (Node.js) — authentifié
-// par secret partagé (voir WhatsappConnectorWebhookController), jamais par un utilisateur.
-Route::post('/webhooks/whatsapp-connector', [WhatsappConnectorWebhookController::class, 'handle']);
+    // Appelé uniquement par le service indépendant whatsapp-connector/ (Node.js) — authentifié
+    // par secret partagé (voir WhatsappConnectorWebhookController), jamais par un utilisateur.
+    Route::post('/webhooks/whatsapp-connector', [WhatsappConnectorWebhookController::class, 'handle']);
 
-// API métier de l'application mobile Flutter -- voir controol.md §5.21. Chaque
-// contrôleur Api\* réutilise les mêmes FormRequests/Policies/Services que son
-// équivalent web, jamais une seconde définition des règles métier.
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+    // API métier de l'application mobile Flutter -- voir controol.md §5.21. Chaque
+    // contrôleur Api\* réutilise les mêmes FormRequests/Policies/Services que son
+    // équivalent web, jamais une seconde définition des règles métier.
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::get('/boutiques', [BoutiqueController::class, 'index']);
-    Route::post('/boutiques/{boutique}/switch', [BoutiqueController::class, 'switch']);
+        Route::get('/boutiques', [BoutiqueController::class, 'index']);
+        Route::post('/boutiques/{boutique}/switch', [BoutiqueController::class, 'switch']);
 
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/dashboard', [DashboardController::class, 'index']);
 
-    Route::apiResource('clients', ClientController::class);
-    Route::apiResource('produits', ProduitController::class);
-    Route::apiResource('depenses', DepenseController::class);
+        Route::apiResource('clients', ClientController::class);
+        Route::apiResource('produits', ProduitController::class);
+        Route::apiResource('depenses', DepenseController::class);
 
-    // Avant apiResource('factures') : sinon "contexte-creation" serait interprété
-    // comme un {facture} à résoudre par liaison de modèle (404 avant d'atteindre
-    // la bonne méthode).
-    Route::get('/factures/contexte-creation', [FactureController::class, 'contexteCreation']);
-    Route::patch('/factures/{facture}/statut', [FactureController::class, 'updateStatut']);
-    Route::apiResource('factures', FactureController::class);
+        // Avant apiResource('factures') : sinon "contexte-creation" serait interprété
+        // comme un {facture} à résoudre par liaison de modèle (404 avant d'atteindre
+        // la bonne méthode).
+        Route::get('/factures/contexte-creation', [FactureController::class, 'contexteCreation']);
+        Route::patch('/factures/{facture}/statut', [FactureController::class, 'updateStatut']);
+        Route::apiResource('factures', FactureController::class);
 
-    Route::get('/stock', [StockController::class, 'index']);
-    Route::get('/stock/{produit}/mouvements', [StockController::class, 'mouvements']);
-    Route::post('/stock', [StockController::class, 'store']);
+        Route::get('/stock', [StockController::class, 'index']);
+        Route::get('/stock/{produit}/mouvements', [StockController::class, 'mouvements']);
+        Route::post('/stock', [StockController::class, 'store']);
+    });
 });
