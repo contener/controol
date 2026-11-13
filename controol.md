@@ -1100,7 +1100,7 @@ moyen** (`ca / nombre_factures`) sur la période choisie — répond à la deman
 explicite "le résultat sur une période, le bénéfice sur une période et d'autres
 éléments utiles pour suivre l'avancée des ventes".
 
-### 5.21 API mobile (authentification par jeton, 2026-11-13)
+### 5.21 API mobile (authentification par jeton, 2026-11-13 ; endpoints métier ajoutés le même jour)
 
 Premier (et pour l'instant seul) point d'entrée API destiné à un client externe au
 SPA web — l'application Flutter (`../flutter_app`, voir §1/§2). Le web (Inertia)
@@ -1129,11 +1129,53 @@ besoin de versionner) :
   l'utilisateur authentifié tel quel (`$hidden` du modèle masque déjà
   password/tokens/secrets 2FA).
 
-**Hors périmètre, à construire plus tard** : tout endpoint métier (factures,
-produits, clients, dépenses, stock, dashboard...) — l'app Flutter n'a aujourd'hui
-qu'un écran de connexion et un écran d'accueil minimal prouvant la connexion. Pas
-de préfixe `/api/v1` pour l'instant (à introduire si/quand une v2 incompatible
+**Endpoints métier** (mêmes FormRequests/Policies/Services que leur équivalent
+web — jamais une seconde définition des règles) :
+- `GET /boutiques` (fusion propriétaire + collaborateur, même logique que
+  `HandleInertiaRequests::share()`), `POST /boutiques/{boutique}/switch`
+  (`User::switchBoutique()`). Créer/modifier les réglages d'une boutique (logo,
+  bannière, NUI...) reste web-only — tâche occasionnelle, pas une priorité mobile.
+- `GET /dashboard` (`BoutiqueStatsService`, même permission `autoriseDashboard()`
+  que le web, mais 403 explicite ici — pas l'état "accès refusé doux" de
+  Dashboard.vue, qui n'a de sens que parce que cette page est aussi la page
+  d'accueil post-connexion web).
+- `apiResource` complet (`index`/`store`/`show`/`update`/`destroy`) pour
+  **clients**, **produits**, **depenses**, **factures** — `Api\ProduitController`
+  duplique intentionnellement (pas de Service extrait) la logique de bascule
+  `gere_stock`/limites de `ProduitController::store()`/`update()` (web) : risque
+  jugé plus faible que de retoucher ce contrôleur web déjà en production pour en
+  extraire un Service partagé. **Si cette logique évolue, mettre à jour les deux
+  côtés.** `Api\FactureController`, lui, réutilise `FactureService` tel quel
+  (aucune duplication — déjà un Service, rien à dupliquer) ; expose aussi
+  `GET /factures/contexte-creation` (clients + produits + taux de TVA par défaut,
+  pour construire le formulaire mobile sans deviner la forme attendue) et
+  `PATCH /factures/{facture}/statut`. Téléchargement de PDF et choix du modèle
+  visuel de facture restent web-only.
+- `GET /stock`, `GET /stock/{produit}/mouvements`, `POST /stock`
+  (`StockService`, identique au web).
+
+**Hors périmètre, à construire plus tard** : Audience, gestion des collaborateurs/
+permissions, Marketplace, Messagerie, Abonnements/paiements, Parrainage, Espace
+Super Administrateur — aucun endpoint n'existe encore pour ces modules. Photo de
+produit et modèle de facture PDF restent aussi web-only (voir ci-dessus). Pas de
+préfixe `/api/v1` pour l'instant (à introduire si/quand une v2 incompatible
 devient nécessaire, pas préventivement).
+
+**Application Flutter (`../flutter_app`)** : coquille de navigation (bottom bar,
+`HomeScreen`) avec un onglet par module ci-dessus déjà couvert côté API — Tableau
+de bord, Clients, Produits, Factures (création/édition avec lignes dynamiques,
+avance/reste des Reçus inclus), Dépenses. `ApiClient` (`lib/services/api_client.dart`)
+est le point unique de tout appel HTTP authentifié (en-têtes/jeton/décodage JSON
+centralisés) ; `EtatAsync` (`lib/widgets/etat_async.dart`) habille chaque
+`FutureBuilder` (chargement/erreur/données) pour ne jamais répéter ces trois états
+dans chaque écran.
+
+**⚠️ Non vérifié en conditions réelles** : ce backend n'a jamais été déployé sur
+controol.fr avec ces changements — le déploiement SSH vers le serveur de
+production était bloqué par les permissions de la session qui a construit cette
+fonctionnalité (voir Historique). Les tests PHPUnit existent
+(`tests/Feature/Api/`) mais n'ont jamais tourné contre le vrai serveur. **À
+vérifier en priorité avant toute utilisation réelle de l'app mobile.**
 
 ---
 
@@ -1292,6 +1334,17 @@ devient nécessaire, pas préventivement).
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-13** — **Modules métier complets sur l'API mobile + écrans Flutter**
+  (voir §5.21). En suite directe de l'entrée précédente (même jour) : l'app
+  Flutter n'avait qu'un écran de connexion ; elle couvre désormais Tableau de
+  bord, Clients, Produits, Factures (avec lignes dynamiques et avance/reste des
+  Reçus) et Dépenses, avec les endpoints API correspondants côté backend. APK de
+  debug installé et lancé avec succès sur un appareil Android réel connecté en
+  USB. **Jamais déployé sur controol.fr** (SSH bloqué toute la session, voir
+  l'entrée précédente) — fonctionnellement non vérifié contre le vrai serveur.
+  Hors périmètre pour l'instant : Audience, collaborateurs/permissions,
+  Marketplace, Messagerie, Abonnements, Parrainage, Super Administrateur, photo
+  produit, choix du modèle PDF de facture.
 - **2026-11-13** — **Démarrage de l'application mobile Flutter + API par jeton**
   (voir §1, §5.21). Projet réorganisé : le backend Laravel vit maintenant dans
   `backend/` (déplacé depuis la racine), sibling d'un nouveau projet
