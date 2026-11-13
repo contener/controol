@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 /**
  * Authentification par jeton (Sanctum personal access token) pour les clients qui ne
@@ -52,13 +53,32 @@ class AuthController extends Controller
             ]);
         }
 
-        $nomAppareil = $request->string('nom_appareil')->toString() ?: 'Appareil mobile';
-        $token = $user->createToken($nomAppareil)->plainTextToken;
-
         return response()->json([
-            'token' => $token,
+            'token' => $this->creerJeton($user, $request),
             'user' => $user,
         ]);
+    }
+
+    /**
+     * Réutilise CreatesNewUsers (lié à CreateNewUser dans FortifyServiceProvider) --
+     * mêmes règles de validation (voir PasswordValidationRules, "confirmed" inclus)
+     * et mêmes effets de bord (NouvelUtilisateurService : essai/plan gratuit,
+     * invitation boutique/parrainage en attente) que l'inscription web, jamais une
+     * seconde définition. Connecte directement l'utilisateur (jeton) après
+     * inscription, comme RegisteredUserController::store() le fait pour le web
+     * (session) -- pas d'écran de vérification d'e-mail, cette fonctionnalité est
+     * désactivée sur tout le projet (voir controol.md §2).
+     */
+    public function register(Request $request, CreatesNewUsers $createsNewUsers): JsonResponse
+    {
+        $user = $createsNewUsers->create($request->all());
+
+        event(new Registered($user));
+
+        return response()->json([
+            'token' => $this->creerJeton($user, $request),
+            'user' => $user,
+        ], 201);
     }
 
     public function logout(Request $request): JsonResponse
@@ -66,5 +86,12 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Déconnecté.']);
+    }
+
+    private function creerJeton(User $user, Request $request): string
+    {
+        $nomAppareil = $request->string('nom_appareil')->toString() ?: 'Appareil mobile';
+
+        return $user->createToken($nomAppareil)->plainTextToken;
     }
 }

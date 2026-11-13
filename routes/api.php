@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 // vérification d'identifiants que FortifyServiceProvider::authenticateUsing()
 // (web), même limiteur de débit ("login", 5/minute par e-mail+IP).
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/register', [AuthController::class, 'register']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

@@ -83,6 +83,54 @@ class AuthControllerTest extends TestCase
         $this->assertStringContainsString('double authentification', $response->json('errors.email.0'));
     }
 
+    public function test_register_creates_an_account_and_returns_a_usable_token(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'Nouvel Utilisateur',
+            'email' => 'nouveau@example.com',
+            'password' => 'mot-de-passe-solide',
+            'password_confirmation' => 'mot-de-passe-solide',
+        ]);
+
+        $response->assertCreated()->assertJsonStructure(['token', 'user' => ['id', 'email']]);
+        $this->assertDatabaseHas('users', ['email' => 'nouveau@example.com']);
+
+        // Un plan (essai ou gratuit) a bien été démarré -- voir NouvelUtilisateurService,
+        // même effet de bord que l'inscription web.
+        $user = User::where('email', 'nouveau@example.com')->first();
+        $this->assertNotNull($user->abonnements()->first());
+
+        $token = $response->json('token');
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/user')
+            ->assertOk()
+            ->assertJsonPath('id', $user->id);
+    }
+
+    public function test_register_requires_matching_password_confirmation(): void
+    {
+        $this->postJson('/api/register', [
+            'name' => 'Nouvel Utilisateur',
+            'email' => 'nouveau@example.com',
+            'password' => 'mot-de-passe-solide',
+            'password_confirmation' => 'autre-chose',
+        ])->assertStatus(422)->assertJsonValidationErrors('password');
+
+        $this->assertDatabaseMissing('users', ['email' => 'nouveau@example.com']);
+    }
+
+    public function test_register_rejects_an_already_used_email(): void
+    {
+        $existant = User::factory()->create();
+
+        $this->postJson('/api/register', [
+            'name' => 'Quelqu\'un',
+            'email' => $existant->email,
+            'password' => 'mot-de-passe-solide',
+            'password_confirmation' => 'mot-de-passe-solide',
+        ])->assertStatus(422)->assertJsonValidationErrors('email');
+    }
+
     public function test_logout_revokes_the_current_token(): void
     {
         $user = User::factory()->create(['password' => bcrypt('mot-de-passe-solide')]);
