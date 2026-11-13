@@ -117,11 +117,19 @@ class ProduitController extends Controller
 
         $data = $request->validate(['marketplace_visible' => ['required', 'boolean']]);
 
-        $devientVisible = $data['marketplace_visible'] && ! $produit->marketplace_visible;
+        // La boutique publique n'affiche que les produits actifs ET visibles : côté
+        // mobile, "Activer" signifie "le montrer dans ma boutique", donc réactive
+        // aussi un produit inactif -- sinon il resterait invisible malgré
+        // marketplace_visible = true (cas réel constaté le 2026-11-13). "Désactiver"
+        // ne touche qu'à la visibilité. Abonnés notifiés seulement au vrai passage
+        // "non affiché" -> "affiché".
+        $etaitAffiche = $produit->marketplace_visible && $produit->actif;
 
-        $produit->update(['marketplace_visible' => $data['marketplace_visible']]);
+        $produit->update($data['marketplace_visible']
+            ? ['marketplace_visible' => true, 'actif' => true]
+            : ['marketplace_visible' => false]);
 
-        if ($devientVisible && $produit->actif) {
+        if ($data['marketplace_visible'] && ! $etaitAffiche) {
             $notifications->nouveauProduit($produit);
         }
 

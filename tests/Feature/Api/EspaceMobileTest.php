@@ -346,4 +346,29 @@ class EspaceMobileTest extends TestCase
         $sansPlan = $this->creerUtilisateurAvecBoutique('gratuit');
         $this->actingAs($sansPlan, 'sanctum')->postJson('/api/boutiques', ['nom' => 'Masquee'])->assertCreated()->assertJsonPath('boutique.marketplace_visible', false);
     }
+
+    /**
+     * Cas réel du 2026-11-13 : produit enregistré inactif mais "visible" -- absent de
+     * la boutique publique. "Activer" depuis l'app doit le rendre réellement affiché.
+     */
+    public function test_activating_an_inactive_product_makes_it_appear_in_the_shop(): void
+    {
+        $boutique = $this->boutiquePublique();
+        $proprietaire = $boutique->proprietaire;
+
+        $id = $this->actingAs($proprietaire, 'sanctum')
+            ->postJson('/api/produits', ['type' => 'service', 'nom' => 'Inactif', 'prix_vente' => 1000, 'unite' => 'pièce', 'actif' => false])
+            ->assertCreated()
+            ->json('id');
+
+        $this->actingAs($proprietaire, 'sanctum')->getJson("/api/marketplace/boutiques/{$boutique->slug}")->assertJsonMissing(['nom' => 'Inactif']);
+
+        $this->actingAs($proprietaire, 'sanctum')
+            ->patchJson("/api/produits/{$id}/marketplace", ['marketplace_visible' => true])
+            ->assertOk()
+            ->assertJsonPath('produit.actif', true)
+            ->assertJsonPath('produit.marketplace_visible', true);
+
+        $this->actingAs($proprietaire, 'sanctum')->getJson("/api/marketplace/boutiques/{$boutique->slug}")->assertJsonFragment(['nom' => 'Inactif']);
+    }
 }
