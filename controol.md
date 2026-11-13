@@ -78,6 +78,26 @@ c'est la langue native du code (`Facture`, `Boutique`, `Client`, `estActive()`,
   l'APK au domaine — sans ce fichier, l'app installée garde la barre d'adresse du
   navigateur visible). Ce fichier n'existe pas encore dans le dépôt : à créer à la
   génération du premier APK, avec l'empreinte SHA-256 que PWABuilder fournit alors.
+  **Ne pas confondre avec l'application mobile Flutter native** (2026-11-13,
+  ci-dessous) : la voie PWABuilder/TWA ci-dessus ne nécessite aucun nouveau code
+  (elle charge simplement controol.fr dans une vue web) ; l'app Flutter, elle, a sa
+  propre interface entièrement réécrite en Dart et consomme l'API REST décrite en
+  §5.21 — un investissement bien plus lourd, mais avec une vraie UI native. Les deux
+  chemins restent valables et indépendants ; lequel distribuer (ou les deux) reste à
+  décider.
+- **Application mobile native (Flutter, 2026-11-13)** : projet séparé dans
+  `../flutter_app` (racine `C:\Users\DELL\Desktop\Project`, sibling de ce dépôt
+  backend, **jamais mélangé avec lui** — son propre dépôt Git, son propre
+  `pubspec.yaml`, aucun fichier partagé). Package Dart `controool_app`, org
+  `fr.controol`, cible Android + iOS uniquement (dossiers `windows/linux/macos/web`
+  supprimés du scaffold par défaut de `flutter create` — inutiles, et leur présence
+  déclenchait une exigence "Developer Mode" Windows pour les symlinks de plugins).
+  Consomme ce backend via l'API par jeton (§5.21) : `AuthService` (connexion/
+  déconnexion, jeton conservé chiffré via `flutter_secure_storage`, jamais en clair),
+  écran de connexion, écran d'accueil minimal (preuve de connexion). Les écrans
+  métier (factures, produits, clients...) restent à construire, au fur et à mesure
+  que les endpoints d'API correspondants seront ajoutés côté backend — aucun n'existe
+  encore au-delà de l'authentification.
   `resources/js/Components/InstallAppBanner.vue` (monté dans `AppLayout.vue` ET sur
   les pages Login/Register) rend l'installation facilement découvrable plutôt que
   cachée dans un menu navigateur : capture `beforeinstallprompt` (Chrome/Android) pour
@@ -1080,6 +1100,41 @@ moyen** (`ca / nombre_factures`) sur la période choisie — répond à la deman
 explicite "le résultat sur une période, le bénéfice sur une période et d'autres
 éléments utiles pour suivre l'avancée des ventes".
 
+### 5.21 API mobile (authentification par jeton, 2026-11-13)
+
+Premier (et pour l'instant seul) point d'entrée API destiné à un client externe au
+SPA web — l'application Flutter (`../flutter_app`, voir §1/§2). Le web (Inertia)
+continue d'utiliser exclusivement la session Jetstream/Fortify habituelle ; cette
+API par jeton (Sanctum `HasApiTokens`, déjà présent sur `User`) est un chemin
+**parallèle**, jamais un remplacement.
+
+`App\Http\Controllers\Api\AuthController` (`routes/api.php`, préfixe `/api`,
+jamais de préfixe de version pour l'instant — un seul consommateur, pas encore de
+besoin de versionner) :
+- `POST /login` (`throttle:login`, même limiteur que le web — 5/minute par
+  e-mail+IP) : réplique **exactement** la vérification de
+  `FortifyServiceProvider::authenticateUsing()` (e-mail + mot de passe haché +
+  `est_actif`) plutôt que d'en écrire une seconde version divergente. Retourne
+  `{token, user}` (jeton Sanctum nommé d'après l'appareil, `createToken()`) ou une
+  erreur 422 au même format que les erreurs de validation Laravel habituelles.
+  **La double authentification (2FA confirmée) est explicitement bloquée** avec un
+  message clair plutôt que contournée silencieusement — aucun flux de saisie de
+  code à 6 chiffres n'existe encore côté mobile ; à construire si des comptes avec
+  2FA ont besoin d'utiliser l'app.
+- `POST /logout` (`auth:sanctum`) : révoque uniquement le jeton courant
+  (`currentAccessToken()->delete()`), jamais tous les jetons de l'utilisateur — une
+  connexion sur un autre appareil ne doit pas être coupée par une déconnexion sur
+  celui-ci.
+- `GET /user` (`auth:sanctum`, déjà existant avant cette fonctionnalité) : renvoie
+  l'utilisateur authentifié tel quel (`$hidden` du modèle masque déjà
+  password/tokens/secrets 2FA).
+
+**Hors périmètre, à construire plus tard** : tout endpoint métier (factures,
+produits, clients, dépenses, stock, dashboard...) — l'app Flutter n'a aujourd'hui
+qu'un écran de connexion et un écran d'accueil minimal prouvant la connexion. Pas
+de préfixe `/api/v1` pour l'instant (à introduire si/quand une v2 incompatible
+devient nécessaire, pas préventivement).
+
 ---
 
 ## 6. Design & UI
@@ -1237,6 +1292,18 @@ explicite "le résultat sur une période, le bénéfice sur une période et d'au
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-13** — **Démarrage de l'application mobile Flutter + API par jeton**
+  (voir §1, §5.21). Projet réorganisé : le backend Laravel vit maintenant dans
+  `backend/` (déplacé depuis la racine), sibling d'un nouveau projet
+  `flutter_app/` (app mobile Android + iOS, dépôt Git séparé, jamais mélangé).
+  Premier point de connexion réel entre les deux : `POST /api/login`/`POST
+  /api/logout` (jeton Sanctum, mêmes règles d'authentification que le web).
+  Seuls un écran de connexion et un écran d'accueil minimal existent côté mobile
+  pour l'instant — tout le reste (factures, produits...) reste à construire,
+  endpoint par endpoint. Outillage (Flutter SDK, JDK 17, Android SDK command-line
+  tools) installé sans droits administrateur sur la machine de développement
+  (versions portables/zip plutôt que les installeurs MSI, qui exigent une
+  élévation que la session n'avait pas).
 - **2026-11-11** — **Bénéfice et période personnalisable sur le tableau de bord**
   (voir §5.20). Le dashboard affichait CA/dépenses/"résultat" mais jamais le
   bénéfice réel basé sur le coût d'achat des produits (`prix_achat`), ni de vue par
