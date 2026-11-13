@@ -151,9 +151,13 @@ class AuthControllerTest extends TestCase
             ->postJson('/api/logout')
             ->assertOk();
 
-        // Le même jeton ne doit plus jamais fonctionner une fois révoqué.
-        $this->withHeader('Authorization', "Bearer {$token}")
-            ->getJson('/api/user')
-            ->assertStatus(401);
+        // Le jeton est bien supprimé de la base -- on vérifie directement la ligne
+        // plutôt que de rejouer une requête authentifiée avec le même jeton : le
+        // guard Sanctum met en cache l'utilisateur résolu sur l'instance de
+        // l'application, qui persiste entre deux appels HTTP simulés dans un même
+        // test (contrairement à une vraie requête, qui démarre une application
+        // fraîche), ce qui ferait passer à tort un jeton révoqué pour valide ici.
+        [$id] = explode('|', $token, 2);
+        $this->assertDatabaseMissing('personal_access_tokens', ['id' => $id]);
     }
 }
