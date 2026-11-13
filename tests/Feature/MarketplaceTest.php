@@ -397,7 +397,8 @@ class MarketplaceTest extends TestCase
     // TEST 22 — un produit nouvellement créé n'est jamais visible dans la Marketplace par
     // défaut : le propriétaire doit l'activer explicitement (changement de comportement
     // demandé — auparavant tout produit actif apparaissait automatiquement).
-    public function test_newly_created_product_is_not_marketplace_visible_by_default(): void
+    // 2026-11-13 : un produit est visible d'office à sa création (désactivable ensuite).
+    public function test_newly_created_product_is_marketplace_visible_by_default(): void
     {
         $planPro = $this->creerPlan('pro', marketplace: true);
         $user = $this->creerUtilisateurAvecPlanEtBoutique($planPro, ['marketplace_visible' => true]);
@@ -407,7 +408,7 @@ class MarketplaceTest extends TestCase
         ])->assertRedirect();
 
         $produit = Produit::first();
-        $this->assertFalse($produit->marketplace_visible);
+        $this->assertTrue($produit->marketplace_visible);
     }
 
     // TEST 23 — le propriétaire active la visibilité Marketplace d'un produit précis, et

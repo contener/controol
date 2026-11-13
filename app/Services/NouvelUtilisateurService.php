@@ -69,6 +69,9 @@ class NouvelUtilisateurService
             'user_id' => $user->id,
             'nom' => $nom,
             'slug' => Boutique::genererSlugUnique($nom),
+            // Visible d'office sur la Marketplace si le plan démarré ci-dessus
+            // (essai Basique) le permet -- même règle que BoutiqueController::store().
+            'marketplace_visible' => (bool) $user->planActif()?->marketplace,
         ]);
 
         $user->switchBoutique($boutique);

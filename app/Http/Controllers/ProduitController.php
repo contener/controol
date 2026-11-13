@@ -67,10 +67,17 @@ class ProduitController extends Controller
             $data['photo_path'] = $request->file('photo')->store('produits', 'public');
         }
 
-        // Jamais de notification ici : marketplace_visible vaut toujours false à la
-        // création (pas dans les règles de StoreProduitRequest), donc le produit n'est
-        // encore visible nulle part -- voir updateMarketplace() pour le vrai déclencheur.
-        Produit::create($data);
+        // Visible d'office dans la boutique publique et la Marketplace (2026-11-13) :
+        // plus besoin de l'activer à la main, le propriétaire peut toujours le
+        // désactiver ensuite (updateMarketplace()). La création est donc aussi la
+        // publication : les abonnés sont notifiés ici, s'il est actif.
+        $data['marketplace_visible'] = true;
+
+        $produit = Produit::create($data);
+
+        if ($produit->actif) {
+            $this->notifierAbonnes($produit);
+        }
 
         return redirect()->route('produits.index')->with('flash_success', 'Produit/service créé avec succès.');
     }

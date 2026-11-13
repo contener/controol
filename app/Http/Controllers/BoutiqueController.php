@@ -46,6 +46,9 @@ class BoutiqueController extends Controller
         $data = $request->validated();
         $data['user_id'] = $user->id;
         $data['slug'] = Boutique::genererSlugUnique($data['nom']);
+        // Publiée d'office sur la Marketplace quand le plan le permet (2026-11-13) --
+        // désactivable ensuite (updateMarketplace()), jamais activée sans plan.
+        $data['marketplace_visible'] = (bool) $user->planActif()?->marketplace;
 
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('boutiques/logos', 'public');

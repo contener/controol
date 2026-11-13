@@ -38,7 +38,7 @@ class ProduitController extends Controller
         return response()->json($produits);
     }
 
-    public function store(StoreProduitRequest $request, LimiteService $limiteService): JsonResponse
+    public function store(StoreProduitRequest $request, LimiteService $limiteService, NotificationAbonnesService $notifications): JsonResponse
     {
         if (! $limiteService->peutCreerProduit($request->user())) {
             return response()->json([
@@ -63,7 +63,15 @@ class ProduitController extends Controller
             $data['photo_path'] = $request->file('photo')->store('produits', 'public');
         }
 
+        // Même règle que ProduitController::store() (web) : visible d'office,
+        // désactivable ensuite (updateMarketplace()), abonnés notifiés à la création.
+        $data['marketplace_visible'] = true;
+
         $produit = Produit::create($data);
+
+        if ($produit->actif) {
+            $notifications->nouveauProduit($produit);
+        }
 
         return response()->json($produit, 201);
     }

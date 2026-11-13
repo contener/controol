@@ -1415,6 +1415,17 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-13** — **Visibilité par défaut** : un produit créé (web `ProduitController::store()`
+  ou API) est désormais **visible d'office** (`marketplace_visible = true`) dans la
+  boutique publique et la Marketplace, et sa création notifie les abonnés
+  (`NotificationAbonnesService`) s'il est actif — il reste désactivable ensuite
+  (`updateMarketplace()`, bouton « Désactiver » dans l'app). Même logique pour une
+  boutique créée (web, API, inscription) : `marketplace_visible` vaut
+  `planActif()->marketplace` — publiée d'office si le plan le permet, jamais sinon,
+  désactivable ensuite. App mobile : **thème clair par défaut** ; bouton flottant
+  « Ajouter un produit » sur le Tableau de bord et la Marketplace
+  (`BoutonAjoutProduit`, boutique courante + permission Produits).
+
 - **2026-11-13** — **L'inscription est la création de la première boutique** :
   formulaire d'inscription en **4 étapes horizontales** (Compte · Boutique ·
   Coordonnées · Image & réseaux) sur le web (`Register.vue`) et sur mobile

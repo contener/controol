@@ -100,7 +100,7 @@ class SuiviBoutiqueTest extends TestCase
         $response->assertInertia(fn ($page) => $page->where('visiteurABoutique', false));
     }
 
-    public function test_new_product_notifies_active_followers_once_made_marketplace_visible(): void
+    public function test_new_product_notifies_active_followers_on_creation(): void
     {
         $vendeur = $this->creerUtilisateurAvecBoutique();
         $boutique = $vendeur->currentBoutique;
@@ -125,13 +125,9 @@ class SuiviBoutiqueTest extends TestCase
             'mini_characteristics' => 'Rouge, taille M',
         ])->assertRedirect();
 
-        // Un produit fraîchement créé est invisible par défaut (marketplace_visible=false) :
-        // aucune notification tant qu'il n'est pas réellement publié.
-        $this->assertDatabaseCount('notifications_utilisateurs', 0);
-
+        // 2026-11-13 : un produit est visible d'office à sa création, qui vaut donc
+        // publication -- seuls les abonnés actifs aux notifications sont prévenus.
         $produit = Produit::where('nom', 'Nouveau produit')->firstOrFail();
-        $this->actingAs($vendeur)->patch(route('produits.marketplace', $produit), ['marketplace_visible' => true])->assertRedirect();
-
         $this->assertDatabaseCount('notifications_utilisateurs', 1);
 
         $notification = NotificationUtilisateur::where('user_id', $abonneActif->id)->firstOrFail();

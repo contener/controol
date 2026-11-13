@@ -122,7 +122,7 @@ class ProduitAjoutDepuisBoutiqueTest extends TestCase
         $this->assertDatabaseMissing('produits', ['nom' => 'En trop']);
     }
 
-    public function test_the_normal_produits_creation_flow_still_defaults_to_invisible(): void
+    public function test_the_normal_produits_creation_flow_is_visible_by_default(): void
     {
         $user = $this->creerUtilisateurAvecBoutique();
 
@@ -131,7 +131,7 @@ class ProduitAjoutDepuisBoutiqueTest extends TestCase
 
         $this->assertDatabaseHas('produits', [
             'nom' => 'Créé via Produits & Services',
-            'marketplace_visible' => 0,
+            'marketplace_visible' => 1,
         ]);
     }
 }

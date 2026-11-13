@@ -308,4 +308,42 @@ class EspaceMobileTest extends TestCase
 
         $this->actingAs($user, 'sanctum')->getJson('/api/compte/vue-globale')->assertOk()->assertJsonStructure(['stats' => ['boutiques', 'chiffre_affaires']]);
     }
+
+    /**
+     * Un produit est visible d'office à sa création (2026-11-13), abonnés notifiés,
+     * et reste désactivable ensuite.
+     */
+    public function test_new_product_is_visible_immediately_and_can_be_hidden(): void
+    {
+        $boutique = $this->boutiquePublique();
+        $proprietaire = $boutique->proprietaire;
+        $abonne = User::factory()->create();
+        Suivi::create(['boutique_id' => $boutique->id, 'user_id' => $abonne->id, 'notifications_actives' => true, 'abonne_a' => now()]);
+
+        $id = $this->actingAs($proprietaire, 'sanctum')
+            ->postJson('/api/produits', ['type' => 'service', 'nom' => 'Retouche', 'prix_vente' => 2000, 'unite' => 'pièce'])
+            ->assertCreated()
+            ->assertJsonPath('marketplace_visible', true)
+            ->json('id');
+
+        $this->assertDatabaseHas('notifications_utilisateurs', ['user_id' => $abonne->id, 'type' => 'nouveau_produit']);
+
+        $this->actingAs($proprietaire, 'sanctum')
+            ->getJson("/api/marketplace/boutiques/{$boutique->slug}")
+            ->assertJsonFragment(['nom' => 'Retouche']);
+
+        $this->actingAs($proprietaire, 'sanctum')->patchJson("/api/produits/{$id}/marketplace", ['marketplace_visible' => false])->assertOk();
+        $this->assertFalse((bool) Produit::withoutGlobalScopes()->find($id)->marketplace_visible);
+    }
+
+    /** Une nouvelle boutique est publiée d'office si le plan le permet, jamais sinon. */
+    public function test_new_shop_is_visible_only_when_plan_allows_it(): void
+    {
+        $avecPlan = $this->creerUtilisateurAvecBoutique('pro');
+        $this->activerFonctionnalites($avecPlan, ['marketplace' => true, 'limite_boutiques' => null]);
+        $this->actingAs($avecPlan, 'sanctum')->postJson('/api/boutiques', ['nom' => 'Visible'])->assertCreated()->assertJsonPath('boutique.marketplace_visible', true);
+
+        $sansPlan = $this->creerUtilisateurAvecBoutique('gratuit');
+        $this->actingAs($sansPlan, 'sanctum')->postJson('/api/boutiques', ['nom' => 'Masquee'])->assertCreated()->assertJsonPath('boutique.marketplace_visible', false);
+    }
 }
