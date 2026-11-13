@@ -30,6 +30,33 @@ class FactureControllerTest extends TestCase
         return [$client, $produit];
     }
 
+    public function test_duplicate_and_download_pdf(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        [$client, $produit] = $this->creerClientEtProduit($user->current_boutique_id);
+
+        $id = $this->actingAs($user, 'sanctum')->postJson('/api/factures', [
+            'client_id' => $client->id,
+            'date_emission' => now()->toDateString(),
+            'remise' => 0,
+            'lignes' => [[
+                'produit_id' => $produit->id, 'designation' => 'Widget',
+                'quantite' => 1, 'prix_unitaire' => 100, 'tva_taux' => 20, 'remise_ligne' => 0,
+            ]],
+        ])->assertCreated()->json('id');
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson("/api/factures/{$id}/dupliquer")
+            ->assertCreated()
+            ->assertJsonPath('facture.statut', 'brouillon');
+        $this->assertSame(2, Facture::count());
+
+        $this->actingAs($user, 'sanctum')
+            ->get("/api/factures/{$id}/pdf")
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
     public function test_create_a_facture_via_the_api_consumes_stock(): void
     {
         $user = $this->creerUtilisateurAvecBoutique('pro');

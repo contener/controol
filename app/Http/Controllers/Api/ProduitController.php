@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProduitRequest;
 use App\Http\Requests\UpdateProduitRequest;
 use App\Models\Produit;
 use App\Services\LimiteService;
+use App\Services\NotificationAbonnesService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -95,6 +96,33 @@ class ProduitController extends Controller
         $produit->update($data);
 
         return response()->json($produit->fresh());
+    }
+
+    /**
+     * Même règle que ProduitController::updateMarketplace() (web) : les abonnés ne
+     * sont notifiés qu'au vrai passage invisible -> visible d'un produit actif
+     * (NotificationAbonnesService, partagé avec le web).
+     */
+    public function updateMarketplace(Request $request, Produit $produit, NotificationAbonnesService $notifications): JsonResponse
+    {
+        $this->authorize('update', $produit);
+
+        $data = $request->validate(['marketplace_visible' => ['required', 'boolean']]);
+
+        $devientVisible = $data['marketplace_visible'] && ! $produit->marketplace_visible;
+
+        $produit->update(['marketplace_visible' => $data['marketplace_visible']]);
+
+        if ($devientVisible && $produit->actif) {
+            $notifications->nouveauProduit($produit);
+        }
+
+        return response()->json([
+            'message' => $data['marketplace_visible']
+                ? "« {$produit->nom} » est désormais visible dans la boutique et la Marketplace."
+                : "« {$produit->nom} » n'est plus visible publiquement.",
+            'produit' => $produit->fresh(),
+        ]);
     }
 
     public function destroy(Produit $produit): JsonResponse

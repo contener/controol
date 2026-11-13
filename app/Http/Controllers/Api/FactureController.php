@@ -10,6 +10,7 @@ use App\Models\Facture;
 use App\Services\FactureService;
 use App\Services\LimiteService;
 use App\Support\FactureApercuBuilder;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,12 +18,44 @@ use Illuminate\Validation\Rule;
 /**
  * Équivalent API de FactureController (web) -- même FactureService pour toute la
  * logique métier (numérotation, mouvements de stock, totaux, avance/reste des
- * Reçus...), jamais réimplémentée ici. Le choix du modèle PDF et le téléchargement
- * du PDF restent web-only pour l'instant (voir controol.md §5.21) : l'app mobile
- * est faite pour saisir/consulter, pas pour produire un document imprimable.
+ * Reçus...), jamais réimplémentée ici. Le PDF (pdf()) est généré avec exactement
+ * la même vue/le même FactureApercuBuilder que FactureController::downloadPdf()
+ * (web) ; le choix du modèle visuel reste web-only (voir controol.md §5.21).
  */
 class FactureController extends Controller
 {
+    /** Même règles que FactureController::duplicate() (web) via FactureService::dupliquer(). */
+    public function dupliquer(Request $request, Facture $facture, FactureService $factureService, LimiteService $limiteService): JsonResponse
+    {
+        $this->authorize('view', $facture);
+        $user = $request->user();
+
+        if (! $limiteService->peutCreerFacture($user)) {
+            return response()->json([
+                'message' => "Limite de factures atteinte pour votre plan ({$user->planActif()?->nom}). Passez à un plan supérieur pour continuer à facturer.",
+            ], 422);
+        }
+
+        ['copie' => $copie, 'modele_substitue' => $substitue] = $factureService->dupliquer($facture, $user);
+
+        return response()->json([
+            'message' => $substitue
+                ? "{$copie->type->label()} dupliquée en brouillon {$copie->numero} (modèle original indisponible sur votre plan actuel, remplacé par Standard)."
+                : "{$copie->type->label()} dupliquée en brouillon {$copie->numero}.",
+            'facture' => $copie,
+        ], 201);
+    }
+
+    public function pdf(Facture $facture, FactureApercuBuilder $apercuBuilder)
+    {
+        $this->authorize('view', $facture);
+
+        $vue = sprintf('factures.pdf.modele-%02d', $facture->modele_id->value);
+
+        return Pdf::loadView($vue, ['apercu' => $apercuBuilder->construire($facture)])
+            ->download("{$facture->numero}.pdf");
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Facture::class);

@@ -7,9 +7,9 @@ use App\Http\Requests\StoreProduitRequest;
 use App\Http\Requests\UpdateProduitRequest;
 use App\Models\Produit;
 use App\Services\LimiteService;
+use App\Services\NotificationAbonnesService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -114,45 +114,12 @@ class ProduitController extends Controller
     /**
      * Insertion en masse (une seule requête) : jamais N notifications Eloquent
      * individuelles pour une boutique à forte audience. Ne part jamais vers un
-     * abonné désactivé (notifications_actives = false) ou désabonné.
+     * abonné désactivé (notifications_actives = false) ou désabonné. Logique dans
+     * NotificationAbonnesService, partagée avec Api\ProduitController.
      */
     private function notifierAbonnes(Produit $produit): void
     {
-        $destinataires = DB::table('suivis_boutique')
-            ->where('boutique_id', $produit->boutique_id)
-            ->where('notifications_actives', true)
-            ->whereNull('desabonne_a')
-            ->pluck('user_id');
-
-        if ($destinataires->isEmpty()) {
-            return;
-        }
-
-        $boutique = $produit->boutique;
-        $prix = $produit->promotion_prix ?? $produit->prix_vente;
-
-        $message = "{$boutique->nom} vient de publier « {$produit->nom} »";
-        if ($produit->mini_characteristics) {
-            $message .= " — {$produit->mini_characteristics}";
-        }
-        $message .= ' à '.number_format((float) $prix, 0, ',', ' ')." {$boutique->devise}.";
-
-        // URL absolue construite ici, une seule fois, plutôt que devinée côté client à
-        // partir d'un slug -- reste valide même si la structure des routes change.
-        $lien = route('public.boutique', $boutique->slug);
-        $maintenant = now();
-
-        DB::table('notifications_utilisateurs')->insert(
-            $destinataires->map(fn ($userId) => [
-                'user_id' => $userId,
-                'type' => 'nouveau_produit',
-                'titre' => "Nouveau produit chez {$boutique->nom}",
-                'message' => $message,
-                'lien' => $lien,
-                'est_promotionnelle' => false,
-                'created_at' => $maintenant,
-            ])->all()
-        );
+        app(NotificationAbonnesService::class)->nouveauProduit($produit);
     }
 
     public function edit(Produit $produit): Response

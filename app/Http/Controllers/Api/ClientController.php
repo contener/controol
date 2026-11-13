@@ -29,6 +29,19 @@ class ClientController extends Controller
                 });
             })
             ->when($request->string('etiquette')->toString(), fn ($query, $etiquette) => $query->where('etiquette', $etiquette))
+            // Mêmes filtres que ClientController::index() (web).
+            ->when($request->filled('avecFactures'), function ($query) use ($request) {
+                $aCeType = fn ($q) => $q->whereHas('factures', fn ($qf) => $qf->where('type', 'facture'));
+                $request->boolean('avecFactures') ? $query->where($aCeType) : $query->whereNot($aCeType);
+            })
+            ->when($request->filled('avecProformas'), function ($query) use ($request) {
+                $aCeType = fn ($q) => $q->whereHas('factures', fn ($qf) => $qf->where('type', 'proforma'));
+                $request->boolean('avecProformas') ? $query->where($aCeType) : $query->whereNot($aCeType);
+            })
+            ->when($request->filled('avecRecus'), function ($query) use ($request) {
+                $aCeType = fn ($q) => $q->whereHas('factures', fn ($qf) => $qf->where('type', 'recu'));
+                $request->boolean('avecRecus') ? $query->where($aCeType) : $query->whereNot($aCeType);
+            })
             ->withCount([
                 'factures as factures_count' => fn ($q) => $q->where('type', 'facture'),
                 'factures as proformas_count' => fn ($q) => $q->where('type', 'proforma'),

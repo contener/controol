@@ -104,6 +104,52 @@ class FactureService
         });
     }
 
+    /**
+     * Copie un document en brouillon daté du jour -- extrait de
+     * FactureController::duplicate() (web) pour être partagé avec l'API mobile.
+     * Si le modèle visuel d'origine n'est plus autorisé par le plan actuel, il est
+     * remplacé par Standard (signalé par 'modele_substitue').
+     *
+     * @return array{copie: Facture, modele_substitue: bool}
+     */
+    public function dupliquer(Facture $facture, User $user): array
+    {
+        $facture->loadMissing('lignes');
+
+        $modeleId = $facture->modele_id->value;
+        $modeleSubstitue = false;
+
+        if (! app(\App\Policies\FacturePolicy::class)->useModele($user, $modeleId)) {
+            $modeleId = \App\Enums\FactureModele::Standard->value;
+            $modeleSubstitue = true;
+        }
+
+        $copie = $this->creer([
+            'client_id' => $facture->client_id,
+            'type' => $facture->type->value,
+            'date_emission' => now()->toDateString(),
+            'date_echeance' => null,
+            'remise' => $facture->remise,
+            // Un Reçu doit toujours avoir une avance renseignée (voir StoreFactureRequest) --
+            // creer() n'est pas filtré par cette validation ici, donc on la reporte explicitement.
+            'montant_avance' => $facture->montant_avance,
+            'notes' => $facture->notes,
+            'statut' => 'brouillon',
+            'modele_id' => $modeleId,
+            'lignes' => $facture->lignes->map(fn ($ligne) => [
+                'produit_id' => $ligne->produit_id,
+                'designation' => $ligne->designation,
+                'description' => $ligne->description,
+                'quantite' => $ligne->quantite,
+                'prix_unitaire' => $ligne->prix_unitaire,
+                'tva_taux' => $ligne->tva_taux,
+                'remise_ligne' => $ligne->remise_ligne,
+            ])->all(),
+        ], $user, $user->currentBoutique->id);
+
+        return ['copie' => $copie, 'modele_substitue' => $modeleSubstitue];
+    }
+
     public function supprimer(Facture $facture, User $user): void
     {
         DB::transaction(function () use ($facture, $user) {

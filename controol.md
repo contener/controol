@@ -1162,21 +1162,84 @@ web — jamais une seconde définition des règles) :
 - `GET /stock`, `GET /stock/{produit}/mouvements`, `POST /stock`
   (`StockService`, identique au web).
 
-**Hors périmètre, à construire plus tard** : Audience, gestion des collaborateurs/
-permissions, Marketplace, Messagerie, Abonnements/paiements, Parrainage, Espace
-Super Administrateur — aucun endpoint n'existe encore pour ces modules. Photo de
-produit et modèle de facture PDF restent aussi web-only (voir ci-dessus). Pas de
-préfixe `/api/v1` pour l'instant (à introduire si/quand une v2 incompatible
-devient nécessaire, pas préventivement).
+**Extension 2026-11-13 (soir) — parité avec l'espace utilisateur du site.**
+Chaque contrôleur `Api\*` ci-dessous reprend les mêmes requêtes, FormRequests,
+Policies et verrous (plan + permission collaborateur) que son équivalent web :
+- `GET /compte/resume` : tout ce dont la coquille mobile a besoin — utilisateur,
+  boutiques accessibles avec permissions (même fusion que `mesBoutiques` de
+  `HandleInertiaRequests`), boutique courante, plan actif, essai en cours,
+  compteurs de non-lus (messages boutique, mes conversations, notifications).
+  `GET /compte/vue-globale` (`CompteStatsService`, permission `vue_globale`),
+  `POST /compte/profil` (multipart, action Fortify `UpdateUserProfileInformation`
+  telle quelle, photo comprise), `DELETE /compte/profil/photo`,
+  `PUT /compte/mot-de-passe` (mêmes `PasswordValidationRules` ; mot de passe
+  actuel vérifié par `Hash::check()` car la règle `current_password:web` de
+  l'action web dépend de la session), `PATCH /compte/preferences`
+  (`UpdatePreferencesRequest`).
+- `GET /notifications`, `PATCH /notifications/{id}/lu`, `PATCH /notifications/tout-lu`.
+- `GET /marketplace` (mêmes filtres/promotions que `MarketplaceController`),
+  `GET /marketplace/boutiques/{slug}` (page publique : produits, likes, abonnés,
+  catégories), `POST|DELETE …/suivre`, `POST …/produits/{id}/jaime`,
+  `GET …/conversation?produit_id=` (fil existant, marque lu),
+  `POST …/messages`. **`Api\MarketplaceController` duplique volontairement la
+  branche « utilisateur connecté » de `PublicBoutiqueController::envoyerMessage()/
+  aimerProduit()`** (blocage sur toute la relation, réutilisation du fil ouvert,
+  journalisation Audience) — l'app est toujours authentifiée, jamais le cookie
+  visiteur anonyme. Si ces règles évoluent, mettre à jour LES DEUX côtés.
+- `GET /audience`, `GET /audience/{membre}`, `POST …/whatsapp` (renvoie le lien
+  wa.me, journalise l'ouverture), `POST …/message`, `PATCH …/statut`.
+- `GET|POST /equipe`, `PATCH|DELETE /equipe/{collaborateur}` (propriétaire seul,
+  plan `personnel_boutique`).
+- `GET /messages` (+ clients pour « Nouvelle conversation »), `GET /messages/{id}`
+  (marque lu), `POST /messages` (renvoie `lien_conversation` à transmettre),
+  `POST /messages/{id}/repondre`, `PATCH /messages/{id}/statut`.
+- `GET /mes-conversations`, `GET /mes-conversations/{id}`, `POST …/repondre`.
+- `GET /abonnement`, `POST /abonnement/plans/{plan}` — renvoie
+  `lien_paiement`, que l'app ouvre dans le navigateur. La logique est dans
+  **`AbonnementService::demanderChangement()`, partagé avec le web** (règle
+  financière, jamais dupliquée).
+- `GET /parrainage`.
+- Boutiques : `GET /boutiques/gestion` (page « Mes boutiques »), `POST /boutiques`,
+  `GET /boutiques/{id}`, `POST /boutiques/{id}` (mise à jour en multipart — PHP
+  ne lit pas les fichiers d'un vrai PUT multipart), `DELETE /boutiques/{id}`,
+  `PATCH /boutiques/{id}/marketplace` (jamais activé sans plan, même forgé).
+- `PATCH /produits/{id}/marketplace` — notifie les abonnés au passage
+  invisible → visible via **`NotificationAbonnesService`, partagé avec le web**.
+  Produits créés/modifiés en multipart (photo) avec `_method=PUT` pour la mise à jour.
+- `GET /factures/{id}/pdf` (même vue/`FactureApercuBuilder` que le web),
+  `POST /factures/{id}/dupliquer` (**`FactureService::dupliquer()`, partagé avec
+  le web**). Le choix du modèle visuel de facture reste web-only.
+- `GET /clients` accepte aussi `avecFactures`/`avecProformas`/`avecRecus` (mêmes
+  filtres que le web).
 
-**Application Flutter (`../flutter_app`)** : coquille de navigation (bottom bar,
-`HomeScreen`) avec un onglet par module ci-dessus déjà couvert côté API — Tableau
-de bord, Clients, Produits, Factures (création/édition avec lignes dynamiques,
-avance/reste des Reçus inclus), Dépenses. `ApiClient` (`lib/services/api_client.dart`)
-est le point unique de tout appel HTTP authentifié (en-têtes/jeton/décodage JSON
-centralisés) ; `EtatAsync` (`lib/widgets/etat_async.dart`) habille chaque
-`FutureBuilder` (chargement/erreur/données) pour ne jamais répéter ces trois états
-dans chaque écran.
+**Encore web-only** : Partage social (destinations/campagnes), Agent IA WhatsApp
+(connexion par QR code), choix du modèle visuel de facture, Espace Super
+Administrateur, double authentification (connexion bloquée côté mobile si 2FA
+confirmée, voir plus haut). Pas de préfixe `/api/v1` pour l'instant.
+
+**Application Flutter (`../flutter_app`)** : barre de navigation à cinq onglets —
+Marketplace, Clients, Messages, Tableau de bord (onglet par défaut), Compte.
+Toutes les autres sections du site sont des **onglets de l'espace Compte**
+(`lib/screens/compte/`) : Vue globale, Produits & Services, Stock, Factures,
+Dépenses, Audience, Équipe (propriétaire seul), Mes conversations,
+Notifications, Mes boutiques, page publique, Abonnement, Parrainage, Profil,
+Paramètres de l'application. Les tuiles suivent les mêmes conditions
+d'affichage que les liens d'`AppLayout.vue` (`Session.peut()`), le backend
+restant la source de vérité.
+- `Session` (`lib/services/session.dart`) : état partagé alimenté par
+  `/compte/resume`, rafraîchi au retour au premier plan, toutes les 60 s et
+  après chaque action ; pastilles de non-lus de la barre de navigation.
+- `ApiClient` : point unique de tout appel HTTP authentifié (JSON, multipart pour
+  les images, téléchargement binaire pour les PDF) ; un 401 renvoie à l'écran de
+  connexion. `ListePaginee` : listes paginées Laravel avec chargement continu ;
+  `EtatAsync` : chargement/erreur (bouton Réessayer)/données.
+- Thème clair/sombre/système (`ThemeController`, mémorisé localement et
+  synchronisé avec `users.theme` via `/compte/preferences`). `AppColors` expose
+  des getters liés au thème actif — **ne jamais les utiliser dans une expression
+  `const`**.
+- Android : permission `INTERNET` dans le manifeste principal (pas seulement
+  debug — sans elle la version release ne joint pas le serveur) et `<queries>`
+  pour https/tel/PDF (ouverture de WhatsApp, des liens de paiement, des PDF).
 
 **Déployé et vérifié en conditions réelles (2026-11-13)** : suite de tests
 complète (`tests/Feature/Api/`) passée contre le vrai serveur de production
@@ -1351,6 +1414,23 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
+
+- **2026-11-13** — **Refonte complète de l'app mobile : parité avec l'espace
+  utilisateur du site** (voir §5.21, « Extension 2026-11-13 (soir) »). Nouveaux
+  endpoints API : Compte (résumé de session, vue globale, profil + photo, mot de
+  passe, préférences), Notifications, Marketplace (liste, page boutique, suivre,
+  j'aime, contacter le vendeur), Audience, Équipe, Messages, Mes conversations,
+  Abonnement, Parrainage, gestion complète des boutiques (logo/bannière,
+  publication Marketplace), publication d'un produit, PDF et duplication de
+  facture, filtres clients avec/sans factures/proformas/reçus. Trois règles
+  extraites en services partagés web + API au lieu d'être dupliquées :
+  `AbonnementService::demanderChangement()` (financier), `NotificationAbonnesService`
+  (publication d'un produit), `FactureService::dupliquer()`. App Flutter : barre de
+  navigation Marketplace / Clients / Messages / Tableau de bord / Compte, toutes
+  les autres sections en onglets de l'espace Compte, thème clair/sombre/système
+  synchronisé avec `users.theme`. Suite de tests : `tests/Feature/Api/EspaceMobileTest.php`
+  + duplication/PDF dans `FactureControllerTest` ; aucun nouvel échec dans la suite
+  complète (mêmes échecs préexistants qu'avant, dont GoogleAuth sans Socialite en local).
 
 - **2026-11-13** — **Déploiement de l'API mobile sur controol.fr + correctif de
   collision de routes** (voir §5.21). Déploiement débloqué (règle de permission

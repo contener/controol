@@ -10,7 +10,6 @@ use App\Models\Client;
 use App\Models\Facture;
 use App\Models\Produit;
 use App\Models\User;
-use App\Policies\FacturePolicy;
 use App\Services\FactureService;
 use App\Services\LimiteService;
 use App\Support\FactureApercuBuilder;
@@ -163,38 +162,8 @@ class FactureController extends Controller
             return back()->with('flash_error', "Limite de factures atteinte pour votre plan ({$user->planActif()?->nom}). Passez à un plan supérieur pour continuer à facturer.");
         }
 
-        $facture->loadMissing('lignes');
-
-        $modeleId = $facture->modele_id->value;
-        $modeleSubstitue = false;
-
-        if (! app(FacturePolicy::class)->useModele($user, $modeleId)) {
-            $modeleId = FactureModele::Standard->value;
-            $modeleSubstitue = true;
-        }
-
-        $copie = $factureService->creer([
-            'client_id' => $facture->client_id,
-            'type' => $facture->type->value,
-            'date_emission' => now()->toDateString(),
-            'date_echeance' => null,
-            'remise' => $facture->remise,
-            // Un Reçu doit toujours avoir une avance renseignée (voir StoreFactureRequest) --
-            // creer() n'est pas filtré par cette validation ici, donc on la reporte explicitement.
-            'montant_avance' => $facture->montant_avance,
-            'notes' => $facture->notes,
-            'statut' => 'brouillon',
-            'modele_id' => $modeleId,
-            'lignes' => $facture->lignes->map(fn ($ligne) => [
-                'produit_id' => $ligne->produit_id,
-                'designation' => $ligne->designation,
-                'description' => $ligne->description,
-                'quantite' => $ligne->quantite,
-                'prix_unitaire' => $ligne->prix_unitaire,
-                'tva_taux' => $ligne->tva_taux,
-                'remise_ligne' => $ligne->remise_ligne,
-            ])->all(),
-        ], $user, $user->currentBoutique->id);
+        // Logique dans FactureService::dupliquer(), partagée avec l'API mobile.
+        ['copie' => $copie, 'modele_substitue' => $modeleSubstitue] = $factureService->dupliquer($facture, $user);
 
         $message = $modeleSubstitue
             ? "{$copie->type->label()} dupliquée en brouillon {$copie->numero} (modèle original indisponible sur votre plan actuel, remplacé par Standard)."
