@@ -1121,6 +1121,14 @@ besoin de versionner) :
   message clair plutôt que contournée silencieusement — aucun flux de saisie de
   code à 6 chiffres n'existe encore côté mobile ; à construire si des comptes avec
   2FA ont besoin d'utiliser l'app.
+- `POST /register` (2026-11-13, pas de limiteur dédié — le web n'en a pas non
+  plus) : réutilise `CreatesNewUsers` (`CreateNewUser`, lié dans
+  `FortifyServiceProvider::boot()`) tel quel — mêmes règles (mot de passe
+  `confirmed`, e-mail unique) et mêmes effets de bord
+  (`NouvelUtilisateurService::initialiser()` : essai/plan gratuit, invitations
+  boutique/parrainage en attente) que l'inscription web, jamais une seconde
+  définition. Connecte directement l'utilisateur (jeton) après inscription,
+  comme `RegisteredUserController::store()` le fait pour le web (session).
 - `POST /logout` (`auth:sanctum`) : révoque uniquement le jeton courant
   (`currentAccessToken()->delete()`), jamais tous les jetons de l'utilisateur — une
   connexion sur un autre appareil ne doit pas être coupée par une déconnexion sur
