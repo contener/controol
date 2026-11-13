@@ -8,6 +8,7 @@ import InstallAppBanner from '@/Components/InstallAppBanner.vue';
 
 const form = useForm({
     name: '',
+    nom_boutique: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -119,7 +120,7 @@ const forceMotDePasse = computed(() => {
                 </div>
 
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Créez votre compte</h2>
-                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Gratuit, sans carte bancaire. Votre première boutique en moins de deux minutes.</p>
+                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Gratuit, sans carte bancaire. Votre boutique est créée en même temps que votre compte.</p>
 
                 <div v-if="$page.props.flash?.error" class="mt-6 rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                     {{ $page.props.flash.error }}
@@ -170,6 +171,31 @@ const forceMotDePasse = computed(() => {
                             >
                         </div>
                         <InputError class="mt-2" :message="form.errors.name" />
+                    </div>
+
+                    <!-- L'inscription crée aussi la boutique (NouvelUtilisateurService) :
+                         plus d'écran "Créez votre première boutique" ensuite. -->
+                    <div>
+                        <label for="nom_boutique" class="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Nom de votre boutique <span class="font-normal text-slate-400 dark:text-slate-500">(facultatif)</span>
+                        </label>
+                        <div class="mt-1 relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 dark:text-slate-500">
+                                <svg class="size-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
+                                </svg>
+                            </span>
+                            <input
+                                id="nom_boutique"
+                                v-model="form.nom_boutique"
+                                type="text"
+                                autocomplete="organization"
+                                placeholder="Ex. : Aïcha Mode"
+                                class="block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 pl-10 py-2.5 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            >
+                        </div>
+                        <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Vous pourrez la renommer et la compléter plus tard (logo, adresse, WhatsApp...).</p>
+                        <InputError class="mt-2" :message="form.errors.nom_boutique" />
                     </div>
 
                     <div>

@@ -25,6 +25,9 @@ class CreateNewUser implements CreatesNewUsers
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => $this->passwordRules(),
+            // L'inscription crée aussi la boutique (NouvelUtilisateurService) --
+            // nom facultatif, repli sur "Boutique de {nom}".
+            'nom_boutique' => ['nullable', 'string', 'max:255'],
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
@@ -33,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
                 'name' => $input['name'],
                 'email' => $input['email'],
                 'password' => Hash::make($input['password']),
-            ]), fn (User $user) => app(NouvelUtilisateurService::class)->initialiser($user));
+            ]), fn (User $user) => app(NouvelUtilisateurService::class)->initialiser($user, $input['nom_boutique'] ?? null));
         });
     }
 }

@@ -1415,6 +1415,19 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-13** — **L'inscription crée la boutique** : `NouvelUtilisateurService::initialiser()`
+  crée désormais la première boutique de tout nouvel inscrit (formulaire web,
+  `/api/register` mobile, Google) et en fait sa boutique courante — plus d'écran
+  « Créez votre première boutique » après l'inscription. Nom saisi dans le
+  nouveau champ facultatif `nom_boutique` (Register.vue, écran d'inscription
+  mobile, validé par `CreateNewUser`), sinon « Boutique de {nom} » ; e-mail du
+  compte repris comme e-mail de la boutique ; suivi de
+  `InvitationBoutiqueService::apresCreationBoutique()` comme une création
+  manuelle. Les comptes collaborateurs (créés par un propriétaire) ne sont pas
+  concernés. Génération de slug unifiée dans `Boutique::genererSlugUnique()`
+  (web, API, inscription). L'état « aucune boutique » du tableau de bord reste
+  pour les comptes plus anciens qui n'en ont pas.
+
 - **2026-11-13** — **Refonte complète de l'app mobile : parité avec l'espace
   utilisateur du site** (voir §5.21, « Extension 2026-11-13 (soir) »). Nouveaux
   endpoints API : Compte (résumé de session, vue globale, profil + photo, mot de

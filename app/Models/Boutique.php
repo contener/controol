@@ -193,6 +193,25 @@ class Boutique extends Model
         return $this->autoriseCollaborateurPour($user, 'acces_vue_globale');
     }
 
+    /**
+     * Slug unique dérivé du nom ("ma-boutique", "ma-boutique-1"...) -- seule
+     * définition, utilisée par BoutiqueController (web + API) et par la boutique
+     * créée automatiquement à l'inscription (NouvelUtilisateurService).
+     */
+    public static function genererSlugUnique(string $nom): string
+    {
+        $base = \Illuminate\Support\Str::slug($nom) ?: 'boutique';
+        $slug = $base;
+        $i = 1;
+
+        while (static::where('slug', $slug)->exists()) {
+            $slug = "{$base}-{$i}";
+            $i++;
+        }
+
+        return $slug;
+    }
+
     public function nombreAbonnes(): int
     {
         return $this->suivis()->actifs()->count();

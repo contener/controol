@@ -114,6 +114,25 @@ class AuthControllerTest extends TestCase
             ->assertJsonPath('id', $user->id);
     }
 
+    /** Même règle que le web : l'inscription mobile crée aussi la boutique. */
+    public function test_register_via_api_creates_the_shop(): void
+    {
+        Plan::create(['code' => 'gratuit', 'nom' => 'Gratuit', 'prix' => 0, 'devise' => 'XAF']);
+
+        $token = $this->postJson('/api/register', [
+            'name' => 'Nouvel Utilisateur',
+            'nom_boutique' => 'Ma Boutique Mobile',
+            'email' => 'mobile@example.com',
+            'password' => 'mot-de-passe-solide',
+            'password_confirmation' => 'mot-de-passe-solide',
+        ])->assertCreated()->json('token');
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('boutique.nom', 'Ma Boutique Mobile');
+    }
+
     public function test_register_requires_matching_password_confirmation(): void
     {
         $this->postJson('/api/register', [

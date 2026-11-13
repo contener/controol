@@ -45,7 +45,7 @@ class BoutiqueController extends Controller
 
         $data = $request->validated();
         $data['user_id'] = $user->id;
-        $data['slug'] = $this->genererSlugUnique($data['nom']);
+        $data['slug'] = Boutique::genererSlugUnique($data['nom']);
 
         if ($request->hasFile('logo')) {
             $data['logo_path'] = $request->file('logo')->store('boutiques/logos', 'public');
@@ -161,19 +161,5 @@ class BoutiqueController extends Controller
         $boutique->update($data);
 
         return back()->with('flash_success', 'NUI mis à jour.');
-    }
-
-    private function genererSlugUnique(string $nom): string
-    {
-        $base = Str::slug($nom);
-        $slug = $base;
-        $i = 1;
-
-        while (Boutique::where('slug', $slug)->exists()) {
-            $slug = "{$base}-{$i}";
-            $i++;
-        }
-
-        return $slug;
     }
 }

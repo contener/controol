@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Abonnement;
+use App\Models\Boutique;
 use App\Models\EssaiUtilisateur;
 use App\Models\Plan;
 use App\Models\User;
@@ -16,11 +17,42 @@ use App\Models\User;
  */
 class NouvelUtilisateurService
 {
-    public function initialiser(User $user): void
+    /**
+     * $nomBoutique : nom saisi à l'inscription (champ facultatif du formulaire web
+     * Register.vue et de l'app mobile) -- repli sur "Boutique de {nom}".
+     */
+    public function initialiser(User $user, ?string $nomBoutique = null): void
     {
         $this->demarrerEssaiOuGratuit($user);
         app(InvitationBoutiqueService::class)->apresInscription($user);
         app(ParrainageService::class)->apresInscription($user);
+        $this->creerBoutiqueInitiale($user, $nomBoutique);
+    }
+
+    /**
+     * L'inscription vaut création de la boutique (2026-11-13) : plus d'écran
+     * "Créez votre première boutique" après l'inscription -- l'utilisateur arrive
+     * directement sur le tableau de bord de sa boutique, sur le web comme sur
+     * mobile, y compris via Google. Créée après l'abonnement (essai/gratuit) pour
+     * respecter la limite de boutiques du plan, et suivie de
+     * apresCreationBoutique() comme une création manuelle (journal d'invitation
+     * si l'inscription venait de la page d'une autre boutique). Les comptes
+     * collaborateurs créés par un propriétaire ne passent jamais par ici.
+     */
+    protected function creerBoutiqueInitiale(User $user, ?string $nomBoutique): void
+    {
+        $nom = trim((string) $nomBoutique) ?: "Boutique de {$user->name}";
+
+        $boutique = Boutique::create([
+            'user_id' => $user->id,
+            'nom' => $nom,
+            'slug' => Boutique::genererSlugUnique($nom),
+            'email' => $user->email,
+        ]);
+
+        $user->switchBoutique($boutique);
+
+        app(InvitationBoutiqueService::class)->apresCreationBoutique($user, $boutique);
     }
 
     /**
