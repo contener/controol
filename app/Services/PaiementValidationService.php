@@ -16,11 +16,22 @@ class PaiementValidationService
      * d'expiration selon la durée du plan, désactive l'ancien abonnement actif de
      * l'utilisateur, et journalise l'action. N'est jamais appelé en dehors d'une route
      * protégée par le middleware 'super_admin' — $admin n'est donc jamais l'utilisateur
-     * lui-même qui valide son propre paiement (RULE 3/6).
+     * lui-même qui valide son propre paiement (RULE 3/6) -- contrôlé par
+     * AdminPaiementController (audit sécurité V-05).
+     *
+     * Le paiement est relu et verrouillé dans la transaction (audit sécurité V-08) :
+     * deux validations simultanées (double clic, deux administrateurs) ne peuvent
+     * jamais activer deux fois l'abonnement -- la seconde renvoie null.
      */
-    public function approuver(Paiement $paiement, User $admin, Request $request): Paiement
+    public function approuver(Paiement $paiement, User $admin, Request $request): ?Paiement
     {
         return DB::transaction(function () use ($paiement, $admin, $request) {
+            $paiement = Paiement::whereKey($paiement->getKey())->lockForUpdate()->first();
+
+            if (! $paiement || ! $paiement->estEnAttente()) {
+                return null;
+            }
+
             $statutAvant = $paiement->statut;
 
             $paiement->update([
@@ -64,9 +75,15 @@ class PaiementValidationService
         });
     }
 
-    public function rejeter(Paiement $paiement, User $admin, string $motif, Request $request): Paiement
+    public function rejeter(Paiement $paiement, User $admin, string $motif, Request $request): ?Paiement
     {
         return DB::transaction(function () use ($paiement, $admin, $motif, $request) {
+            $paiement = Paiement::whereKey($paiement->getKey())->lockForUpdate()->first();
+
+            if (! $paiement || ! $paiement->estEnAttente()) {
+                return null;
+            }
+
             $statutAvant = $paiement->statut;
 
             $paiement->update([

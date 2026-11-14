@@ -59,7 +59,16 @@ class PaiementController extends Controller
             return back()->with('flash_error', 'Ce paiement a déjà été traité.');
         }
 
-        $service->approuver($paiement, $request->user(), $request);
+        // Séparation des rôles (audit sécurité V-05) : la permission paiements.valider
+        // peut être déléguée à un administrateur, qui est aussi un utilisateur comme un
+        // autre -- il ne doit jamais pouvoir s'activer lui-même un abonnement.
+        if ($paiement->user_id === $request->user()->id) {
+            return back()->with('flash_error', 'Vous ne pouvez pas traiter votre propre paiement : un autre administrateur doit le faire.');
+        }
+
+        if (! $service->approuver($paiement, $request->user(), $request)) {
+            return back()->with('flash_error', 'Ce paiement a déjà été traité.');
+        }
 
         return back()->with('flash_success', 'Paiement approuvé, abonnement activé.');
     }
@@ -70,7 +79,13 @@ class PaiementController extends Controller
             return back()->with('flash_error', 'Ce paiement a déjà été traité.');
         }
 
-        $service->rejeter($paiement, $request->user(), $request->validated('motif'), $request);
+        if ($paiement->user_id === $request->user()->id) {
+            return back()->with('flash_error', 'Vous ne pouvez pas traiter votre propre paiement : un autre administrateur doit le faire.');
+        }
+
+        if (! $service->rejeter($paiement, $request->user(), $request->validated('motif'), $request)) {
+            return back()->with('flash_error', 'Ce paiement a déjà été traité.');
+        }
 
         return back()->with('flash_success', 'Paiement rejeté.');
     }

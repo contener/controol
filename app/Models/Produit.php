@@ -11,6 +11,17 @@ class Produit extends Model
 {
     use BelongsToBoutique, HasFactory;
 
+    /**
+     * Seuls champs d'un produit montrés à un visiteur (page publique de la boutique,
+     * Marketplace web et mobile) -- jamais prix_achat, quantite_stock, seuil_alerte,
+     * reference, gere_stock : données commerciales confidentielles du vendeur (audit
+     * sécurité V-03, 2026-11-14 -- elles étaient exposées dans la page publique).
+     */
+    public const CHAMPS_PUBLICS = [
+        'id', 'nom', 'description', 'categorie', 'mini_characteristics',
+        'photo_path', 'prix_vente', 'promotion_prix', 'unite',
+    ];
+
     protected $fillable = [
         'boutique_id',
         'type',

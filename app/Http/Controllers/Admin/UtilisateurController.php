@@ -168,6 +168,10 @@ class UtilisateurController extends Controller
             // Coupe toute session déjà ouverte immédiatement, sans attendre que
             // EnsureAccountActive l'intercepte à sa prochaine requête.
             DB::table('sessions')->where('user_id', $utilisateur->id)->delete();
+            // Idem pour l'application mobile : révoque tous ses jetons API (audit
+            // sécurité V-01) -- sinon un jeton émis avant la désactivation resterait
+            // utilisable.
+            $utilisateur->tokens()->delete();
         }
 
         $this->journaliser(

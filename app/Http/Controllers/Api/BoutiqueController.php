@@ -148,7 +148,7 @@ class BoutiqueController extends Controller
 
     public function switch(Request $request, Boutique $boutique): JsonResponse
     {
-        $this->authorize('view', $boutique);
+        $this->authorize('basculer', $boutique);
 
         $request->user()->switchBoutique($boutique);
 

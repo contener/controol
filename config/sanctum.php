@@ -50,7 +50,10 @@ return [
     |
     */
 
-    'expiration' => null,
+    // 30 jours, comme le cookie "Se souvenir de moi" du web (AppServiceProvider) --
+    // un jeton mobile volé ne reste plus valable indéfiniment (audit sécurité V-02).
+    // Les jetons expirés sont purgés chaque jour (routes/console.php).
+    'expiration' => env('SANCTUM_EXPIRATION', 60 * 24 * 30),
 
     /*
     |--------------------------------------------------------------------------

@@ -1314,6 +1314,33 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 11. **Auditer régulièrement** : `npm audit`/`composer audit` sans vulnérabilité
     connue tolérée en attente, aucun endpoint de debug (`_debugbar`/`telescope`/
     `horizon`) exposé en production.
+12. **API mobile : un compte désactivé perd l'accès immédiatement** — middleware
+    `api.compte.actif` (`EnsureApiAccountActive`) sur tout le groupe `auth:sanctum`
+    de `routes/api.php`, et révocation de tous les jetons à la désactivation
+    (`Admin\UtilisateurController::basculerActivation`). Ne jamais ajouter de route
+    API authentifiée sans ce middleware.
+13. **Jetons API à durée de vie limitée** (`sanctum.expiration`, 30 jours, purge
+    quotidienne `sanctum:prune-expired`) et **révoqués à chaque changement ou
+    réinitialisation de mot de passe** (`UpdateUserPassword`, `ResetUserPassword`,
+    `Api\CompteController::updateMotDePasse` qui garde seulement l'appareil courant).
+14. **Données publiques d'un produit = `Produit::CHAMPS_PUBLICS` uniquement** —
+    jamais `prix_achat`, `quantite_stock`, `seuil_alerte`, `reference` sur une page
+    ou un endpoint visible par un visiteur (page boutique publique, Marketplace).
+15. **Séparation des rôles financière** : un administrateur ne traite jamais son
+    propre paiement (`Admin\PaiementController`), et `PaiementValidationService`
+    relit le paiement sous `lockForUpdate()` — un paiement déjà traité n'est jamais
+    retraité (double clic, deux admins).
+16. **Inscriptions limitées** à 10/heure par IP (limiteur `inscription`, web via
+    `LimiteInscriptions` et API via `throttle:inscription`) ; connexion limitée aussi
+    à 30/heure par e-mail toutes IP confondues.
+17. **Visiteur bloqué = plus aucun message**, y compris dans « Mes conversations »
+    (`ConversationPolicy::repondreCommeVisiteur`). Pas de commission de parrainage
+    entre deux comptes partageant un numéro de téléphone/WhatsApp. Seul le plan
+    `gratuit` s'active sans paiement ; une demande de plan en attente est réutilisée.
+18. **App Android** : `allowBackup="false"` ; signature de publication lue depuis
+    `android/key.properties` (non versionné) — repli sur la clé de debug pour les
+    seules compilations locales, jamais à publier ; compiler la version diffusée
+    avec `--obfuscate --split-debug-info`.
 
 ---
 
@@ -1414,6 +1441,20 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
+
+- **2026-11-14** — **Corrections de l'audit de sécurité (phase 2, analyse statique)**,
+  voir §7 règles 12 à 18 : accès API coupé pour un compte désactivé (V-01), jetons
+  expirant après 30 jours et révoqués au changement/à la réinitialisation du mot de
+  passe (V-02), prix d'achat/stock/référence retirés de la page publique et de la
+  Marketplace (V-03), visiteur bloqué ne pouvant plus répondre (V-04), interdiction
+  pour un admin de traiter son propre paiement (V-05), inscriptions limitées et
+  connexion limitée par e-mail (V-06, PV-4), signature Android de publication
+  préparée (V-07), verrou anti double validation des paiements (V-08), pas de
+  commission en auto-parrainage (V-09), plan à prix 0 non activable hors `gratuit`
+  (PV-5), demande de plan en attente réutilisée (PV-6), `allowBackup=false` (PV-3),
+  dépendances npm mises à jour (`npm audit fix`, PV-8). Défaut fonctionnel corrigé au
+  passage : un collaborateur peut basculer sur sa boutique (`BoutiquePolicy::basculer`).
+  Tests : `tests/Feature/SecuriteAuditTest.php` (14 tests).
 
 - **2026-11-13** — **Visibilité par défaut** : un produit créé (web `ProduitController::store()`
   ou API) est désormais **visible d'office** (`marketplace_visible = true`) dans la

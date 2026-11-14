@@ -82,6 +82,13 @@ class ParrainageService
             return;
         }
 
+        // Auto-parrainage (audit sécurité V-09) : un second compte de la même personne
+        // ne doit pas lui rapporter de commission sur ses propres paiements. Indice
+        // retenu : un numéro de téléphone/WhatsApp commun entre parrain et filleul.
+        if ($this->semblentEtreLaMemePersonne($filleul->parrain, $filleul)) {
+            return;
+        }
+
         $montantCommission = round((float) $paiement->montant * self::TAUX_COMMISSION / 100, 2);
 
         $commission = CommissionParrainage::create([
@@ -185,6 +192,21 @@ class ParrainageService
             'nouvelle_valeur' => ['statut' => 'annulee', 'motif' => $motif],
             'ip_address' => $request->ip(),
         ]);
+    }
+
+    private function semblentEtreLaMemePersonne(?User $parrain, User $filleul): bool
+    {
+        if (! $parrain) {
+            return false;
+        }
+
+        $numeros = fn (User $u) => collect([$u->telephone, $u->whatsapp])
+            ->map(fn ($n) => preg_replace('/\D/', '', (string) $n))
+            ->map(fn ($n) => strlen($n) >= 8 ? substr($n, -9) : null)
+            ->filter()
+            ->unique();
+
+        return $numeros($parrain)->intersect($numeros($filleul))->isNotEmpty();
     }
 
     private function formaterMontant(float $montant): string

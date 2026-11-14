@@ -63,7 +63,20 @@ class FortifyServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
-            return Limit::perMinute(5)->by($throttleKey);
+            // Second palier par e-mail seul (audit sécurité PV-4) : une attaque répartie
+            // sur de nombreuses adresses IP contre un même compte reste freinée.
+            return [
+                Limit::perMinute(5)->by($throttleKey),
+                Limit::perHour(30)->by('login-email|'.Str::transliterate(Str::lower((string) $request->input(Fortify::username())))),
+            ];
+        });
+
+        // Inscriptions (web /register et API /api/register) : chaque compte reçoit un
+        // essai Basique et une boutique -- sans limite, une même personne pouvait en
+        // créer à la chaîne (audit sécurité V-06). 10/heure par IP laisse passer les
+        // IP partagées (opérateurs mobiles, cybercafés) tout en bloquant l'automatisation.
+        RateLimiter::for('inscription', function (Request $request) {
+            return Limit::perHour(10)->by('inscription|'.$request->ip());
         });
 
         RateLimiter::for('two-factor', function (Request $request) {

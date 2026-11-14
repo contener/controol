@@ -89,6 +89,7 @@ class MarketplaceController extends Controller
             ->where('actif', true)
             ->where('marketplace_visible', true)
             ->when($request->string('categorie')->toString(), fn ($q, $c) => $q->where('categorie', $c))
+            ->select(Produit::CHAMPS_PUBLICS)
             ->withCount(['interactionsAudience as likes_count' => fn ($q) => $q->withoutGlobalScopes()->where('type', AudienceInteraction::LIKE)])
             ->orderBy('nom')
             ->get();

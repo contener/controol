@@ -32,11 +32,11 @@ Route::name('api.')->group(function () {
     // vérification d'identifiants que FortifyServiceProvider::authenticateUsing()
     // (web), même limiteur de débit ("login", 5/minute par e-mail+IP).
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:inscription');
 
     Route::get('/user', function (Request $request) {
         return $request->user();
-    })->middleware('auth:sanctum');
+    })->middleware(['auth:sanctum', 'api.compte.actif']);
 
     // Appelé uniquement par le service indépendant whatsapp-connector/ (Node.js) — authentifié
     // par secret partagé (voir WhatsappConnectorWebhookController), jamais par un utilisateur.
@@ -45,7 +45,9 @@ Route::name('api.')->group(function () {
     // API métier de l'application mobile Flutter -- voir controol.md §5.21. Chaque
     // contrôleur Api\* réutilise les mêmes FormRequests/Policies/Services que son
     // équivalent web, jamais une seconde définition des règles métier.
-    Route::middleware('auth:sanctum')->group(function () {
+    // api.compte.actif : un compte désactivé perd immédiatement l'accès, même avec un
+    // jeton émis avant sa désactivation (audit sécurité V-01).
+    Route::middleware(['auth:sanctum', 'api.compte.actif'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
 
         // Compte (coquille mobile, profil, préférences, vue globale) -- voir controol.md §5.21.

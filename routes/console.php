@@ -10,6 +10,9 @@ Artisan::command('inspire', function () {
 
 Schedule::command('abonnements:expirer')->daily();
 
+// Purge des jetons API expirés (voir config/sanctum.php 'expiration', audit V-02).
+Schedule::command('sanctum:prune-expired --hours=24')->daily();
+
 // L'heure ET le fuseau sont relus en base a chaque evaluation du planning (ce fichier
 // est charge a chaque appel artisan, donc a chaque execution de schedule:run) : un
 // changement fait par le Super Admin prend effet le jour meme, sans redeploiement.

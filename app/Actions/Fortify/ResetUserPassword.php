@@ -28,5 +28,9 @@ class ResetUserPassword implements ResetsUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        // Mot de passe réinitialisé (souvent après un vol ou une fuite) : tous les
+        // jetons de l'application mobile sont révoqués (audit sécurité V-02).
+        $user->tokens()->delete();
     }
 }

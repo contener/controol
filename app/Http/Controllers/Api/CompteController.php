@@ -131,7 +131,14 @@ class CompteController extends Controller
 
         $user->forceFill(['password' => Hash::make($request->string('password')->toString())])->save();
 
-        return response()->json(['message' => 'Mot de passe mis à jour.']);
+        // Révoque tous les autres appareils, garde celui qui vient de changer le mot
+        // de passe connecté (audit sécurité V-02).
+        $jetonActuel = $user->currentAccessToken();
+        $user->tokens()
+            ->when($jetonActuel instanceof \Laravel\Sanctum\PersonalAccessToken, fn ($q) => $q->whereKeyNot($jetonActuel->getKey()))
+            ->delete();
+
+        return response()->json(['message' => 'Mot de passe mis à jour. Vos autres appareils ont été déconnectés.']);
     }
 
     public function updatePreferences(UpdatePreferencesRequest $request): JsonResponse

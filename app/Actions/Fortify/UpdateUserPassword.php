@@ -31,5 +31,9 @@ class UpdateUserPassword implements UpdatesUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        // Changement depuis le site : déconnecte aussi l'application mobile partout
+        // (audit sécurité V-02) -- un jeton volé ne survit plus au nouveau mot de passe.
+        $user->tokens()->delete();
     }
 }

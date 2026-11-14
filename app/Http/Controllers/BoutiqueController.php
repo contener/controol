@@ -121,7 +121,7 @@ class BoutiqueController extends Controller
 
     public function switch(Boutique $boutique): RedirectResponse
     {
-        $this->authorize('view', $boutique);
+        $this->authorize('basculer', $boutique);
 
         auth()->user()->switchBoutique($boutique);
 

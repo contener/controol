@@ -22,6 +22,34 @@ class AbonnementService
      */
     public function demanderChangement(User $user, Plan $plan): array
     {
+        // Seul le plan Gratuit s'active sans paiement : un plan à prix 0 créé pour un
+        // usage interne (offert, partenaire...) ne doit jamais être activable par
+        // n'importe quel utilisateur (audit sécurité PV-5).
+        abort_if($plan->prix <= 0 && $plan->code !== 'gratuit', 403, "Ce plan n'est pas disponible à l'abonnement.");
+
+        // Une demande déjà en attente pour ce plan est réutilisée au lieu d'en créer
+        // une nouvelle à chaque clic (audit sécurité PV-6 : file d'attente des
+        // paiements à valider encombrée).
+        $enAttente = Paiement::where('user_id', $user->id)
+            ->where('statut', 'en_attente')
+            ->whereHas('abonnement', fn ($q) => $q->where('plan_id', $plan->id)->where('statut', 'en_attente'))
+            ->latest('id')
+            ->first();
+
+        if ($enAttente) {
+            $essai = EssaiUtilisateur::where('user_id', $user->id)->latest('id')->first();
+            $enPromo = $plan->code === 'basique' && $essai?->statut() === EssaiStatut::EnCours;
+            $lien = ($enPromo && $plan->lien_paiement_promo) ? $plan->lien_paiement_promo : $plan->lien_paiement;
+
+            return [
+                'gratuit' => false,
+                'montant' => (float) $enAttente->montant,
+                'devise' => $enAttente->devise,
+                'lien_paiement' => $lien ?: null,
+                'message' => "Votre demande pour le plan {$plan->nom} est déjà en attente de confirmation du paiement ({$enAttente->montant} {$enAttente->devise}).",
+            ];
+        }
+
         if ($plan->prix <= 0) {
             $user->abonnements()->create([
                 'plan_id' => $plan->id,
