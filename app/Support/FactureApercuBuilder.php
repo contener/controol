@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Boutique;
 use App\Models\Facture;
 use Illuminate\Support\Facades\Storage;
 
@@ -75,6 +76,63 @@ class FactureApercuBuilder
             ],
             'notes' => $facture->notes,
             'garantie' => $facture->garantie,
+        ];
+    }
+
+    /**
+     * Aperçu d'exemple d'un modèle (galerie de modèles de l'app mobile) : l'en-tête
+     * réel de la boutique (nom, logo, coordonnées, NUI, note de bas de facture) avec
+     * un client et des lignes fictifs -- mêmes valeurs que exempleApercu.js côté web.
+     */
+    public function exemple(Boutique $boutique): array
+    {
+        return [
+            'meta' => [
+                'numero' => 'FAC-'.now()->year.'-0001',
+                'type' => 'facture',
+                'type_label' => 'Facture',
+                'statut' => 'brouillon',
+                'date_emission' => now()->format('d/m/Y'),
+                'date_echeance' => now()->addDays(14)->format('d/m/Y'),
+                'devise' => $boutique->devise ?: 'XAF',
+            ],
+            'boutique' => [
+                'nom' => $boutique->nom,
+                'logo_url' => $this->logoDataUri($boutique->logo_path),
+                'adresse' => $boutique->adresse,
+                'ville' => $boutique->ville,
+                'pays' => $boutique->pays,
+                'telephone' => $boutique->telephone,
+                'whatsapp' => $boutique->whatsapp,
+                'email' => $boutique->email,
+                'nui' => $boutique->nui,
+                'note_pied_facture' => $boutique->note_pied_facture,
+            ],
+            'client' => [
+                'nom' => 'Société Alpha SARL',
+                'email' => 'contact@alpha.cm',
+                'telephone' => '+237 6 11 11 11 11',
+                'adresse' => null,
+                'ville' => 'Douala',
+                'pays' => 'Cameroun',
+                'code_postal' => null,
+                'numero_fiscal' => 'M022312345678B',
+                'rccm' => 'RC/DLA/2024/B/1234',
+            ],
+            'lignes' => [
+                ['designation' => 'Ordinateur portable 15"', 'description' => null, 'quantite' => 2.0, 'prix_unitaire' => 350000.0, 'tva_taux' => 19.25, 'remise_ligne' => 0.0, 'montant_ht' => 700000.0, 'montant_tva' => 134750.0, 'montant_ttc' => 834750.0],
+                ['designation' => 'Installation et configuration', 'description' => null, 'quantite' => 1.0, 'prix_unitaire' => 25000.0, 'tva_taux' => 19.25, 'remise_ligne' => 0.0, 'montant_ht' => 25000.0, 'montant_tva' => 4812.5, 'montant_ttc' => 29812.5],
+            ],
+            'totaux' => [
+                'sous_total' => 725000.0,
+                'remise' => 0.0,
+                'total_tva' => 139562.5,
+                'total_ttc' => 864562.5,
+                'montant_avance' => null,
+                'reste_a_payer' => null,
+            ],
+            'notes' => 'Merci de votre confiance.',
+            'garantie' => "Garantie de 6 mois. Ne couvre pas les dommages liés à l'eau, aux chocs ou à une mauvaise utilisation.",
         ];
     }
 

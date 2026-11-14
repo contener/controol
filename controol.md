@@ -1208,12 +1208,12 @@ Policies et verrous (plan + permission collaborateur) que son équivalent web :
   Produits créés/modifiés en multipart (photo) avec `_method=PUT` pour la mise à jour.
 - `GET /factures/{id}/pdf` (même vue/`FactureApercuBuilder` que le web),
   `POST /factures/{id}/dupliquer` (**`FactureService::dupliquer()`, partagé avec
-  le web**). Le choix du modèle visuel de facture reste web-only.
+  le web**). Les modèles visuels de facture sont aussi disponibles sur mobile (voir historique 2026-11-14).
 - `GET /clients` accepte aussi `avecFactures`/`avecProformas`/`avecRecus` (mêmes
   filtres que le web).
 
 **Encore web-only** : Partage social (destinations/campagnes), Agent IA WhatsApp
-(connexion par QR code), choix du modèle visuel de facture, Espace Super
+(connexion par QR code), Espace Super
 Administrateur, double authentification (connexion bloquée côté mobile si 2FA
 confirmée, voir plus haut). Pas de préfixe `/api/v1` pour l'instant.
 
@@ -1441,6 +1441,21 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
+
+- **2026-11-14** — **Modèles de facture dans l'app mobile** : mêmes 10 modèles et
+  même verrou de plan que le web (`FactureModele::estAutorisePour`). API :
+  `GET /factures/modeles` (aussi dans `contexte-creation`, avec la boutique et son
+  NUI), `GET /factures/modeles/{id}/apercu` (PDF d'exemple avec l'en-tête réel de la
+  boutique, `FactureApercuBuilder::exemple()`, visible même verrouillé comme les
+  miniatures du site), `POST /factures/apercu` (aperçu **exact** du brouillon :
+  `FactureService::creer()` exécuté puis **`DB::rollBack()`** — aucune facture,
+  aucun numéro consommé, aucun mouvement de stock conservé ; mêmes règles
+  `StoreFactureRequest`, modèle verrouillé refusé), `PATCH /boutiques/{id}/nui`
+  (raccourci NUI de la saisie de facture, comme le web). App : galerie de modèles
+  (miniatures = rendu des vrais PDF via `pdfx`), sélecteur dans le formulaire, aperçu
+  plein écran, formulaire de facture refait (notes, garantie, description de ligne,
+  TVA par défaut de la boutique, « Brouillon » / « Enregistrer » comme le web),
+  modèle affiché sur la fiche facture.
 
 - **2026-11-14** — **Corrections de l'audit de sécurité (phase 2, analyse statique)**,
   voir §7 règles 12 à 18 : accès API coupé pour un compte désactivé (V-01), jetons

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\FactureModele;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreFactureRequest;
 use App\Http\Requests\UpdateFactureRequest;
@@ -13,6 +14,7 @@ use App\Support\FactureApercuBuilder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
@@ -20,10 +22,77 @@ use Illuminate\Validation\Rule;
  * logique métier (numérotation, mouvements de stock, totaux, avance/reste des
  * Reçus...), jamais réimplémentée ici. Le PDF (pdf()) est généré avec exactement
  * la même vue/le même FactureApercuBuilder que FactureController::downloadPdf()
- * (web) ; le choix du modèle visuel reste web-only (voir controol.md §5.21).
+ * (web). Modèles visuels (2026-11-14) : mêmes 10 modèles et même règle d'accès
+ * (FactureModele::estAutorisePour) que le web, aperçus rendus par les mêmes vues PDF.
  */
 class FactureController extends Controller
 {
+    /** Galerie de modèles -- même liste que FactureController::modelesDisponibles() (web). */
+    public function modeles(Request $request): JsonResponse
+    {
+        $this->authorize('create', Facture::class);
+
+        return response()->json(['modeles' => $this->modelesDisponibles($request->user())]);
+    }
+
+    /**
+     * Aperçu PDF d'un modèle avec l'en-tête réel de la boutique courante et des
+     * données d'exemple (miniatures de la galerie). Visible même pour un modèle
+     * verrouillé, comme les miniatures du site -- seule son utilisation est réservée.
+     */
+    public function apercuModele(Request $request, int $modele, FactureApercuBuilder $apercuBuilder)
+    {
+        $this->authorize('create', Facture::class);
+        abort_unless(FactureModele::tryFrom($modele) !== null, 404);
+
+        return $this->reponsePdf(
+            sprintf('factures.pdf.modele-%02d', $modele),
+            $apercuBuilder->exemple($request->user()->currentBoutique),
+            'apercu-modele.pdf',
+        );
+    }
+
+    /**
+     * Aperçu PDF de la facture en cours de saisie, dans le modèle choisi -- rendu
+     * EXACT du document final : FactureService::creer() est exécuté avec les données
+     * du formulaire (mêmes règles StoreFactureRequest, y compris le droit d'utiliser
+     * ce modèle), le PDF est construit, puis TOUT est annulé (DB::rollBack) -- aucune
+     * facture, aucun numéro consommé, aucun mouvement de stock n'est conservé.
+     */
+    public function apercuBrouillon(StoreFactureRequest $request, FactureService $factureService, FactureApercuBuilder $apercuBuilder)
+    {
+        $user = $request->user();
+
+        DB::beginTransaction();
+        try {
+            $facture = $factureService->creer($request->validated(), $user, $user->currentBoutique->id);
+            $vue = sprintf('factures.pdf.modele-%02d', $facture->modele_id->value);
+            $apercu = $apercuBuilder->construire($facture);
+        } finally {
+            DB::rollBack();
+        }
+
+        return $this->reponsePdf($vue, $apercu, 'apercu-facture.pdf');
+    }
+
+    private function reponsePdf(string $vue, array $apercu, string $nomFichier)
+    {
+        return response(Pdf::loadView($vue, ['apercu' => $apercu])->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$nomFichier.'"',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    private function modelesDisponibles(\App\Models\User $user): array
+    {
+        return collect(FactureModele::cases())->map(fn (FactureModele $modele) => [
+            'id' => $modele->value,
+            'label' => $modele->label(),
+            'gratuit' => $modele->estGratuit(),
+            'autorise' => $modele->estAutorisePour($user),
+        ])->all();
+    }
     /** Même règles que FactureController::duplicate() (web) via FactureService::dupliquer(). */
     public function dupliquer(Request $request, Facture $facture, FactureService $factureService, LimiteService $limiteService): JsonResponse
     {
@@ -154,6 +223,9 @@ class FactureController extends Controller
             'clients' => Client::orderBy('nom')->get(['id', 'nom', 'email', 'telephone', 'adresse', 'ville', 'pays', 'code_postal', 'numero_fiscal', 'rccm', 'etiquette']),
             'produits' => \App\Models\Produit::orderBy('nom')->get(['id', 'nom', 'type', 'prix_vente', 'tva_taux', 'unite', 'gere_stock', 'quantite_stock']),
             'taux_tva_defaut' => $request->user()->currentBoutique->taux_tva_defaut,
+            'modeles' => $this->modelesDisponibles($request->user()),
+            'boutique' => $request->user()->currentBoutique->only(['id', 'nom', 'nui', 'devise']),
+            'peut_modifier_boutique' => $request->user()->can('update', $request->user()->currentBoutique),
         ]);
     }
 }

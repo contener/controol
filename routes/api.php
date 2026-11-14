@@ -73,6 +73,7 @@ Route::name('api.')->group(function () {
         Route::delete('/boutiques/{boutique}', [BoutiqueController::class, 'destroy']);
         Route::post('/boutiques/{boutique}/switch', [BoutiqueController::class, 'switch']);
         Route::patch('/boutiques/{boutique}/marketplace', [BoutiqueController::class, 'updateMarketplace']);
+        Route::patch('/boutiques/{boutique}/nui', [BoutiqueController::class, 'updateNui']);
 
         Route::get('/dashboard', [DashboardController::class, 'index']);
 
@@ -85,6 +86,9 @@ Route::name('api.')->group(function () {
         // comme un {facture} à résoudre par liaison de modèle (404 avant d'atteindre
         // la bonne méthode).
         Route::get('/factures/contexte-creation', [FactureController::class, 'contexteCreation']);
+        Route::get('/factures/modeles', [FactureController::class, 'modeles']);
+        Route::get('/factures/modeles/{modele}/apercu', [FactureController::class, 'apercuModele'])->whereNumber('modele');
+        Route::post('/factures/apercu', [FactureController::class, 'apercuBrouillon']);
         Route::patch('/factures/{facture}/statut', [FactureController::class, 'updateStatut']);
         Route::get('/factures/{facture}/pdf', [FactureController::class, 'pdf']);
         Route::post('/factures/{facture}/dupliquer', [FactureController::class, 'dupliquer']);

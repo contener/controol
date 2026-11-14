@@ -140,4 +140,67 @@ class FactureControllerTest extends TestCase
             ->getJson("/api/factures/{$facture->id}")
             ->assertStatus(404);
     }
+
+    /** Modèles de facture (2026-11-14) : même liste et même verrou que le web. */
+    public function test_templates_are_listed_with_plan_lock(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('gratuit');
+
+        $modeles = collect($this->actingAs($user, 'sanctum')->getJson('/api/factures/modeles')->assertOk()->json('modeles'));
+
+        $this->assertCount(10, $modeles);
+        $this->assertTrue($modeles->firstWhere('id', 1)['autorise']);
+        $this->assertTrue($modeles->firstWhere('id', 2)['autorise']);
+        $this->assertFalse($modeles->firstWhere('id', 5)['autorise']);
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/factures/contexte-creation')->assertOk()->assertJsonCount(10, 'modeles');
+    }
+
+    public function test_template_preview_is_a_pdf_even_for_locked_templates(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('gratuit');
+
+        $this->actingAs($user, 'sanctum')->get('/api/factures/modeles/7/apercu')
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $this->actingAs($user, 'sanctum')->get('/api/factures/modeles/99/apercu')->assertNotFound();
+    }
+
+    /** L'aperçu du brouillon est le vrai rendu final, mais ne laisse aucune trace. */
+    public function test_draft_preview_renders_pdf_without_persisting_anything(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        \App\Models\Plan::whereKey($user->planActif()->id)->update(['modeles_facture_avances' => true]);
+        [$client, $produit] = $this->creerClientEtProduit($user->current_boutique_id);
+
+        $this->actingAs($user, 'sanctum')->post('/api/factures/apercu', [
+            'client_id' => $client->id,
+            'date_emission' => now()->toDateString(),
+            'modele_id' => 6,
+            'lignes' => [[
+                'produit_id' => $produit->id, 'designation' => 'Widget',
+                'quantite' => 3, 'prix_unitaire' => 100, 'tva_taux' => 20, 'remise_ligne' => 0,
+            ]],
+        ], ['Accept' => 'application/json'])->assertOk()->assertHeader('content-type', 'application/pdf');
+
+        $this->assertSame(0, Facture::withoutGlobalScopes()->count());
+        $this->assertSame(50, $produit->fresh()->quantite_stock);
+        $this->assertSame(0, \App\Models\MouvementStock::withoutGlobalScopes()->count());
+        $this->assertSame(0, \App\Models\CompteurFacture::count());
+    }
+
+    /** Un modèle verrouillé ne peut ni être prévisualisé en brouillon ni utilisé. */
+    public function test_locked_template_cannot_be_used(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('gratuit');
+        [$client] = $this->creerClientEtProduit($user->current_boutique_id);
+        $payload = [
+            'client_id' => $client->id, 'date_emission' => now()->toDateString(), 'modele_id' => 8,
+            'lignes' => [['designation' => 'Service', 'quantite' => 1, 'prix_unitaire' => 100]],
+        ];
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/factures/apercu', $payload)->assertForbidden();
+        $this->actingAs($user, 'sanctum')->postJson('/api/factures', $payload)->assertForbidden();
+    }
 }

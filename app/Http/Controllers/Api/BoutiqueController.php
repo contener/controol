@@ -155,6 +155,21 @@ class BoutiqueController extends Controller
         return response()->json(['message' => 'Boutique changée.', 'boutique_courante_id' => $boutique->id]);
     }
 
+    /**
+     * Mise à jour rapide du NUI depuis la saisie d'une facture -- même règle que
+     * BoutiqueController::updateNui() (web) : propriété de la boutique, s'applique à
+     * toutes ses futures factures.
+     */
+    public function updateNui(Request $request, Boutique $boutique): JsonResponse
+    {
+        $this->authorize('update', $boutique);
+
+        $data = $request->validate(['nui' => ['nullable', 'string', 'max:50']]);
+        $boutique->update($data);
+
+        return response()->json(['message' => 'NUI mis à jour.', 'nui' => $boutique->nui]);
+    }
+
     public function updateMarketplace(Request $request, Boutique $boutique): JsonResponse
     {
         $this->authorize('update', $boutique);
