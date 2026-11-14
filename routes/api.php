@@ -58,6 +58,7 @@ Route::name('api.')->group(function () {
             Route::delete('/profil/photo', [CompteController::class, 'supprimerPhoto']);
             Route::put('/mot-de-passe', [CompteController::class, 'updateMotDePasse']);
             Route::patch('/preferences', [CompteController::class, 'updatePreferences']);
+            Route::delete('/', [CompteController::class, 'supprimer'])->middleware('throttle:5,1');
         });
 
         Route::get('/notifications', [NotificationController::class, 'index']);

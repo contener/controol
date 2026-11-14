@@ -141,6 +141,29 @@ class CompteController extends Controller
         return response()->json(['message' => 'Mot de passe mis à jour. Vos autres appareils ont été déconnectés.']);
     }
 
+    /**
+     * Suppression du compte depuis l'application (exigence Google Play, 2026-11-14) --
+     * réutilise l'action Jetstream DeletesUsers du site (Profil > Supprimer le compte)
+     * telle quelle : même suppression définitive, en cascade, des boutiques et de leurs
+     * données (voir /suppression-compte). Mot de passe exigé, comme sur le site.
+     */
+    public function supprimer(Request $request, \Laravel\Jetstream\Contracts\DeletesUsers $suppression): JsonResponse
+    {
+        $request->validate(['password' => ['required', 'string']]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->string('password')->toString(), $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['Le mot de passe est incorrect.'],
+            ]);
+        }
+
+        $suppression->delete($user->fresh());
+
+        return response()->json(['message' => 'Votre compte a été supprimé définitivement.']);
+    }
+
     public function updatePreferences(UpdatePreferencesRequest $request): JsonResponse
     {
         $request->user()->update($request->validated());

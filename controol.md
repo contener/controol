@@ -1442,6 +1442,20 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-14** — **Conformité Google Play de l'app Android** : identifiant définitif
+  `fr.controol.app` (nom affiché « Controool ») ; permissions médias ajoutées par
+  `open_filex` retirées (`tools:node="remove"`, seule `INTERNET` subsiste) ;
+  **suppression du compte depuis l'app** (`DELETE /api/compte`, mot de passe exigé,
+  réutilise l'action Jetstream `DeletesUsers` du site) ; pages publiques
+  **`/politique-de-confidentialite`** et **`/suppression-compte`** (Blade autonomes,
+  `resources/views/legal/`, contact = `config('app.contact_email')` / `CONTACT_EMAIL`) ;
+  **règles de paiement Google Play** : l'app Android ne propose plus aucun achat ni
+  lien de paiement externe (plans payants affichés à titre informatif, seul le plan
+  Gratuit se choisit, libellés neutres « Voir les forfaits ») — la logique serveur et
+  le site sont inchangés. AAB signé avec une clé d'importation (`android/key.properties`
+  + `.jks` hors dépôt, à sauvegarder), compilé avec `flutter build appbundle --release
+  --obfuscate --split-debug-info=build/symboles`.
+
 - **2026-11-14** — **Modèles de facture dans l'app mobile** : mêmes 10 modèles et
   même verrou de plan que le web (`FactureModele::estAutorisePour`). API :
   `GET /factures/modeles` (aussi dans `contexte-creation`, avec la boutique et son

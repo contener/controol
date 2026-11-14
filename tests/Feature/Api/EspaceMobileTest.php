@@ -371,4 +371,29 @@ class EspaceMobileTest extends TestCase
 
         $this->actingAs($proprietaire, 'sanctum')->getJson("/api/marketplace/boutiques/{$boutique->slug}")->assertJsonFragment(['nom' => 'Inactif']);
     }
+
+    /** Exigence Google Play : suppression du compte depuis l'application. */
+    public function test_account_can_be_deleted_from_the_app_with_password(): void
+    {
+        $user = $this->creerUtilisateurAvecBoutique('pro');
+        $user->forceFill(['password' => Hash::make('mon-mot-de-passe')])->save();
+        $boutiqueId = $user->current_boutique_id;
+        $jeton = $user->createToken('Test')->plainTextToken;
+
+        $this->withToken($jeton)->deleteJson('/api/compte', ['password' => 'faux'])->assertStatus(422);
+        $this->assertNotNull($user->fresh());
+
+        $this->withToken($jeton)->deleteJson('/api/compte', ['password' => 'mon-mot-de-passe'])->assertOk();
+
+        $this->assertNull(User::find($user->id));
+        $this->assertNull(Boutique::find($boutiqueId));
+        $this->assertDatabaseMissing('personal_access_tokens', ['tokenable_id' => $user->id]);
+    }
+
+    /** Exigence Google Play : pages publiques politique de confidentialité et suppression de compte. */
+    public function test_legal_pages_are_public(): void
+    {
+        $this->get('/politique-de-confidentialite')->assertOk()->assertSee('Politique de confidentialité')->assertSee(config('app.contact_email'));
+        $this->get('/suppression-compte')->assertOk()->assertSee('Supprimer mon compte');
+    }
 }

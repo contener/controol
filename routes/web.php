@@ -42,6 +42,11 @@ Route::get('/', function () {
 
 Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marketplace.index');
 
+// Pages légales publiques (exigées par Google Play pour l'app mobile) -- voir
+// resources/views/legal/.
+Route::view('/politique-de-confidentialite', 'legal.confidentialite')->name('legal.confidentialite');
+Route::view('/suppression-compte', 'legal.suppression-compte')->name('legal.suppression-compte');
+
 Route::middleware('guest')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
     Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');

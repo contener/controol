@@ -15,6 +15,11 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Adresse de contact affichée sur les pages légales (politique de confidentialité,
+    // suppression de compte) -- exigée par Google Play. À faire pointer vers une boîte
+    // réellement consultée (variable CONTACT_EMAIL du .env).
+    'contact_email' => env('CONTACT_EMAIL', 'contact@controol.fr'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
