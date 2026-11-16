@@ -86,14 +86,20 @@ class BoutiqueStatsService
                 'impayees' => $facturesQuery()->where('statut', 'envoyee')->count(),
                 'payees' => $facturesQuery()->where('statut', 'payee')->count(),
             ],
+            // Bénéfice brut = ventes − prix d'achat des produits vendus (benefice()) ;
+            // bénéfice net = bénéfice brut − charges (dépenses de la période) ; marges
+            // brute et nette = ces bénéfices rapportés au chiffre d'affaires (2026-11-16).
+            // benefice_mois / benefice / marge_pourcentage restent envoyés (= brut) pour
+            // les anciennes versions de l'application ; resultat (CA − dépenses) aussi.
             'finances' => [
                 'ca_mois' => (float) $caMois,
                 'depenses_mois' => (float) $depensesMois,
                 'resultat_mois' => (float) $caMois - (float) $depensesMois,
-                // Bénéfice brut (marge) du mois -- distinct de resultat_mois (CA − dépenses
-                // de fonctionnement) : ici CA − coût d'achat des produits vendus, voir
-                // benefice() ci-dessous pour les nuances de calcul.
                 'benefice_mois' => $beneficeMois,
+                'benefice_brut_mois' => $beneficeMois,
+                'benefice_net_mois' => $beneficeMois - (float) $depensesMois,
+                'marge_brute_mois' => $this->marge($beneficeMois, (float) $caMois),
+                'marge_nette_mois' => $this->marge($beneficeMois - (float) $depensesMois, (float) $caMois),
             ],
             // Bloc "période personnalisée" (voir resoudrePeriode(), même principe que
             // CompteStatsService::pourCompte()) -- par défaut le mois en cours, mais
@@ -102,8 +108,12 @@ class BoutiqueStatsService
                 'ca' => $caPeriode,
                 'depenses' => $depensesPeriode,
                 'benefice' => $beneficePeriode,
+                'benefice_brut' => $beneficePeriode,
+                'benefice_net' => $beneficePeriode - $depensesPeriode,
                 'resultat' => $caPeriode - $depensesPeriode,
-                'marge_pourcentage' => $caPeriode > 0 ? round(($beneficePeriode / $caPeriode) * 100, 1) : 0.0,
+                'marge_pourcentage' => $this->marge($beneficePeriode, $caPeriode),
+                'marge_brute_pourcentage' => $this->marge($beneficePeriode, $caPeriode),
+                'marge_nette_pourcentage' => $this->marge($beneficePeriode - $depensesPeriode, $caPeriode),
                 'nombre_factures' => $nombreFacturesPeriode,
                 'panier_moyen' => $nombreFacturesPeriode > 0 ? $caPeriode / $nombreFacturesPeriode : 0.0,
                 'debut' => $debut->toDateString(),
@@ -137,6 +147,12 @@ class BoutiqueStatsService
             ->whereBetween('factures.date_emission', [$debut, $fin])
             ->selectRaw('COALESCE(SUM(facture_lignes.montant_ht - COALESCE(produits.prix_achat, 0) * facture_lignes.quantite), 0) as total')
             ->value('total') ?? 0);
+    }
+
+    /** Marge en % du chiffre d'affaires, arrondie à 0,1 -- 0 sans chiffre d'affaires. */
+    private function marge(float $benefice, float $chiffreAffaires): float
+    {
+        return $chiffreAffaires > 0 ? round(($benefice / $chiffreAffaires) * 100, 1) : 0.0;
     }
 
     private function resoudrePeriode(?string $debut, ?string $fin): array

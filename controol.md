@@ -1442,6 +1442,18 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-16** — **Tableau de bord : bénéfice brut / net et marge brute / nette**
+  (`BoutiqueStatsService`, site `Dashboard.vue`, app `dashboard_screen.dart`).
+  Bénéfice brut = ventes − prix d'achat des produits vendus (calcul `benefice()`
+  inchangé) ; bénéfice net = bénéfice brut − charges (dépenses de la période) ; marge
+  brute / nette = chaque bénéfice rapporté au chiffre d'affaires, arrondie à 0,1 %.
+  Nouvelles clés : `finances.benefice_brut_mois`, `benefice_net_mois`,
+  `marge_brute_mois`, `marge_nette_mois` ; `periode.benefice_brut`, `benefice_net`,
+  `marge_brute_pourcentage`, `marge_nette_pourcentage`. Les anciennes clés
+  (`benefice_mois`, `benefice`, `marge_pourcentage` = brut ; `resultat` = CA − dépenses)
+  restent envoyées pour les anciennes versions de l'app, mais « Résultat » n'est plus
+  affiché. « Dépenses » s'affiche « Charges ».
+
 - **2026-11-16** — **Inscription : catégories à choisir, NUI et réseaux sociaux
   retirés** (site `Auth/Register.vue` et app `register_screen.dart`). La catégorie se
   choisit dans une liste déroulante (« Sélectionner une catégorie », 20 catégories +

@@ -105,16 +105,20 @@ const statutClasses = {
                         <div class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.finances.ca_mois) }}</div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.expenses_month') }}</div>
+                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.expenses_charges_month') }}</div>
                         <div class="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.finances.depenses_mois) }}</div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.profit_month') }}</div>
-                        <div class="mt-2 text-2xl font-semibold" :class="stats.finances.benefice_mois >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.finances.benefice_mois) }}</div>
+                    <!-- Bénéfice brut = ventes − prix d'achat ; net = brut − charges ; chaque
+                         marge = ce bénéfice rapporté au chiffre d'affaires (BoutiqueStatsService). -->
+                    <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6" :title="t('dashboard.gross_profit_hint')">
+                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.gross_profit_month') }}</div>
+                        <div class="mt-2 text-2xl font-semibold" :class="stats.finances.benefice_brut_mois >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.finances.benefice_brut_mois) }}</div>
+                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.gross_margin') }} : <span class="font-semibold text-slate-700 dark:text-slate-200">{{ stats.finances.marge_brute_mois }} %</span></div>
                     </div>
-                    <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
-                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.result_month') }}</div>
-                        <div class="mt-2 text-2xl font-semibold" :class="stats.finances.resultat_mois >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.finances.resultat_mois) }}</div>
+                    <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6" :title="t('dashboard.net_profit_hint')">
+                        <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.net_profit_month') }}</div>
+                        <div class="mt-2 text-2xl font-semibold" :class="stats.finances.benefice_net_mois >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.finances.benefice_net_mois) }}</div>
+                        <div class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.net_margin') }} : <span class="font-semibold text-slate-700 dark:text-slate-200">{{ stats.finances.marge_nette_mois }} %</span></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                         <div class="text-sm text-slate-500 dark:text-slate-400">{{ t('dashboard.unpaid_invoices') }}</div>
@@ -140,26 +144,30 @@ const statutClasses = {
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
                         <div>
                             <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_revenue') }}</div>
                             <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.periode.ca) }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_expenses') }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_charges') }}</div>
                             <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ formatMontant(stats.periode.depenses) }}</div>
                         </div>
-                        <div>
-                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_profit') }}</div>
-                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.benefice >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.periode.benefice) }}</div>
+                        <div :title="t('dashboard.gross_profit_hint')">
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_gross_profit') }}</div>
+                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.benefice_brut >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.periode.benefice_brut) }}</div>
+                        </div>
+                        <div :title="t('dashboard.net_profit_hint')">
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_net_profit') }}</div>
+                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.benefice_net >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.periode.benefice_net) }}</div>
                         </div>
                         <div>
-                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_result') }}</div>
-                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.resultat >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ formatMontant(stats.periode.resultat) }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_gross_margin') }}</div>
+                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.marge_brute_pourcentage >= 0 ? 'text-slate-900 dark:text-slate-100' : 'text-red-600 dark:text-red-400'">{{ stats.periode.marge_brute_pourcentage }} %</div>
                         </div>
                         <div>
-                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_margin') }}</div>
-                            <div class="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-100">{{ stats.periode.marge_pourcentage }} %</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_net_margin') }}</div>
+                            <div class="mt-1 text-lg font-semibold" :class="stats.periode.marge_nette_pourcentage >= 0 ? 'text-slate-900 dark:text-slate-100' : 'text-red-600 dark:text-red-400'">{{ stats.periode.marge_nette_pourcentage }} %</div>
                         </div>
                         <div>
                             <div class="text-xs text-slate-500 dark:text-slate-400">{{ t('dashboard.period_average_basket') }}</div>

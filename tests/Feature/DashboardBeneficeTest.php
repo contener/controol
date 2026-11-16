@@ -134,6 +134,13 @@ class DashboardBeneficeTest extends TestCase
         $this->assertSame(200.0, $stats['periode']['depenses']);
         $this->assertSame(400.0, $stats['periode']['benefice']);
         $this->assertSame(800.0, $stats['periode']['resultat']);
+
+        // 2026-11-16 : brut = ventes − prix d'achat ; net = brut − charges.
+        $this->assertSame(400.0, $stats['periode']['benefice_brut']);
+        $this->assertSame(200.0, $stats['periode']['benefice_net']);
+        $this->assertSame(40.0, $stats['periode']['marge_brute_pourcentage']);
+        $this->assertSame(20.0, $stats['periode']['marge_nette_pourcentage']);
+
         $this->assertSame(1, $stats['periode']['nombre_factures']);
         $this->assertSame(1000.0, $stats['periode']['panier_moyen']);
     }
