@@ -1444,7 +1444,8 @@ changement de comportement significatif)*
 
 - **2026-11-16** — **Inscription : catégories à choisir, NUI et réseaux sociaux
   retirés** (site `Auth/Register.vue` et app `register_screen.dart`). La catégorie se
-  choisit parmi 20 puces (liste unique par plateforme :
+  choisit dans une liste déroulante (« Sélectionner une catégorie », 20 catégories +
+  « Autre (préciser) » ; liste unique par plateforme :
   `resources/js/Composables/categoriesBoutique.js` et
   `flutter_app/lib/utils/categories_boutique.dart`, à garder identiques) ; « Autre »
   ouvre un champ de saisie libre. `boutiques.categorie` reste un texte libre (aucun

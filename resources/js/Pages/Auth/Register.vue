@@ -45,7 +45,7 @@ const categorieChoisie = ref('');
 const categorieAutre = ref('');
 
 const choisirCategorie = (nom) => {
-    categorieChoisie.value = categorieChoisie.value === nom ? '' : nom;
+    categorieChoisie.value = nom;
     form.boutique.categorie = categorieChoisie.value === CATEGORIE_AUTRE ? categorieAutre.value.trim() : categorieChoisie.value;
 };
 
@@ -384,24 +384,17 @@ const libelleClasse = 'block text-sm font-medium text-slate-700 dark:text-slate-
                                     <InputError class="mt-2" :message="erreur('boutique.nom')" />
                                 </div>
                                 <div>
-                                    <span id="b_categorie_libelle" :class="libelleClasse">Catégorie</span>
-                                    <div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-labelledby="b_categorie_libelle">
-                                        <button
-                                            v-for="c in [...categoriesBoutique, { nom: CATEGORIE_AUTRE, icone: '✏️' }]"
-                                            :key="c.nom"
-                                            type="button"
-                                            role="radio"
-                                            :aria-checked="categorieChoisie === c.nom"
-                                            class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-800"
-                                            :class="categorieChoisie === c.nom
-                                                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                                                : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400 hover:text-blue-700 dark:hover:text-blue-300'"
-                                            @click="choisirCategorie(c.nom)"
-                                        >
-                                            <span aria-hidden="true">{{ c.icone }}</span>
-                                            {{ c.nom }}
-                                        </button>
-                                    </div>
+                                    <label for="b_categorie" :class="libelleClasse">Catégorie</label>
+                                    <select
+                                        id="b_categorie"
+                                        :value="categorieChoisie"
+                                        :class="[champClasse, 'mt-1', categorieChoisie === '' ? 'text-slate-400 dark:text-slate-500' : '']"
+                                        @change="choisirCategorie($event.target.value)"
+                                    >
+                                        <option value="">Sélectionner une catégorie</option>
+                                        <option v-for="c in categoriesBoutique" :key="c.nom" :value="c.nom" class="text-slate-900 dark:text-slate-100">{{ c.icone }}  {{ c.nom }}</option>
+                                        <option :value="CATEGORIE_AUTRE" class="text-slate-900 dark:text-slate-100">✏️  Autre (préciser)</option>
+                                    </select>
                                     <div v-if="categorieChoisie === CATEGORIE_AUTRE" class="mt-3">
                                         <label for="b_categorie_autre" class="sr-only">Votre catégorie</label>
                                         <input id="b_categorie_autre" v-model="categorieAutre" type="text" maxlength="255" placeholder="Saisissez votre catégorie" :class="champClasse" autofocus>
