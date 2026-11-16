@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ReplyGuestConversationRequest;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Services\MessagerieTempsReelService;
 use App\Services\VisiteurIdentiteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,9 +32,7 @@ class GuestConversationController extends Controller
 
         $identite->synchroniserCookie($request, $conv);
 
-        if ($conv->messages_non_lus_visiteur > 0) {
-            $conv->update(['messages_non_lus_visiteur' => 0]);
-        }
+        app(MessagerieTempsReelService::class)->marquerLus($conv, ConversationMessage::EXPEDITEUR_VISITEUR);
 
         return Inertia::render('Public/ConversationInvite', [
             'conversation' => $conv,

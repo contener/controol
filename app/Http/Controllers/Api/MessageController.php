@@ -8,6 +8,7 @@ use App\Http\Requests\StoreConversationDepuisClientRequest;
 use App\Models\Client;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Services\MessagerieTempsReelService;
 use App\Services\VisiteurIdentiteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,15 +35,26 @@ class MessageController extends Controller
         ]);
     }
 
-    public function show(Conversation $conversation): JsonResponse
+    public function show(Conversation $conversation, MessagerieTempsReelService $tempsReel): JsonResponse
     {
         $this->authorize('view', $conversation);
 
-        if ($conversation->messages_non_lus_boutique > 0) {
-            $conversation->update(['messages_non_lus_boutique' => 0]);
-        }
+        $tempsReel->marquerLus($conversation, ConversationMessage::EXPEDITEUR_BOUTIQUE);
 
         return response()->json($conversation->load(['produit:id,nom,photo_path', 'client:id,nom', 'messages']));
+    }
+
+    /**
+     * Fil ouvert dans l'application (appelé toutes les 3 s) : nouveaux messages du
+     * visiteur, statut reçu/lu des réponses de la boutique, statut de la conversation.
+     */
+    public function synchroniser(Request $request, Conversation $conversation, MessagerieTempsReelService $tempsReel): JsonResponse
+    {
+        $this->authorize('view', $conversation);
+
+        return response()->json(
+            $tempsReel->synchroniserFil($conversation, ConversationMessage::EXPEDITEUR_BOUTIQUE, $request->integer('apres'))
+        );
     }
 
     public function store(StoreConversationDepuisClientRequest $request, VisiteurIdentiteService $identite): JsonResponse
@@ -72,13 +84,17 @@ class MessageController extends Controller
 
     public function repondre(ReplyConversationRequest $request, Conversation $conversation): JsonResponse
     {
-        $conversation->messages()->create([
+        $message = $conversation->messages()->create([
             'expediteur' => ConversationMessage::EXPEDITEUR_BOUTIQUE,
             'contenu' => $request->string('contenu')->toString(),
         ]);
         $conversation->increment('messages_non_lus_visiteur', 1, ['dernier_message_a' => now()]);
 
-        return response()->json(['message' => 'Réponse envoyée.', 'conversation' => $conversation->fresh()->load('messages')]);
+        return response()->json([
+            'message' => 'Réponse envoyée.',
+            'envoye' => $message->fresh(),
+            'conversation' => $conversation->fresh()->load('messages'),
+        ]);
     }
 
     public function updateStatut(Request $request, Conversation $conversation): JsonResponse

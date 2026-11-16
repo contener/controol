@@ -53,6 +53,7 @@ Route::name('api.')->group(function () {
         // Compte (coquille mobile, profil, préférences, vue globale) -- voir controol.md §5.21.
         Route::prefix('compte')->group(function () {
             Route::get('/resume', [CompteController::class, 'resume']);
+            Route::get('/messagerie/synchro', [CompteController::class, 'synchroniserMessagerie']);
             Route::get('/vue-globale', [CompteController::class, 'vueGlobale']);
             Route::post('/profil', [CompteController::class, 'updateProfil']);
             Route::delete('/profil/photo', [CompteController::class, 'supprimerPhoto']);
@@ -127,11 +128,13 @@ Route::name('api.')->group(function () {
         Route::get('/messages', [MessageController::class, 'index']);
         Route::post('/messages', [MessageController::class, 'store']);
         Route::get('/messages/{conversation}', [MessageController::class, 'show']);
+        Route::get('/messages/{conversation}/synchro', [MessageController::class, 'synchroniser']);
         Route::post('/messages/{conversation}/repondre', [MessageController::class, 'repondre']);
         Route::patch('/messages/{conversation}/statut', [MessageController::class, 'updateStatut']);
 
         Route::get('/mes-conversations', [MesConversationsController::class, 'index']);
         Route::get('/mes-conversations/{conversation}', [MesConversationsController::class, 'show']);
+        Route::get('/mes-conversations/{conversation}/synchro', [MesConversationsController::class, 'synchroniser']);
         Route::post('/mes-conversations/{conversation}/repondre', [MesConversationsController::class, 'repondre']);
 
         Route::get('/abonnement', [AbonnementController::class, 'index']);

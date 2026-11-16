@@ -8,7 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePreferencesRequest;
 use App\Models\Conversation;
 use App\Models\NotificationUtilisateur;
+use App\Models\User;
 use App\Services\CompteStatsService;
+use App\Services\MessagerieTempsReelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -59,15 +61,34 @@ class CompteController extends Controller
             'boutique_courante_id' => $boutique?->id,
             'plan_actif' => $plan?->only(['id', 'code', 'nom', 'marketplace', 'audience', 'personnel_boutique']),
             'essai_actif' => $this->essaiActif($user),
-            'compteurs' => [
-                'messages_non_lus' => $boutique ? Conversation::where('messages_non_lus_boutique', '>', 0)->count() : 0,
-                'mes_conversations_non_lues' => Conversation::withoutGlobalScopes()
-                    ->where('visiteur_user_id', $user->id)
-                    ->where('messages_non_lus_visiteur', '>', 0)
-                    ->count(),
-                'notifications_non_lues' => NotificationUtilisateur::where('user_id', $user->id)->whereNull('lu_a')->count(),
-            ],
+            'compteurs' => $this->compteurs($user),
         ]);
+    }
+
+    /**
+     * Synchronisation légère de la messagerie (appelée toutes les 5 s par
+     * l'application ouverte) : l'utilisateur est connecté, donc les messages qui lui
+     * sont adressés passent à "reçu" (deux traits chez l'expéditeur), et les
+     * pastilles de non-lus de la barre de navigation sont renvoyées à jour.
+     */
+    public function synchroniserMessagerie(Request $request, MessagerieTempsReelService $tempsReel): JsonResponse
+    {
+        $tempsReel->marquerRecus($request->user());
+
+        return response()->json(['compteurs' => $this->compteurs($request->user())]);
+    }
+
+    /** @return array{messages_non_lus: int, mes_conversations_non_lues: int, notifications_non_lues: int} */
+    private function compteurs(User $user): array
+    {
+        return [
+            'messages_non_lus' => $user->currentBoutique ? Conversation::where('messages_non_lus_boutique', '>', 0)->count() : 0,
+            'mes_conversations_non_lues' => Conversation::withoutGlobalScopes()
+                ->where('visiteur_user_id', $user->id)
+                ->where('messages_non_lus_visiteur', '>', 0)
+                ->count(),
+            'notifications_non_lues' => NotificationUtilisateur::where('user_id', $user->id)->whereNull('lu_a')->count(),
+        ];
     }
 
     public function vueGlobale(Request $request, CompteStatsService $statsService): JsonResponse

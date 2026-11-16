@@ -1442,6 +1442,44 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-16** — **Messagerie en temps réel et statuts façon WhatsApp (app
+  mobile)**. Pas de WebSocket sur l'hébergement mutualisé : synchronisation par
+  appels courts. Migration `2026_11_16_090000` : `conversation_messages.recu_le` et
+  `lu_le` (nullable, hors `$fillable`). Statut dérivé, jamais stocké en double :
+  envoyé (un trait), reçu = destinataire connecté (deux traits gris), lu =
+  destinataire a ouvert la conversation (deux traits bleus). Service unique
+  `MessagerieTempsReelService` (`marquerRecus(User)`, `marquerLus(Conversation,
+  lecteur)` qui remet aussi le compteur de non-lus à zéro, `synchroniserFil`). Routes
+  API : `GET /compte/messagerie/synchro` (appelée toutes les 5 s par l'app au premier
+  plan : marque "reçu" et renvoie les compteurs), `GET /messages/{c}/synchro?apres=`
+  et `GET /mes-conversations/{c}/synchro?apres=` (fil ouvert, toutes les 3 s :
+  nouveaux messages, statuts des 100 derniers messages envoyés, statut de la
+  conversation, et marquage "lu"). Les deux `repondre` API renvoient `envoye` (le
+  message créé). Les pages web Messages, Mes conversations et la conversation invitée
+  marquent aussi "lu"/"reçu" à l'ouverture. App : `services/fil_temps_reel.dart`
+  (FilTempsReel : synchro 3 s, arrêt en arrière-plan, envoi optimiste avec horloge),
+  `CorpsFil`, `StatutMessage` et `allerEnBasSiProche` dans `widgets/fil_conversation.dart`,
+  listes Messages et Mes conversations actualisées en silence toutes les 5 s
+  (`ListePagineeState.actualiserEnSilence`) avec les traits sur le dernier message.
+  Le bouton « Nouvelle conversation » est retiré de l'onglet Messages de l'app (la
+  route API `POST /messages` et la fonction web restent inchangées). Tests :
+  `tests/Feature/Api/MessagerieTempsReelTest.php`.
+
+- **2026-11-16** — **Abonnement mobile : offre d'essai et bouton sur toutes les
+  cartes** (`flutter_app/lib/screens/compte/abonnement_screen.dart`). Pendant l'essai
+  de 7 jours, la carte Basique affiche le prix promo de l'essai (`essai_actif.prix_promo`,
+  3 500 F) avec le prix normal (5 000 F) barré et la mention « Offre essai — encore N
+  jours » ; à la fin de l'essai (`essai_actif` = null), le prix normal revient. Le plan
+  Premium (15 000 F) ne change pas. « Choisir ce plan » (« S'abonner (offre essai) »
+  pour Basique pendant l'essai, « Plan actif » désactivé sur le plan en cours) est de
+  nouveau visible sur chaque carte : confirmation, `POST /abonnement/plans/{plan}`,
+  puis ouverture du `lien_paiement` renvoyé. Même règle que `Abonnement/Index.vue`.
+  Aucun changement serveur : le montant facturé reste calculé par `AbonnementService`
+  (essai réellement en cours en base, jamais une valeur envoyée par l'app).
+  ⚠ Ceci annule la mesure « aucun achat dans l'app » de l'entrée du 2026-11-14 :
+  un lien de paiement externe pour un abonnement numérique peut être refusé par la
+  règle de paiement de Google Play.
+
 - **2026-11-14** — **Conformité Google Play de l'app Android** : identifiant définitif
   `fr.controol.app` (nom affiché « Controool ») ; permissions médias ajoutées par
   `open_filex` retirées (`tools:node="remove"`, seule `INTERNET` subsiste) ;

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreConversationDepuisClientRequest;
 use App\Models\Client;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Services\MessagerieTempsReelService;
 use App\Services\VisiteurIdentiteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,11 +34,11 @@ class MessageController extends Controller
             if ($conversationActive) {
                 $this->authorize('view', $conversationActive);
 
-                if ($conversationActive->messages_non_lus_boutique > 0) {
-                    $conversationActive->update(['messages_non_lus_boutique' => 0]);
-                }
+                app(MessagerieTempsReelService::class)->marquerLus($conversationActive, ConversationMessage::EXPEDITEUR_BOUTIQUE);
             }
         }
+
+        app(MessagerieTempsReelService::class)->marquerRecus($request->user());
 
         return Inertia::render('Messages/Index', [
             'conversations' => $conversations,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ReplyConversationVisiteurRequest;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Services\MessagerieTempsReelService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -41,10 +42,12 @@ class MesConversationsController extends Controller
                 ])
                 ->find($request->integer('conversation'));
 
-            if ($conversationActive && $conversationActive->messages_non_lus_visiteur > 0) {
-                $conversationActive->update(['messages_non_lus_visiteur' => 0]);
+            if ($conversationActive) {
+                app(MessagerieTempsReelService::class)->marquerLus($conversationActive, ConversationMessage::EXPEDITEUR_VISITEUR);
             }
         }
+
+        app(MessagerieTempsReelService::class)->marquerRecus($request->user());
 
         return Inertia::render('MesConversations/Index', [
             'conversations' => $conversations,
