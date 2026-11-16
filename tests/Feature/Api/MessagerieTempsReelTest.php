@@ -95,7 +95,7 @@ class MessagerieTempsReelTest extends TestCase
         $intrus = $this->creerUtilisateurAvecBoutique('pro');
 
         $this->actingAs($intrus, 'sanctum')->getJson("/api/mes-conversations/{$conversation->id}/synchro")->assertNotFound();
-        $this->actingAs($intrus, 'sanctum')->getJson("/api/messages/{$conversation->id}/synchro")->assertStatus(404);
+        $this->actingAs($intrus, 'sanctum')->getJson("/api/messages/{$conversation->id}/synchro")->assertForbidden(); // 2026-11-16 : boîte unifiée, refus par ConversationPolicy
     }
 
     public function test_synchro_globale_ne_marque_pas_les_messages_des_autres(): void

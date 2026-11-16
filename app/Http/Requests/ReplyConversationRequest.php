@@ -8,7 +8,8 @@ class ReplyConversationRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('reply', $this->route('conversation'));
+        // "conversationGeree" : route API de la messagerie unifiée (toutes les boutiques gérées).
+        return $this->user()->can('reply', $this->route('conversation') ?? $this->route('conversationGeree'));
     }
 
     public function rules(): array

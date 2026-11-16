@@ -126,12 +126,13 @@ Route::name('api.')->group(function () {
             Route::delete('/{collaborateur}', [EquipeController::class, 'destroy']);
         });
 
+        Route::get('/messagerie', [MessageController::class, 'boite']);
         Route::get('/messages', [MessageController::class, 'index']);
         Route::post('/messages', [MessageController::class, 'store']);
-        Route::get('/messages/{conversation}', [MessageController::class, 'show']);
-        Route::get('/messages/{conversation}/synchro', [MessageController::class, 'synchroniser']);
-        Route::post('/messages/{conversation}/repondre', [MessageController::class, 'repondre']);
-        Route::patch('/messages/{conversation}/statut', [MessageController::class, 'updateStatut']);
+        Route::get('/messages/{conversationGeree}', [MessageController::class, 'show']);
+        Route::get('/messages/{conversationGeree}/synchro', [MessageController::class, 'synchroniser']);
+        Route::post('/messages/{conversationGeree}/repondre', [MessageController::class, 'repondre']);
+        Route::patch('/messages/{conversationGeree}/statut', [MessageController::class, 'updateStatut']);
 
         Route::get('/mes-conversations', [MesConversationsController::class, 'index']);
         Route::get('/mes-conversations/{conversation}', [MesConversationsController::class, 'show']);

@@ -15,7 +15,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 /**
- * Équivalent API de MessageController (messagerie de la boutique courante) -- même
+ * Équivalent API de MessageController -- `index` : boutique courante (comme le site) ;
+ * `boite` : boîte de réception unifiée de l'app ; le fil (`{conversationGeree}`)
+ * s'ouvre pour toute boutique dont l'utilisateur gère la messagerie. Même
  * Policy (ConversationPolicy, permission "Messagerie"), mêmes règles. La liste et le
  * fil sont deux appels séparés (écrans distincts sur mobile) au lieu du paramètre
  * ?conversation= de la page web.
@@ -35,13 +37,65 @@ class MessageController extends Controller
         ]);
     }
 
+    /**
+     * Boîte de réception unifiée de l'application (onglet Messages) : toutes les
+     * conversations de l'utilisateur -- reçues par chacune des boutiques dont il gère
+     * la messagerie (pas seulement la boutique courante) et celles qu'il a engagées
+     * comme acheteur. `role` indique de quel côté il se trouve ("boutique" ou
+     * "visiteur"), `non_lus` le compteur de ce côté. ?filtre=boutiques|achats.
+     */
+    public function boite(Request $request, MessagerieTempsReelService $tempsReel): JsonResponse
+    {
+        $user = $request->user();
+        $boutiques = $tempsReel->boutiquesMessagerie($user);
+        $filtre = $request->string('filtre')->toString();
+
+        $page = Conversation::withoutGlobalScopes()
+            ->where(function ($q) use ($boutiques, $user, $filtre) {
+                if ($filtre !== 'achats') {
+                    $q->whereIn('boutique_id', $boutiques);
+                }
+                if ($filtre !== 'boutiques') {
+                    $q->orWhere(fn ($v) => $v->where('visiteur_user_id', $user->id)->whereNotIn('boutique_id', $boutiques));
+                }
+            })
+            ->with([
+                'boutique:id,nom,slug,logo_path',
+                'produit' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'nom', 'photo_path'),
+                'client' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'nom'),
+                'dernierMessage',
+            ])
+            ->orderByDesc('dernier_message_a')
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString()
+            ->through(function (Conversation $c) use ($boutiques) {
+                $commeBoutique = $boutiques->contains($c->boutique_id);
+                $c->setAttribute('role', $commeBoutique ? 'boutique' : 'visiteur');
+                $c->setAttribute('non_lus', $commeBoutique ? $c->messages_non_lus_boutique : $c->messages_non_lus_visiteur);
+
+                return $c;
+            });
+
+        return response()->json([
+            'conversations' => $page,
+            'gere_des_boutiques' => $boutiques->isNotEmpty(),
+            'plusieurs_boutiques' => $boutiques->count() > 1,
+        ]);
+    }
+
     public function show(Conversation $conversation, MessagerieTempsReelService $tempsReel): JsonResponse
     {
         $this->authorize('view', $conversation);
 
         $tempsReel->marquerLus($conversation, ConversationMessage::EXPEDITEUR_BOUTIQUE);
 
-        return response()->json($conversation->load(['produit:id,nom,photo_path', 'client:id,nom', 'messages']));
+        return response()->json($conversation->load([
+            'boutique:id,nom,slug,logo_path',
+            'produit' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'nom', 'photo_path'),
+            'client' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'nom'),
+            'messages',
+        ]));
     }
 
     /**

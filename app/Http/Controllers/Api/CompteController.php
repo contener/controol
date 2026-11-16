@@ -78,15 +78,24 @@ class CompteController extends Controller
         return response()->json(['compteurs' => $this->compteurs($request->user())]);
     }
 
-    /** @return array{messages_non_lus: int, mes_conversations_non_lues: int, notifications_non_lues: int} */
+    /**
+     * messages_non_lus : pastille de l'onglet Messages, qui réunit toutes les
+     * conversations de l'utilisateur (boîte unifiée) -- conversations non lues de
+     * toutes les boutiques dont il gère la messagerie + celles où il est acheteur.
+     *
+     * @return array{messages_non_lus: int, mes_conversations_non_lues: int, notifications_non_lues: int}
+     */
     private function compteurs(User $user): array
     {
+        $boutiques = app(MessagerieTempsReelService::class)->boutiquesMessagerie($user);
+        $achatsNonLus = Conversation::withoutGlobalScopes()
+            ->where('visiteur_user_id', $user->id)
+            ->where('messages_non_lus_visiteur', '>', 0);
+
         return [
-            'messages_non_lus' => $user->currentBoutique ? Conversation::where('messages_non_lus_boutique', '>', 0)->count() : 0,
-            'mes_conversations_non_lues' => Conversation::withoutGlobalScopes()
-                ->where('visiteur_user_id', $user->id)
-                ->where('messages_non_lus_visiteur', '>', 0)
-                ->count(),
+            'messages_non_lus' => Conversation::withoutGlobalScopes()->whereIn('boutique_id', $boutiques)->where('messages_non_lus_boutique', '>', 0)->count()
+                + (clone $achatsNonLus)->whereNotIn('boutique_id', $boutiques)->count(),
+            'mes_conversations_non_lues' => $achatsNonLus->count(),
             'notifications_non_lues' => NotificationUtilisateur::where('user_id', $user->id)->whereNull('lu_a')->count(),
         ];
     }

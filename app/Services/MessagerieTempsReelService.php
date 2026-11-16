@@ -97,8 +97,13 @@ class MessagerieTempsReelService
         ];
     }
 
-    /** @return Collection<int, int> */
-    private function boutiquesMessagerie(User $user): Collection
+    /**
+     * Boutiques dont l'utilisateur gère la messagerie : les siennes, et celles où il
+     * est collaborateur avec la permission Messagerie.
+     *
+     * @return Collection<int, int>
+     */
+    public function boutiquesMessagerie(User $user): Collection
     {
         return Boutique::query()->where('user_id', $user->id)->pluck('id')
             ->concat(

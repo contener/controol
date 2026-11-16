@@ -1,10 +1,11 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import ApplicationMark from '@/Components/ApplicationMark.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
 import InstallAppBanner from '@/Components/InstallAppBanner.vue';
+import { CATEGORIE_AUTRE, categoriesBoutique } from '@/Composables/categoriesBoutique';
 
 // L'inscription est aussi la création de la première boutique (2026-11-13) :
 // formulaire en 4 étapes horizontales, mêmes champs que BoutiqueForm.vue, envoyés
@@ -24,7 +25,6 @@ const form = useForm({
         description: '',
         devise: 'XAF',
         taux_tva_defaut: '19.25',
-        nui: '',
         adresse: '',
         ville: '',
         pays: 'Cameroun',
@@ -32,28 +32,43 @@ const form = useForm({
         whatsapp: '',
         email: '',
         note_pied_facture: '',
-        facebook_url: '',
-        instagram_url: '',
-        telegram_url: '',
         logo: null,
         banniere: null,
     },
+});
+
+// NUI et liens des réseaux sociaux ne sont plus demandés à l'inscription
+// (2026-11-16) : ils restent modifiables ensuite dans "Mes boutiques".
+
+// Catégorie : choix dans la liste, ou "Autre" pour saisir la sienne.
+const categorieChoisie = ref('');
+const categorieAutre = ref('');
+
+const choisirCategorie = (nom) => {
+    categorieChoisie.value = categorieChoisie.value === nom ? '' : nom;
+    form.boutique.categorie = categorieChoisie.value === CATEGORIE_AUTRE ? categorieAutre.value.trim() : categorieChoisie.value;
+};
+
+watch(categorieAutre, (valeur) => {
+    if (categorieChoisie.value === CATEGORIE_AUTRE) {
+        form.boutique.categorie = valeur.trim();
+    }
 });
 
 const etapes = [
     { titre: 'Compte', sousTitre: 'Vos identifiants' },
     { titre: 'Boutique', sousTitre: 'Votre activité' },
     { titre: 'Coordonnées', sousTitre: 'Où vous trouver' },
-    { titre: 'Image', sousTitre: 'Logo & réseaux' },
+    { titre: 'Image', sousTitre: 'Logo & facture' },
 ];
 
 // Champs de chaque étape -- sert à revenir automatiquement sur l'étape qui
 // contient une erreur renvoyée par le serveur.
 const champsParEtape = [
     ['name', 'email', 'password', 'password_confirmation'],
-    ['boutique.nom', 'boutique.categorie', 'boutique.description', 'boutique.devise', 'boutique.taux_tva_defaut', 'boutique.nui'],
+    ['boutique.nom', 'boutique.categorie', 'boutique.description', 'boutique.devise', 'boutique.taux_tva_defaut'],
     ['boutique.adresse', 'boutique.ville', 'boutique.pays', 'boutique.telephone', 'boutique.whatsapp', 'boutique.email'],
-    ['boutique.logo', 'boutique.banniere', 'boutique.facebook_url', 'boutique.instagram_url', 'boutique.telegram_url', 'boutique.note_pied_facture', 'terms'],
+    ['boutique.logo', 'boutique.banniere', 'boutique.note_pied_facture', 'terms'],
 ];
 
 const etape = ref(0);
@@ -369,8 +384,28 @@ const libelleClasse = 'block text-sm font-medium text-slate-700 dark:text-slate-
                                     <InputError class="mt-2" :message="erreur('boutique.nom')" />
                                 </div>
                                 <div>
-                                    <label for="b_categorie" :class="libelleClasse">Catégorie</label>
-                                    <input id="b_categorie" v-model="form.boutique.categorie" type="text" placeholder="Informatique, Vêtements..." :class="[champClasse, 'mt-1']">
+                                    <span id="b_categorie_libelle" :class="libelleClasse">Catégorie</span>
+                                    <div class="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-labelledby="b_categorie_libelle">
+                                        <button
+                                            v-for="c in [...categoriesBoutique, { nom: CATEGORIE_AUTRE, icone: '✏️' }]"
+                                            :key="c.nom"
+                                            type="button"
+                                            role="radio"
+                                            :aria-checked="categorieChoisie === c.nom"
+                                            class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-offset-slate-800"
+                                            :class="categorieChoisie === c.nom
+                                                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                                                : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400 hover:text-blue-700 dark:hover:text-blue-300'"
+                                            @click="choisirCategorie(c.nom)"
+                                        >
+                                            <span aria-hidden="true">{{ c.icone }}</span>
+                                            {{ c.nom }}
+                                        </button>
+                                    </div>
+                                    <div v-if="categorieChoisie === CATEGORIE_AUTRE" class="mt-3">
+                                        <label for="b_categorie_autre" class="sr-only">Votre catégorie</label>
+                                        <input id="b_categorie_autre" v-model="categorieAutre" type="text" maxlength="255" placeholder="Saisissez votre catégorie" :class="champClasse" autofocus>
+                                    </div>
                                     <InputError class="mt-2" :message="erreur('boutique.categorie')" />
                                 </div>
                                 <div>
@@ -389,11 +424,6 @@ const libelleClasse = 'block text-sm font-medium text-slate-700 dark:text-slate-
                                         <input id="b_tva" v-model="form.boutique.taux_tva_defaut" type="number" step="0.01" min="0" max="100" :class="[champClasse, 'mt-1']">
                                         <InputError class="mt-2" :message="erreur('boutique.taux_tva_defaut')" />
                                     </div>
-                                </div>
-                                <div>
-                                    <label for="b_nui" :class="libelleClasse">NUI (Numéro d'Identifiant Unique)</label>
-                                    <input id="b_nui" v-model="form.boutique.nui" type="text" placeholder="M012312345678A" :class="[champClasse, 'mt-1']">
-                                    <InputError class="mt-2" :message="erreur('boutique.nui')" />
                                 </div>
                             </div>
 
@@ -436,7 +466,7 @@ const libelleClasse = 'block text-sm font-medium text-slate-700 dark:text-slate-
                                 </div>
                             </div>
 
-                            <!-- Étape 4 : apparence, réseaux et facture -->
+                            <!-- Étape 4 : apparence et facture -->
                             <div v-else key="image" class="space-y-5">
                                 <div>
                                     <span :class="libelleClasse">Bannière</span>
@@ -462,24 +492,6 @@ const libelleClasse = 'block text-sm font-medium text-slate-700 dark:text-slate-
                                     </div>
                                 </div>
                                 <InputError :message="erreur('boutique.logo')" />
-
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div>
-                                        <label for="b_fb" :class="libelleClasse">Lien Facebook</label>
-                                        <input id="b_fb" v-model="form.boutique.facebook_url" type="url" placeholder="https://" :class="[champClasse, 'mt-1']">
-                                        <InputError class="mt-2" :message="erreur('boutique.facebook_url')" />
-                                    </div>
-                                    <div>
-                                        <label for="b_ig" :class="libelleClasse">Lien Instagram</label>
-                                        <input id="b_ig" v-model="form.boutique.instagram_url" type="url" placeholder="https://" :class="[champClasse, 'mt-1']">
-                                        <InputError class="mt-2" :message="erreur('boutique.instagram_url')" />
-                                    </div>
-                                    <div>
-                                        <label for="b_tg" :class="libelleClasse">Lien Telegram</label>
-                                        <input id="b_tg" v-model="form.boutique.telegram_url" type="url" placeholder="https://" :class="[champClasse, 'mt-1']">
-                                        <InputError class="mt-2" :message="erreur('boutique.telegram_url')" />
-                                    </div>
-                                </div>
 
                                 <div>
                                     <label for="b_note" :class="libelleClasse">Note de bas de facture</label>

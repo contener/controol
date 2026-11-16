@@ -1442,6 +1442,33 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-16** — **Inscription : catégories à choisir, NUI et réseaux sociaux
+  retirés** (site `Auth/Register.vue` et app `register_screen.dart`). La catégorie se
+  choisit parmi 20 puces (liste unique par plateforme :
+  `resources/js/Composables/categoriesBoutique.js` et
+  `flutter_app/lib/utils/categories_boutique.dart`, à garder identiques) ; « Autre »
+  ouvre un champ de saisie libre. `boutiques.categorie` reste un texte libre (aucun
+  changement serveur, règles `ReglesBoutique` inchangées). Les champs NUI et liens
+  Facebook / Instagram / Telegram ne sont plus demandés à l'inscription ; ils restent
+  modifiables dans « Mes boutiques ». L'étape 4 s'appelle « Image & facture ».
+
+- **2026-11-16** — **Onglet Messages de l'app = toutes les conversations de
+  l'utilisateur**. `GET /api/messagerie?filtre=&page=` (`Api\MessageController::boite`) :
+  conversations de toutes les boutiques dont il gère la messagerie
+  (`MessagerieTempsReelService::boutiquesMessagerie`, désormais public) + celles où
+  il est acheteur, triées par dernier message, chaque élément avec `role`
+  (boutique/visiteur) et `non_lus` ; filtres `boutiques` / `achats`. Les routes API du
+  fil boutique utilisent le paramètre `{conversationGeree}` (`Route::bind` dans
+  AppServiceProvider, résolu hors du filtre BelongsToBoutique) : une conversation
+  d'une autre boutique gérée s'ouvre sans changer de boutique courante, l'accès
+  restant contrôlé par ConversationPolicy (un tiers reçoit 403). `ReplyConversationRequest`
+  accepte les deux noms de paramètre. Le fil charge `boutique`, `produit` et `client`
+  sans filtre de boutique. `compteurs.messages_non_lus` compte maintenant toute la boîte
+  unifiée (toutes boutiques gérées + achats). App : `messages_screen.dart` refait
+  (filtres Toutes / Mes boutiques / Mes achats, mention « Achat », nom de la boutique
+  si plusieurs), plus de pastille sur l'onglet Compte. Le site web n'est pas modifié.
+  Tests : `tests/Feature/Api/MessagerieUnifieeTest.php`.
+
 - **2026-11-16** — **Centre de notifications d'activité (site et app mobile)**.
   `App\Services\NotificationService`, point d'entrée unique, branché une seule fois
   par événement : `ConversationMessage::booted` (created) → `message_recu` (équipe
