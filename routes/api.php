@@ -106,6 +106,7 @@ Route::name('api.')->group(function () {
             Route::post('/boutiques/{slug}/suivre', [MarketplaceController::class, 'suivre']);
             Route::delete('/boutiques/{slug}/suivre', [MarketplaceController::class, 'neplusSuivre']);
             Route::post('/boutiques/{slug}/produits/{produit}/jaime', [MarketplaceController::class, 'aimer'])->middleware('throttle:20,1');
+            Route::post('/boutiques/{slug}/produits/{produit}/commande', [MarketplaceController::class, 'commander'])->middleware('throttle:10,1');
             Route::get('/boutiques/{slug}/conversation', [MarketplaceController::class, 'conversation']);
             Route::post('/boutiques/{slug}/messages', [MarketplaceController::class, 'envoyerMessage'])->middleware('throttle:5,1');
         });

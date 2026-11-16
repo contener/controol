@@ -14,6 +14,9 @@ class AudienceInteraction extends Model
 
     public const MESSAGE = 'MESSAGE';
 
+    /** Clic sur "Commander" (WhatsApp) -- intention de commande, notifiée au vendeur. */
+    public const COMMANDE = 'COMMANDE';
+
     public const WHATSAPP_RELANCE_OPENED = 'WHATSAPP_RELANCE_OPENED';
 
     public const MESSAGE_RELANCE_ENVOYE = 'MESSAGE_RELANCE_ENVOYE';

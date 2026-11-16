@@ -51,6 +51,7 @@ class EspaceMobileTest extends TestCase
     public function test_resume_returns_navigation_data(): void
     {
         $user = $this->creerUtilisateurAvecBoutique('pro');
+        NotificationUtilisateur::where('type', 'boutique_creee')->delete();
         NotificationUtilisateur::create(['user_id' => $user->id, 'type' => 'info', 'titre' => 'T', 'message' => 'M']);
 
         $this->actingAs($user, 'sanctum')
@@ -64,6 +65,7 @@ class EspaceMobileTest extends TestCase
     public function test_notifications_can_be_listed_and_marked_read(): void
     {
         $user = $this->creerUtilisateurAvecBoutique('pro');
+        NotificationUtilisateur::where('type', 'boutique_creee')->delete();
         $notification = NotificationUtilisateur::create(['user_id' => $user->id, 'type' => 'info', 'titre' => 'T', 'message' => 'M']);
         $autre = User::factory()->create();
         $notificationAutre = NotificationUtilisateur::create(['user_id' => $autre->id, 'type' => 'info', 'titre' => 'T', 'message' => 'M']);

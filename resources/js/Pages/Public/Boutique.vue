@@ -105,6 +105,12 @@ const aimer = async (produit) => {
     }
 };
 
+// Clic sur "Commander" : le lien WhatsApp s'ouvre normalement, et le vendeur est
+// prévenu ("Nouvelle commande") -- envoi silencieux, jamais bloquant pour le visiteur.
+const signalerCommande = (produit) => {
+    axios.post(route('public.boutique.produits.commande', [props.boutique.slug, produit.id])).catch(() => {});
+};
+
 // Garde-fou : après un changement de produit sans rechargement (nouveau produit sans
 // conversation existante), `conversationActive` peut encore contenir le fil du produit
 // précédemment ouvert tant qu'aucun rechargement ne l'a remplacé — ne jamais l'afficher
@@ -242,7 +248,7 @@ const conversationPourModal = computed(() => {
                             <span class="text-sm font-semibold text-slate-900">{{ formatMontant(produit.promotion_prix ?? produit.prix_vente) }}</span>
                             <span v-if="produit.promotion_prix" class="text-xs text-slate-400 line-through">{{ formatMontant(produit.prix_vente) }}</span>
                         </div>
-                        <a v-if="lienWhatsapp(produit)" :href="lienWhatsapp(produit)" target="_blank" class="mt-2 inline-flex items-center justify-center px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700">
+                        <a v-if="lienWhatsapp(produit)" :href="lienWhatsapp(produit)" target="_blank" @click="signalerCommande(produit)" class="mt-2 inline-flex items-center justify-center px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-md hover:bg-green-700">
                             Commander
                         </a>
                         <button type="button" class="mt-2 inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-medium rounded-md hover:bg-slate-50" @click="ouvrirMessage(produit)">

@@ -13,13 +13,42 @@ use Illuminate\Http\Request;
  */
 class NotificationController extends Controller
 {
+    /**
+     * ?categorie= (messages, jaime, abonnes, commandes, boutiques, abonnement, autres)
+     * filtre par regroupement de types (NotificationUtilisateur::CATEGORIES) ;
+     * ?page= pagine par 30. Sans paramètre : mêmes clés qu'avant (anciennes versions).
+     */
     public function index(Request $request): JsonResponse
     {
         $userId = $request->user()->id;
+        $categorie = $request->string('categorie')->toString();
+
+        $requete = NotificationUtilisateur::where('user_id', $userId);
+
+        if (isset(NotificationUtilisateur::CATEGORIES[$categorie])) {
+            $requete->whereIn('type', NotificationUtilisateur::CATEGORIES[$categorie]);
+        } elseif ($categorie === 'autres') {
+            $requete->whereNotIn('type', array_merge(...array_values(NotificationUtilisateur::CATEGORIES)));
+        }
+
+        $page = $requete->latest('created_at')->latest('id')->paginate(30);
+
+        $nonLuesParCategorie = NotificationUtilisateur::where('user_id', $userId)
+            ->whereNull('lu_a')
+            ->selectRaw('type, count(*) as total')
+            ->groupBy('type')
+            ->pluck('total', 'type');
+
+        $compteurs = collect(NotificationUtilisateur::CATEGORIES)
+            ->map(fn ($types) => (int) $nonLuesParCategorie->only($types)->sum())
+            ->put('autres', (int) $nonLuesParCategorie->except(array_merge(...array_values(NotificationUtilisateur::CATEGORIES)))->sum());
 
         return response()->json([
-            'notifications' => NotificationUtilisateur::where('user_id', $userId)->latest('created_at')->limit(20)->get(),
-            'non_lues' => NotificationUtilisateur::where('user_id', $userId)->whereNull('lu_a')->count(),
+            'notifications' => $page->items(),
+            'page' => $page->currentPage(),
+            'derniere_page' => $page->lastPage(),
+            'non_lues' => (int) $nonLuesParCategorie->sum(),
+            'non_lues_par_categorie' => $compteurs,
         ]);
     }
 

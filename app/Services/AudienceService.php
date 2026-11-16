@@ -66,13 +66,26 @@ class AudienceService
         // produit. Tout autre type (message...) est un événement réel distinct à
         // chaque occurrence.
         if ($type === AudienceInteraction::LIKE) {
-            return AudienceInteraction::withoutGlobalScopes()->firstOrCreate([
+            $interaction = AudienceInteraction::withoutGlobalScopes()->firstOrCreate([
                 'audience_membre_id' => $membre->id,
                 'produit_id' => $produit?->id,
                 'type' => $type,
             ], $donnees);
+
+            // Un seul "J'aime" notifié par visiteur et par produit (idempotent ci-dessus).
+            if ($interaction->wasRecentlyCreated) {
+                app(NotificationService::class)->nouveauLike($boutique, $produit, $identite['user_id'] ?? null);
+            }
+
+            return $interaction;
         }
 
-        return AudienceInteraction::withoutGlobalScopes()->create($donnees);
+        $interaction = AudienceInteraction::withoutGlobalScopes()->create($donnees);
+
+        if ($type === AudienceInteraction::COMMANDE && $produit) {
+            app(NotificationService::class)->nouvelleCommande($boutique, $produit, $identite['user_id'] ?? null);
+        }
+
+        return $interaction;
     }
 }

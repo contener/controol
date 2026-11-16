@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -45,6 +46,15 @@ class Boutique extends Model
             'marketplace_visible' => 'boolean',
             'marketplace_disabled_by_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Notifications "boutique créée" (propriétaire) et "nouvelle boutique" (abonnés
+     * de ses autres boutiques) -- tous les chemins de création (inscription, web, app).
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (self $boutique) => app(NotificationService::class)->nouvelleBoutique($boutique));
     }
 
     public function proprietaire(): BelongsTo

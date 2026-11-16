@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,19 @@ class Suivi extends Model
             'abonne_a' => 'datetime',
             'desabonne_a' => 'datetime',
         ];
+    }
+
+    /**
+     * Notification "nouvel abonné" (web et application) : nouvel abonnement, ou
+     * réabonnement après un désabonnement -- jamais pour un simple réenregistrement.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (self $suivi) {
+            if ($suivi->desabonne_a === null && ($suivi->wasRecentlyCreated || $suivi->wasChanged('desabonne_a'))) {
+                app(NotificationService::class)->nouvelAbonne($suivi);
+            }
+        });
     }
 
     public function boutique(): BelongsTo

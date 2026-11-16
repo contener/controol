@@ -68,6 +68,9 @@ Route::post('/boutique/{slug}/produits', [ProduitController::class, 'storeDepuis
 Route::post('/boutique/{slug}/produits/{produit}/jaime', [PublicBoutiqueController::class, 'aimerProduit'])
     ->middleware('throttle:20,1')
     ->name('public.boutique.produits.jaime');
+Route::post('/boutique/{slug}/produits/{produit}/commande', [PublicBoutiqueController::class, 'commanderProduit'])
+    ->middleware('throttle:10,1')
+    ->name('public.boutique.produits.commande');
 
 Route::get('/conversations/{conversation}', [GuestConversationController::class, 'show'])
     ->middleware('signed')

@@ -1442,6 +1442,34 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-16** — **Centre de notifications d'activité (site et app mobile)**.
+  `App\Services\NotificationService`, point d'entrée unique, branché une seule fois
+  par événement : `ConversationMessage::booted` (created) → `message_recu` (équipe
+  ayant la Messagerie) ou `message_vendeur` (acheteur connecté), regroupées par
+  conversation tant que non lues ; `Suivi::booted` (saved, abonnement ou
+  réabonnement) → `nouvel_abonne` ; `Boutique::booted` (created) → `boutique_creee`
+  (propriétaire) et `nouvelle_boutique` (abonnés de ses autres boutiques) ;
+  `AudienceService::enregistrerInteraction` → `like` (une fois par visiteur et par
+  produit) et `nouvelle_commande` (nouvelle interaction `AudienceInteraction::COMMANDE`
+  = clic sur « Commander » vers WhatsApp, routes `POST /boutique/{slug}/produits/{p}/commande`
+  web et `POST /api/marketplace/boutiques/{slug}/produits/{p}/commande`, throttle 10/min) ;
+  `PaiementValidationService` → `paiement_approuve` / `paiement_rejete` ; ajout de
+  collaborateur (web et API) → `collaborateur_ajoute`. Destinataires boutique : le
+  propriétaire et les collaborateurs ayant la permission (Messagerie ou Audience),
+  jamais l'auteur de l'action. Migration `2026_11_16_120000` : colonne JSON
+  `notifications_utilisateurs.donnees` (boutique_id, conversation_id, produit_id,
+  slug) et index (user_id, type). `NotificationUtilisateur::CATEGORIES` regroupe les
+  types (messages, jaime, abonnes, commandes, boutiques, abonnement ; le reste dans
+  « autres »). `GET /api/notifications?categorie=&page=` : 30 par page,
+  `non_lues_par_categorie`. App : cloche `widgets/bouton_notifications.dart` en haut
+  de Marketplace, Clients, Messages, Tableau de bord et Compte (pastille mise à jour
+  toutes les 5 s, la cloche s'agite à l'arrivée d'une notification) ; écran
+  Notifications refait (filtres avec compteurs, pagination, actualisation 5 s,
+  ouverture directe de la conversation, de l'Audience, de la boutique ou de
+  l'Abonnement, avec bascule sur la bonne boutique). L'onglet Compte ne compte plus
+  les notifications (cloche dédiée), seulement Mes conversations.
+  Tests : `tests/Feature/Api/NotificationsActiviteTest.php`.
+
 - **2026-11-16** — **Messagerie en temps réel et statuts façon WhatsApp (app
   mobile)**. Pas de WebSocket sur l'hébergement mutualisé : synchronisation par
   appels courts. Migration `2026_11_16_090000` : `conversation_messages.recu_le` et

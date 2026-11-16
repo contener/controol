@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCollaborateurRequest;
 use App\Http\Requests\UpdateCollaborateurPermissionsRequest;
 use App\Models\Boutique;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -66,6 +67,7 @@ class BoutiqueCollaborateurController extends Controller
         // Chaque permission omise ou décochée reste à false (défaut colonne) -- jamais
         // d'accès automatique, même pour les fonctionnalités non cochées explicitement.
         $boutique->collaborateurs()->attach($collaborateur->id, $this->permissionsCochees($data));
+        app(NotificationService::class)->collaborateurAjoute($boutique, $collaborateur);
 
         return back()->with('flash_success', "{$collaborateur->name} a été ajouté comme collaborateur de {$boutique->nom}.");
     }

@@ -13,12 +13,27 @@ class NotificationUtilisateur extends Model
     // après création, seulement marquée lue via lu_a) — Eloquent gère created_at seul.
     const UPDATED_AT = null;
 
+    /**
+     * Regroupement des types pour les filtres de l'écran Notifications (app mobile).
+     * Tout type absent d'ici (essai, parrainage, annonces de l'administration...)
+     * tombe dans "autres" -- jamais de type perdu si un nouveau est ajouté plus tard.
+     */
+    public const CATEGORIES = [
+        'messages' => ['message_recu', 'message_vendeur'],
+        'jaime' => ['like'],
+        'abonnes' => ['nouvel_abonne'],
+        'commandes' => ['nouvelle_commande'],
+        'boutiques' => ['nouvelle_boutique', 'boutique_creee', 'nouveau_produit', 'collaborateur_ajoute'],
+        'abonnement' => ['paiement_approuve', 'paiement_rejete'],
+    ];
+
     protected $fillable = [
         'user_id',
         'type',
         'titre',
         'message',
         'lien',
+        'donnees',
         'est_promotionnelle',
         'lu_a',
     ];
@@ -26,6 +41,7 @@ class NotificationUtilisateur extends Model
     protected function casts(): array
     {
         return [
+            'donnees' => 'array',
             'est_promotionnelle' => 'boolean',
             'lu_a' => 'datetime',
             'created_at' => 'datetime',

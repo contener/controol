@@ -174,6 +174,7 @@ class EssaiBasiqueTest extends TestCase
     {
         $this->creerPlanBasique();
         $user = $this->inscrire();
+        NotificationUtilisateur::where('type', 'boutique_creee')->delete();
 
         Artisan::call('essais:notifier');
         Artisan::call('essais:notifier');
@@ -287,6 +288,7 @@ class EssaiBasiqueTest extends TestCase
     {
         $this->creerPlanBasique();
         $user = $this->inscrire();
+        NotificationUtilisateur::where('type', 'boutique_creee')->delete();
 
         $notification = NotificationUtilisateur::create([
             'user_id' => $user->id, 'type' => 'essai_rappel', 'titre' => 'T', 'message' => 'M', 'created_at' => now(),

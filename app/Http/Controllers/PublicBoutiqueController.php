@@ -229,6 +229,29 @@ class PublicBoutiqueController extends Controller
     }
 
     /**
+     * Clic sur "Commander" (ouverture de WhatsApp) : journalisé dans l'audience et
+     * notifié au vendeur ("Nouvelle commande"). Même résolution du produit que le like.
+     */
+    public function commanderProduit(Request $request, string $slug, int $produit, VisiteurIdentiteService $identite, AudienceService $audience): JsonResponse
+    {
+        $boutique = $this->resoudreBoutique($slug);
+
+        $produitModele = Produit::withoutGlobalScopes()
+            ->where('boutique_id', $boutique->id)
+            ->where('actif', true)
+            ->where('marketplace_visible', true)
+            ->findOrFail($produit);
+
+        $identiteVisiteur = Auth::check()
+            ? ['user_id' => Auth::id()]
+            : ['visiteur_token' => $identite->resoudreOuCreerJeton($request)];
+
+        $audience->enregistrerInteraction($boutique, AudienceInteraction::COMMANDE, $produitModele, $identiteVisiteur);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * Ne lit le cookie visiteur qu'en lecture (jamais resoudreOuCreerJeton(), qui en
      * créerait un pour chaque simple visite) -- un visiteur qui n'a jamais interagi ne
      * doit pas se voir attribuer un token juste pour afficher la page.

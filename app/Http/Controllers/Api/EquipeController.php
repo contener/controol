@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCollaborateurRequest;
 use App\Http\Requests\UpdateCollaborateurPermissionsRequest;
 use App\Models\Boutique;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -59,6 +60,7 @@ class EquipeController extends Controller
         ])->save();
 
         $boutique->collaborateurs()->attach($collaborateur->id, $this->permissionsCochees($data));
+        app(NotificationService::class)->collaborateurAjoute($boutique, $collaborateur);
 
         return response()->json(['message' => "{$collaborateur->name} a été ajouté comme collaborateur de {$boutique->nom}."], 201);
     }

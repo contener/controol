@@ -128,9 +128,9 @@ class SuiviBoutiqueTest extends TestCase
         // 2026-11-13 : un produit est visible d'office à sa création, qui vaut donc
         // publication -- seuls les abonnés actifs aux notifications sont prévenus.
         $produit = Produit::where('nom', 'Nouveau produit')->firstOrFail();
-        $this->assertDatabaseCount('notifications_utilisateurs', 1);
+        $this->assertSame(1, NotificationUtilisateur::where('type', 'nouveau_produit')->count());
 
-        $notification = NotificationUtilisateur::where('user_id', $abonneActif->id)->firstOrFail();
+        $notification = NotificationUtilisateur::where('user_id', $abonneActif->id)->where('type', 'nouveau_produit')->firstOrFail();
         $this->assertSame('nouveau_produit', $notification->type);
         $this->assertStringContainsString('Nouveau produit', $notification->message);
         $this->assertStringContainsString('Rouge, taille M', $notification->message);
@@ -138,7 +138,7 @@ class SuiviBoutiqueTest extends TestCase
 
         // Rejouer la même publication (déjà visible) ne doit jamais dupliquer la notification.
         $this->actingAs($vendeur)->patch(route('produits.marketplace', $produit), ['marketplace_visible' => true]);
-        $this->assertDatabaseCount('notifications_utilisateurs', 1);
+        $this->assertSame(1, NotificationUtilisateur::where('type', 'nouveau_produit')->count());
     }
 
     public function test_inactive_product_does_not_notify_followers_even_when_made_visible(): void
@@ -158,7 +158,7 @@ class SuiviBoutiqueTest extends TestCase
 
         $this->actingAs($vendeur)->patch(route('produits.marketplace', $produit), ['marketplace_visible' => true]);
 
-        $this->assertDatabaseCount('notifications_utilisateurs', 0);
+        $this->assertSame(0, NotificationUtilisateur::where('type', 'nouveau_produit')->count());
     }
 
     public function test_capturing_middleware_stores_the_invitation_boutique_in_session(): void

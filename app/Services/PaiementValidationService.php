@@ -71,7 +71,10 @@ class PaiementValidationService
 
             $this->journaliser($paiement, $admin, 'approbation', $statutAvant, Paiement::STATUT_APPROUVE, null, $request);
 
-            return $paiement->fresh(['abonnement.plan', 'user']);
+            $paiement = $paiement->fresh(['abonnement.plan', 'user']);
+            app(NotificationService::class)->paiementTraite($paiement);
+
+            return $paiement;
         });
     }
 
@@ -100,7 +103,10 @@ class PaiementValidationService
 
             $this->journaliser($paiement, $admin, 'rejet', $statutAvant, Paiement::STATUT_REJETE, $motif, $request);
 
-            return $paiement->fresh(['abonnement.plan', 'user']);
+            $paiement = $paiement->fresh(['abonnement.plan', 'user']);
+            app(NotificationService::class)->paiementTraite($paiement);
+
+            return $paiement;
         });
     }
 

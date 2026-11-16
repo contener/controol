@@ -166,6 +166,22 @@ class MarketplaceController extends Controller
         return response()->json(['aime' => true]);
     }
 
+    /** Clic sur "Commander" dans l'application -- voir PublicBoutiqueController::commanderProduit. */
+    public function commander(Request $request, string $slug, int $produit, AudienceService $audience): JsonResponse
+    {
+        $boutique = $this->resoudreBoutique($slug);
+
+        $produitModele = Produit::withoutGlobalScopes()
+            ->where('boutique_id', $boutique->id)
+            ->where('actif', true)
+            ->where('marketplace_visible', true)
+            ->findOrFail($produit);
+
+        $audience->enregistrerInteraction($boutique, AudienceInteraction::COMMANDE, $produitModele, ['user_id' => $request->user()->id]);
+
+        return response()->json(['ok' => true]);
+    }
+
     /**
      * Fil existant entre l'utilisateur et cette boutique pour un produit donné (ou
      * sans produit) -- affiché dans la fenêtre "Contacter la boutique" comme sur le

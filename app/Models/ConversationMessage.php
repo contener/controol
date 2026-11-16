@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -23,6 +24,16 @@ class ConversationMessage extends Model
             'recu_le' => 'datetime',
             'lu_le' => 'datetime',
         ];
+    }
+
+    /**
+     * Notification "nouveau message" branchée ici une seule fois : couvre tous les
+     * chemins d'envoi (page publique, lien invité, Mes conversations, messagerie de
+     * la boutique, web comme application mobile).
+     */
+    protected static function booted(): void
+    {
+        static::created(fn (self $message) => app(NotificationService::class)->nouveauMessage($message));
     }
 
     public function conversation(): BelongsTo
