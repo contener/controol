@@ -120,6 +120,9 @@ const logout = () => {
                                 <NavLink v-if="peutAcceder('depenses')" :href="route('depenses.index')" :active="route().current('depenses.*')">
                                     {{ t('nav.expenses') }}
                                 </NavLink>
+                                <NavLink v-if="peutAcceder('depenses')" :href="route('caisse.index')" :active="route().current('caisse.*')">
+                                    {{ t('nav.cash') }}
+                                </NavLink>
                                 <NavLink v-if="peutAcceder('messagerie')" :href="route('messages.index')" :active="route().current('messages.*')" class="relative">
                                     {{ t('nav.messages') }}
                                     <span v-if="messagesNonLus > 0" class="ms-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold">
@@ -340,6 +343,9 @@ const logout = () => {
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="peutAcceder('depenses')" :href="route('depenses.index')" :active="route().current('depenses.*')">
                             {{ t('nav.expenses') }}
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="peutAcceder('depenses')" :href="route('caisse.index')" :active="route().current('caisse.*')">
+                            {{ t('nav.cash') }}
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="peutAcceder('messagerie')" :href="route('messages.index')" :active="route().current('messages.*')">
                             {{ t('nav.messages') }}

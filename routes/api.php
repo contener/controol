@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BoutiqueController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CompteController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\CaisseController;
 use App\Http\Controllers\Api\DepenseController;
 use App\Http\Controllers\Api\EquipeController;
 use App\Http\Controllers\Api\FactureController;
@@ -83,6 +84,10 @@ Route::name('api.')->group(function () {
         Route::patch('/produits/{produit}/marketplace', [ProduitController::class, 'updateMarketplace']);
         Route::apiResource('produits', ProduitController::class);
         Route::apiResource('depenses', DepenseController::class);
+
+        Route::get('/caisse', [CaisseController::class, 'index']);
+        Route::post('/caisse/apport', [CaisseController::class, 'apport'])->middleware('throttle:30,1');
+        Route::post('/caisse/retrait', [CaisseController::class, 'retrait'])->middleware('throttle:30,1');
 
         // Avant apiResource('factures') : sinon "contexte-creation" serait interprété
         // comme un {facture} à résoudre par liaison de modèle (404 avant d'atteindre

@@ -1442,6 +1442,29 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-17** — **Caisse de boutique** (site `/caisse`, page `Caisse/Index.vue` ;
+  API `GET /api/caisse`, `POST /api/caisse/apport`, `POST /api/caisse/retrait` ; app
+  `compte/caisse_screen.dart`, onglet « Caisse » de l'espace Compte). Table
+  `mouvements_caisse` (`boutique_id, sens entree|sortie, origine apport|retrait|vente|depense,
+  montant, libelle, facture_id, depense_id, user_id`) en **grand livre** : jamais
+  modifiée ni supprimée, solde toujours recalculé (Σ entrées − Σ sorties), jamais
+  stocké. `App\Services\CaisseService` est le seul point de création :
+  `apport()`, `retrait()` (refusé au-delà du solde, verrou `lockForUpdate` sur la
+  boutique), `synchroniserFacture()` (appelé par `FactureService` après
+  `creer`/`mettreAJour`/`changerStatut`, et avant `supprimer`) et
+  `synchroniserDepense()` (événements `saved`/`deleting` du modèle `Depense`). La
+  synchronisation calcule ce que le document devrait avoir apporté à la caisse et
+  n'ajoute que l'écart (ligne de correction en sens inverse si besoin) : jamais de
+  doublon. Argent encaissé pour une vente : Facture/Reçu « payée » → total TTC ; Reçu
+  envoyé → avance (plafonnée au total) ; brouillon, annulée, Proforma, facture
+  impayée → rien. Les factures et dépenses créées avant `boutiques.caisse_ouverte_le`
+  (posée à la date de la migration pour les boutiques existantes, hors `$fillable` ;
+  null = date de création de la boutique) ne touchent pas la caisse
+  (`Boutique::caisseOuverteLe()`). Accès : même permission que les Dépenses
+  (`autoriseDepenses`). Journal partagé site/API : `App\Support\JournalCaisse`
+  (filtres sens, origine, période). Migration `2026_11_17_090000`. Tests :
+  `tests/Feature/CaisseTest.php`.
+
 - **2026-11-16** — **Tableau de bord : bénéfice brut / net et marge brute / nette**
   (`BoutiqueStatsService`, site `Dashboard.vue`, app `dashboard_screen.dart`).
   Bénéfice brut = ventes − prix d'achat des produits vendus (calcul `benefice()`

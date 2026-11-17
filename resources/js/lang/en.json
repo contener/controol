@@ -11,6 +11,7 @@
         "stock": "Stock",
         "invoices": "Invoices",
         "expenses": "Expenses",
+        "cash": "Cash register",
         "messages": "Messages",
         "my_conversations": "My conversations",
         "no_shop": "No shop yet",

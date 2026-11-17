@@ -45,7 +45,18 @@ class Boutique extends Model
         return [
             'marketplace_visible' => 'boolean',
             'marketplace_disabled_by_admin' => 'boolean',
+            'caisse_ouverte_le' => 'datetime',
         ];
+    }
+
+    /**
+     * Date à partir de laquelle factures et dépenses alimentent la caisse --
+     * caisse_ouverte_le (hors $fillable, posée par la migration de la caisse pour les
+     * boutiques existantes) ou, à défaut, la création de la boutique.
+     */
+    public function caisseOuverteLe(): \Illuminate\Support\Carbon
+    {
+        return $this->caisse_ouverte_le ?? $this->created_at ?? now();
     }
 
     /**

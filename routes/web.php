@@ -19,6 +19,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompteDashboardController;
 use App\Http\Controllers\CompteParrainageController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CaisseController;
 use App\Http\Controllers\DepenseController;
 use App\Http\Controllers\DestinationSocialeController;
 use App\Http\Controllers\FactureController;
@@ -111,6 +112,10 @@ Route::middleware([
         Route::resource('produits', ProduitController::class)->except(['show']);
         Route::patch('/produits/{produit}/marketplace', [ProduitController::class, 'updateMarketplace'])->name('produits.marketplace');
         Route::resource('depenses', DepenseController::class)->except(['show']);
+
+        Route::get('/caisse', [CaisseController::class, 'index'])->name('caisse.index');
+        Route::post('/caisse/apport', [CaisseController::class, 'apport'])->middleware('throttle:30,1')->name('caisse.apport');
+        Route::post('/caisse/retrait', [CaisseController::class, 'retrait'])->middleware('throttle:30,1')->name('caisse.retrait');
 
         // Chemin "equipe", jamais "boutique/collaborateurs" : /boutique/{slug} (page
         // boutique publique, enregistrée plus haut) est un segment joker qui

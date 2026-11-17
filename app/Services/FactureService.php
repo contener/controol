@@ -13,6 +13,7 @@ class FactureService
     public function __construct(
         private readonly FactureNumeroService $numeroService,
         private readonly StockService $stockService,
+        private readonly CaisseService $caisseService,
     ) {
     }
 
@@ -49,6 +50,7 @@ class FactureService
             }
 
             $this->recalculerTotaux($facture);
+            $this->caisseService->synchroniserFacture($facture->refresh(), $user->id);
 
             return $facture->fresh('lignes');
         });
@@ -86,6 +88,7 @@ class FactureService
             }
 
             $this->recalculerTotaux($facture);
+            $this->caisseService->synchroniserFacture($facture->refresh(), $user->id);
 
             return $facture->fresh('lignes');
         });
@@ -99,6 +102,7 @@ class FactureService
             }
 
             $facture->update(['statut' => $statut]);
+            $this->caisseService->synchroniserFacture($facture, $user->id);
 
             return $facture->fresh('lignes');
         });
@@ -156,6 +160,10 @@ class FactureService
             if ($facture->statut !== 'annulee' && $this->doitGererStock($facture)) {
                 $this->restituerStockPourFacture($facture, $user->id);
             }
+
+            // Avant la suppression : le lien facture_id des mouvements de caisse passe
+            // ensuite à null, l'écart ne pourrait plus être calculé.
+            $this->caisseService->synchroniserFacture($facture, $user->id, supprimee: true);
 
             $facture->lignes()->delete();
             $facture->delete();
