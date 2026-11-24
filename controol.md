@@ -1467,7 +1467,7 @@ changement de comportement significatif)*
   `CAMERPAY_WEBHOOK_SECRET` dans `.env`, jamais dans l'app). `PaiementEnLigneService` :
   `demarrer()` (table `tentatives_paiement`, une ligne par passage sur la page CamerPay,
   `reference_marchand` aléatoire `CTRL-<ULID>-<6>` envoyée comme merchant_invoice_id et
-  idempotency_key, URL de paiement acceptée seulement en HTTPS sur camerpay.biz ou ntas-services.com -- `CAMERPAY_DOMAINES_PAIEMENT` --, téléphone envoyé seulement au format +2376XXXXXXXX ; si la réponse de statut n'a pas de montant, seul le montant d'une notification à signature HMAC vérifiée le remplace),
+  idempotency_key, URL de paiement acceptée seulement en HTTPS sur camerpay.biz (production uniquement, aucun domaine de test -- `CAMERPAY_DOMAINES_PAIEMENT`), téléphone envoyé seulement au format +2376XXXXXXXX ; si la réponse de statut n'a pas de montant, seul le montant d'une notification à signature HMAC vérifiée le remplace),
   `verifier()` (interroge CamerPay, au plus toutes les 4 s par tentative, et n'approuve
   que si statut `completed` ET montant présent et identique ET référence et devise
   identiques), `traiterNotification()` (signature HMAC-SHA256 de `uuid|invoice_id|status|amount`

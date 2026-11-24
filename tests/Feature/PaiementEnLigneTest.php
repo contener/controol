@@ -175,15 +175,25 @@ class PaiementEnLigneTest extends TestCase
         $this->assertSame('en_attente', Paiement::first()->statut);
     }
 
-    public function test_page_de_paiement_ntas_services_acceptee_et_telephone_normalise(): void
+    public function test_sous_domaine_camerpay_accepte_et_telephone_normalise(): void
     {
-        $this->camerpay(payUrl: 'https://tespay.ntas-services.com/pay/abc');
+        $this->camerpay(payUrl: 'https://pay.camerpay.biz/checkout/abc');
         $user = $this->creerUtilisateurAvecBoutique('gratuit');
         $user->forceFill(['telephone' => '6 90 12 34 56'])->save();
         $plan = $this->plan();
 
         $this->actingAs($user, 'sanctum')->postJson("/api/abonnement/plans/{$plan->id}/payer")->assertCreated();
         Http::assertSent(fn ($r) => str_ends_with($r->url(), '/payment/initiate') && $r['customer_phone'] === '+237690123456');
+    }
+
+    public function test_page_de_paiement_de_test_refusee(): void
+    {
+        // Paiements réels uniquement : une page de paiement d'un serveur de test est refusée.
+        $this->camerpay(payUrl: 'https://tespay.ntas-services.com/pay/abc');
+        $user = $this->creerUtilisateurAvecBoutique('gratuit');
+        $plan = $this->plan();
+
+        $this->actingAs($user, 'sanctum')->postJson("/api/abonnement/plans/{$plan->id}/payer")->assertStatus(503);
     }
 
     public function test_telephone_invalide_non_envoye(): void
