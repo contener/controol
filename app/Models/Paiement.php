@@ -55,6 +55,11 @@ class Paiement extends Model
         return $this->hasMany(PaiementAudit::class);
     }
 
+    public function tentatives(): HasMany
+    {
+        return $this->hasMany(TentativePaiement::class);
+    }
+
     public function estEnAttente(): bool
     {
         return $this->statut === self::STATUT_EN_ATTENTE;

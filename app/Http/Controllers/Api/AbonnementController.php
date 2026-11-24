@@ -28,7 +28,8 @@ class AbonnementController extends Controller
             'plan_actif' => $user->planActif(),
             'usage' => $limiteService->usage($user),
             'plans' => Plan::orderBy('ordre')->get(),
-            'paiement_en_attente' => Paiement::where('user_id', $user->id)->where('statut', 'en_attente')->latest()->first(),
+            // Liste blanche : jamais le modèle complet (valide_par, références...).
+            'paiement_en_attente' => Paiement::where('user_id', $user->id)->where('statut', 'en_attente')->latest()->first()?->only(['montant', 'devise']),
             'essai_actif' => $this->essaiActif($user),
             // L'application propose le paiement en ligne (CamerPay) seulement s'il est configuré.
             'paiement_en_ligne' => app(\App\Services\PaiementEnLigneService::class)->disponible(),

@@ -236,7 +236,14 @@ class PaiementEnLigneService
             }
 
             $verrouillee->update(['statut' => TentativePaiement::CONFIRMEE, 'confirmee_le' => now()]);
-            $this->validation->confirmerEnLigne($verrouillee->paiement, (string) $verrouillee->reference_prestataire);
+            $approuve = $this->validation->confirmerEnLigne($verrouillee->paiement, (string) $verrouillee->reference_prestataire);
+
+            // Argent bien reçu chez CamerPay mais Paiement déjà traité entre-temps (refusé
+            // par un administrateur, ou réglé par une autre tentative) : rien n'est
+            // réactivé automatiquement ; à examiner par l'administration (remboursement).
+            if ($approuve === null) {
+                Log::warning('CamerPay : paiement reçu pour une demande déjà traitée, à examiner.', ['paiement' => $verrouillee->paiement_id, 'tentative' => $verrouillee->id]);
+            }
         });
 
         return $tentative->refresh();

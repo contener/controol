@@ -7,6 +7,7 @@ use App\Models\Paiement;
 use App\Models\Plan;
 use App\Models\TentativePaiement;
 use App\Services\PaiementEnLigneService;
+use App\Support\HistoriquePaiements;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;
@@ -25,6 +26,12 @@ class PaiementEnLigneController extends Controller
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 503);
         }
+    }
+
+    /** Historique des paiements de l'utilisateur connecté -- champs en liste blanche. */
+    public function historique(Request $request): JsonResponse
+    {
+        return response()->json(HistoriquePaiements::pour($request->user(), $request->integer('page', 1)));
     }
 
     /** Suivi par l'application : vérifie auprès de CamerPay, jamais sur sa parole. */

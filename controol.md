@@ -1442,6 +1442,20 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-24** — **Historique des paiements côté utilisateur** (site : section
+  « Historique des paiements » de `Abonnement/Index.vue`, prop `historiquePaiements` ;
+  API `GET /api/abonnement/paiements?page=` ; app `compte/historique_paiements_screen.dart`,
+  bouton dans « Mon abonnement »). `App\Support\HistoriquePaiements` : toujours filtré
+  sur l'utilisateur connecté, champs en **liste blanche** (plan, montant, devise,
+  moyen, statut et libellé, motif de refus, dates, fin d'abonnement, tentatives),
+  références masquées (6 derniers caractères) ; jamais `valide_par`, audits (admin,
+  IP), empreintes, identifiants internes ni références complètes. Statut dérivé :
+  `paye` (approuvé), `refuse` (rejeté), `echoue` / `en_cours` (dernière tentative en
+  ligne), `en_attente` (ancien parcours sans tentative). `paiement_en_attente` (API) /
+  `paiementEnAttente` (site) réduits à `montant` et `devise`. Relation
+  `Paiement::tentatives()`. Paiement CamerPay reçu pour une demande déjà traitée :
+  rien n'est réactivé, alerte « à examiner » dans le journal.
+
 - **2026-11-24** — **Paiement des abonnements dans l'application (CamerPay)**. Même
   logique d'abonnement : `AbonnementService::demanderChangement()` crée ou réutilise
   l'abonnement et le Paiement « en attente » avec le montant calculé côté serveur

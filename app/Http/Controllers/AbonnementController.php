@@ -8,6 +8,7 @@ use App\Models\Paiement;
 use App\Models\Plan;
 use App\Services\AbonnementService;
 use App\Services\LimiteService;
+use App\Support\HistoriquePaiements;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -26,7 +27,9 @@ class AbonnementController extends Controller
             'planActif' => $user->planActif(),
             'usage' => $limiteService->usage($user),
             'plans' => Plan::orderBy('ordre')->get(),
-            'paiementEnAttente' => Paiement::where('user_id', $user->id)->where('statut', 'en_attente')->latest()->first(),
+            // Liste blanche : jamais le modèle complet (valide_par, références...).
+            'paiementEnAttente' => Paiement::where('user_id', $user->id)->where('statut', 'en_attente')->latest()->first()?->only(['montant', 'devise']),
+            'historiquePaiements' => HistoriquePaiements::pour($user, $request->integer('page', 1))->withQueryString(),
             'essaiActif' => $essaiEnCours ? [
                 'jours_restants' => $essai->joursRestants(),
                 'date_fin' => $essai->date_fin->format('d/m/Y'),

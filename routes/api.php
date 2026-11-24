@@ -155,6 +155,7 @@ Route::name('api.')->group(function () {
         Route::get('/abonnement', [AbonnementController::class, 'index']);
         Route::post('/abonnement/plans/{plan}', [AbonnementController::class, 'changer']);
         Route::post('/abonnement/plans/{plan}/payer', [PaiementEnLigneController::class, 'payer'])->middleware('throttle:10,1');
+        Route::get('/abonnement/paiements', [PaiementEnLigneController::class, 'historique'])->middleware('throttle:60,1');
         Route::get('/abonnement/paiements/{reference}', [PaiementEnLigneController::class, 'statut'])->middleware('throttle:60,1');
 
         Route::get('/parrainage', [ParrainageController::class, 'index']);

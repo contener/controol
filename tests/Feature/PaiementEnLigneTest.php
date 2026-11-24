@@ -197,6 +197,55 @@ class PaiementEnLigneTest extends TestCase
         Http::assertSent(fn ($r) => str_ends_with($r->url(), '/payment/initiate') && ! isset($r['customer_phone']));
     }
 
+    public function test_historique_montre_les_statuts_sans_information_sensible(): void
+    {
+        $this->camerpay('completed');
+        [$user, $reference] = $this->demarrer();
+        $this->actingAs($user, 'sanctum')->getJson("/api/abonnement/paiements/{$reference}")->assertJsonPath('statut', 'confirmee');
+
+        // Un paiement d'un autre utilisateur ne doit jamais apparaître.
+        $autre = User::factory()->create();
+        Paiement::create(['user_id' => $autre->id, 'montant' => 999, 'devise' => 'XAF', 'statut' => 'rejete', 'motif_rejet' => 'secret']);
+
+        $reponse = $this->actingAs($user, 'sanctum')->getJson('/api/abonnement/paiements')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.statut', 'paye')
+            ->assertJsonPath('data.0.statut_libelle', 'Payé')
+            ->assertJsonPath('data.0.montant', 5000)
+            ->assertJsonPath('data.0.plan', 'Basique')
+            ->assertJsonPath('data.0.tentatives.0.statut', 'confirmee');
+
+        $brut = $reponse->getContent();
+        foreach (['uuid-123', $reference, 'valide_par', 'admin', 'ip_address', 'empreinte', 'user_id', 'reference_prestataire', 'secret'] as $interdit) {
+            $this->assertStringNotContainsString($interdit, $brut, "« {$interdit} » ne doit pas être exposé");
+        }
+        // Références masquées : seuls les 6 derniers caractères.
+        $this->assertSame('…'.substr('uuid-123', -6), $reponse->json('data.0.reference'));
+    }
+
+    public function test_historique_statuts_echoue_et_en_attente(): void
+    {
+        $this->camerpay('failed');
+        [$user, $reference] = $this->demarrer();
+        $this->actingAs($user, 'sanctum')->getJson("/api/abonnement/paiements/{$reference}")->assertJsonPath('statut', 'echouee');
+
+        $this->actingAs($user, 'sanctum')->getJson('/api/abonnement/paiements')
+            ->assertJsonPath('data.0.statut', 'echoue')
+            ->assertJsonPath('data.0.statut_libelle', 'Échoué');
+
+        // Ancien parcours (sans tentative en ligne) : en attente de validation.
+        $user2 = $this->creerUtilisateurAvecBoutique('gratuit');
+        Paiement::create(['user_id' => $user2->id, 'montant' => 5000, 'devise' => 'XAF', 'statut' => 'en_attente']);
+        $this->actingAs($user2, 'sanctum')->getJson('/api/abonnement/paiements')->assertJsonPath('data.0.statut', 'en_attente');
+
+        // Paiement en attente exposé en liste blanche seulement.
+        $this->actingAs($user2, 'sanctum')->getJson('/api/abonnement')
+            ->assertJsonPath('paiement_en_attente.montant', '5000.00')
+            ->assertJsonMissingPath('paiement_en_attente.valide_par')
+            ->assertJsonMissingPath('paiement_en_attente.user_id');
+    }
+
     public function test_reference_d_un_autre_utilisateur_introuvable(): void
     {
         $this->camerpay('completed');
