@@ -50,4 +50,16 @@ return [
         'secret' => env('WHATSAPP_CONNECTOR_SECRET'),
     ],
 
+    // Paiement en ligne des abonnements (CamerPay : Orange Money, MTN MoMo, carte,
+    // PayPal), 2026-11-24. Clés UNIQUEMENT ici, côté serveur : jamais dans
+    // l'application mobile (une clé embarquée dans l'APK se récupère en le
+    // décompilant). api_key : jeton Bearer des appels serveur→CamerPay ;
+    // webhook_secret : secret HMAC-SHA256 des notifications CamerPay→serveur.
+    // Paiement en ligne désactivé tant que les deux ne sont pas renseignés.
+    'camerpay' => [
+        'base_url' => env('CAMERPAY_BASE_URL', 'https://camerpay.biz/api'),
+        'api_key' => env('CAMERPAY_API_KEY'),
+        'webhook_secret' => env('CAMERPAY_WEBHOOK_SECRET'),
+    ],
+
 ];

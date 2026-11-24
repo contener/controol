@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CompteController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\CaisseController;
+use App\Http\Controllers\Api\CamerPayNotificationController;
+use App\Http\Controllers\Api\PaiementEnLigneController;
 use App\Http\Controllers\Api\DepenseController;
 use App\Http\Controllers\Api\EquipeController;
 use App\Http\Controllers\Api\FactureController;
@@ -42,6 +44,12 @@ Route::name('api.')->group(function () {
     // Appelé uniquement par le service indépendant whatsapp-connector/ (Node.js) — authentifié
     // par secret partagé (voir WhatsappConnectorWebhookController), jamais par un utilisateur.
     Route::post('/webhooks/whatsapp-connector', [WhatsappConnectorWebhookController::class, 'handle']);
+
+    // Notification CamerPay (paiement en ligne des abonnements) -- authentifiée par
+    // signature HMAC, jamais par un utilisateur ; voir CamerPayNotificationController.
+    Route::post('/webhooks/camerpay', CamerPayNotificationController::class)
+        ->middleware('throttle:60,1')
+        ->name('camerpay.notification');
 
     // API métier de l'application mobile Flutter -- voir controol.md §5.21. Chaque
     // contrôleur Api\* réutilise les mêmes FormRequests/Policies/Services que son
@@ -146,6 +154,8 @@ Route::name('api.')->group(function () {
 
         Route::get('/abonnement', [AbonnementController::class, 'index']);
         Route::post('/abonnement/plans/{plan}', [AbonnementController::class, 'changer']);
+        Route::post('/abonnement/plans/{plan}/payer', [PaiementEnLigneController::class, 'payer'])->middleware('throttle:10,1');
+        Route::get('/abonnement/paiements/{reference}', [PaiementEnLigneController::class, 'statut'])->middleware('throttle:60,1');
 
         Route::get('/parrainage', [ParrainageController::class, 'index']);
     });

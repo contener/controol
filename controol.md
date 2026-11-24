@@ -1442,6 +1442,40 @@ de ce groupe nommé** — ne jamais ajouter de routes API en dehors.
 *(nouvelle entrée en haut, la plus récente en premier — une ligne suffit sauf
 changement de comportement significatif)*
 
+- **2026-11-24** — **Paiement des abonnements dans l'application (CamerPay)**. Même
+  logique d'abonnement : `AbonnementService::demanderChangement()` crée ou réutilise
+  l'abonnement et le Paiement « en attente » avec le montant calculé côté serveur
+  (prix promo d'essai compris ; renvoie désormais `paiement_id`) ; seul le moyen de
+  régler change. `App\Services\CamerPay\CamerPayClient` (format du SDK PHP officiel
+  `camerpay/php-sdk` : Bearer, `POST /payment/initiate`, `GET /payment/{uuid}/status`,
+  réponses lues de façon tolérante) est le seul code qui connaît la clé
+  (`config('services.camerpay')` : `CAMERPAY_BASE_URL`, `CAMERPAY_API_KEY`,
+  `CAMERPAY_WEBHOOK_SECRET` dans `.env`, jamais dans l'app). `PaiementEnLigneService` :
+  `demarrer()` (table `tentatives_paiement`, une ligne par passage sur la page CamerPay,
+  `reference_marchand` aléatoire `CTRL-<ULID>-<6>` envoyée comme merchant_invoice_id et
+  idempotency_key, URL de paiement acceptée seulement en HTTPS sur le domaine de l'API),
+  `verifier()` (interroge CamerPay, au plus toutes les 4 s par tentative, et n'approuve
+  que si statut `completed` ET montant présent et identique ET référence et devise
+  identiques), `traiterNotification()` (signature HMAC-SHA256 de `uuid|invoice_id|status|amount`
+  avec le secret de notification, `hash_equals`, empreinte SHA-256 conservée ; la
+  notification ne fait que déclencher `verifier()`). Approbation :
+  `PaiementValidationService::confirmerEnLigne()` (verrou `lockForUpdate`, action
+  d'audit `paiement_en_ligne`, `admin_id` désormais nullable) qui partage
+  `activerAbonnement()` avec `approuver()` (activation, essai converti, commission de
+  parrainage, notification) : une seule règle financière. Routes : `POST
+  /api/abonnement/plans/{plan}/payer` (10/min), `GET /api/abonnement/paiements/{reference}`
+  (60/min, propriétaire seulement), `POST /api/webhooks/camerpay` (public, signé, 60/min,
+  répond `OK`/401), `GET /paiement/retour?ref=` (page Blade `legal.paiement-retour`,
+  déclenche une vérification). `GET /api/abonnement` renvoie `paiement_en_ligne` (clés
+  configurées ou non). App : `compte/paiement_camerpay_screen.dart` (WebView
+  `webview_flutter`, liens non HTTPS bloqués sauf tel/intent ouverts à l'extérieur,
+  suivi serveur toutes les 5 s, fermeture sur la page de retour) ; le SDK
+  `camerpay-flutter` fourni n'est PAS utilisé (il embarque la clé API dans l'APK) et
+  est exclu de l'analyse. Le site garde l'ancien parcours (lien de paiement +
+  validation admin). Migration `2026_11_24_090000`. Tests :
+  `tests/Feature/PaiementEnLigneTest.php`. ⚠ Google Play peut refuser la vente d'un
+  abonnement numérique hors Google Play Billing.
+
 - **2026-11-17** — **Caisse de boutique** (site `/caisse`, page `Caisse/Index.vue` ;
   API `GET /api/caisse`, `POST /api/caisse/apport`, `POST /api/caisse/retrait` ; app
   `compte/caisse_screen.dart`, onglet « Caisse » de l'espace Compte). Table

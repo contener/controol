@@ -41,33 +41,7 @@ class PaiementValidationService
                 'motif_rejet' => null,
             ]);
 
-            if ($paiement->abonnement_id) {
-                $abonnement = $paiement->abonnement;
-                $plan = $abonnement->plan;
-
-                // Un seul abonnement actif à la fois : les autres passent "expire".
-                $abonnement->user->abonnements()
-                    ->where('id', '!=', $abonnement->id)
-                    ->where('statut', 'actif')
-                    ->update(['statut' => 'expire', 'date_fin' => now()]);
-
-                $abonnement->update([
-                    'statut' => 'actif',
-                    'date_debut' => now(),
-                    'date_fin' => now()->addDays($plan->duree_jours),
-                ]);
-
-                // Marque l'essai converti (arrete les rappels quotidiens) sans toucher
-                // a la logique d'abonnement ci-dessus, deja correcte : l'essai a deja
-                // ete bascule "expire" par la boucle "un seul abonnement actif" plus
-                // haut, independamment de ce marqueur.
-                EssaiUtilisateur::where('user_id', $abonnement->user_id)
-                    ->whereNull('converti_a')
-                    ->whereNull('annule_a')
-                    ->update(['converti_a' => now()]);
-            }
-
-            app(ParrainageService::class)->creerCommissionSiEligible($paiement);
+            $this->activerAbonnement($paiement);
 
             $this->journaliser($paiement, $admin, 'approbation', $statutAvant, Paiement::STATUT_APPROUVE, null, $request);
 
@@ -76,6 +50,80 @@ class PaiementValidationService
 
             return $paiement;
         });
+    }
+
+    /**
+     * Approbation automatique d'un paiement en ligne (CamerPay) -- appelée uniquement
+     * par PaiementEnLigneService après vérification SERVEUR auprès du prestataire
+     * (statut "completed", montant et référence identiques), jamais sur la seule
+     * déclaration de l'application ou d'une notification. Mêmes effets que
+     * approuver() (activerAbonnement(), notification), même verrou anti-double
+     * activation ; journalisée sans administrateur (action "paiement_en_ligne").
+     */
+    public function confirmerEnLigne(Paiement $paiement, string $referenceTransaction): ?Paiement
+    {
+        return DB::transaction(function () use ($paiement, $referenceTransaction) {
+            $paiement = Paiement::whereKey($paiement->getKey())->lockForUpdate()->first();
+
+            if (! $paiement || ! $paiement->estEnAttente()) {
+                return null;
+            }
+
+            $statutAvant = $paiement->statut;
+
+            $paiement->update([
+                'statut' => Paiement::STATUT_APPROUVE,
+                'valide_par' => null,
+                'valide_at' => now(),
+                'motif_rejet' => null,
+                'moyen_paiement' => 'camerpay',
+                'reference_transaction' => $referenceTransaction,
+            ]);
+
+            $this->activerAbonnement($paiement);
+
+            $this->journaliser($paiement, null, 'paiement_en_ligne', $statutAvant, Paiement::STATUT_APPROUVE, null, null);
+
+            $paiement = $paiement->fresh(['abonnement.plan', 'user']);
+            app(NotificationService::class)->paiementTraite($paiement);
+
+            return $paiement;
+        });
+    }
+
+    /**
+     * Effets d'un paiement approuvé, communs à l'approbation par un administrateur
+     * et au paiement en ligne vérifié : un seul exemplaire de cette règle financière.
+     */
+    private function activerAbonnement(Paiement $paiement): void
+    {
+        if ($paiement->abonnement_id) {
+            $abonnement = $paiement->abonnement;
+            $plan = $abonnement->plan;
+
+            // Un seul abonnement actif à la fois : les autres passent "expire".
+            $abonnement->user->abonnements()
+                ->where('id', '!=', $abonnement->id)
+                ->where('statut', 'actif')
+                ->update(['statut' => 'expire', 'date_fin' => now()]);
+
+            $abonnement->update([
+                'statut' => 'actif',
+                'date_debut' => now(),
+                'date_fin' => now()->addDays($plan->duree_jours),
+            ]);
+
+            // Marque l'essai converti (arrete les rappels quotidiens) sans toucher
+            // a la logique d'abonnement ci-dessus, deja correcte : l'essai a deja
+            // ete bascule "expire" par la boucle "un seul abonnement actif" plus
+            // haut, independamment de ce marqueur.
+            EssaiUtilisateur::where('user_id', $abonnement->user_id)
+                ->whereNull('converti_a')
+                ->whereNull('annule_a')
+                ->update(['converti_a' => now()]);
+        }
+
+        app(ParrainageService::class)->creerCommissionSiEligible($paiement);
     }
 
     public function rejeter(Paiement $paiement, User $admin, string $motif, Request $request): ?Paiement
@@ -110,17 +158,17 @@ class PaiementValidationService
         });
     }
 
-    private function journaliser(Paiement $paiement, User $admin, string $action, string $statutAvant, string $statutApres, ?string $motif, Request $request): void
+    private function journaliser(Paiement $paiement, ?User $admin, string $action, string $statutAvant, string $statutApres, ?string $motif, ?Request $request): void
     {
         PaiementAudit::create([
             'paiement_id' => $paiement->id,
             'user_id' => $paiement->user_id,
-            'admin_id' => $admin->id,
+            'admin_id' => $admin?->id,
             'action' => $action,
             'statut_avant' => $statutAvant,
             'statut_apres' => $statutApres,
             'motif' => $motif,
-            'ip_address' => $request->ip(),
+            'ip_address' => $request?->ip(),
         ]);
     }
 }

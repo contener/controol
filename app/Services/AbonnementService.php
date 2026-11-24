@@ -18,7 +18,7 @@ use App\Models\User;
 class AbonnementService
 {
     /**
-     * @return array{gratuit: bool, montant: float, devise: string, lien_paiement: ?string, message: string}
+     * @return array{gratuit: bool, paiement_id?: int, montant: float, devise: string, lien_paiement: ?string, message: string}
      */
     public function demanderChangement(User $user, Plan $plan): array
     {
@@ -43,6 +43,7 @@ class AbonnementService
 
             return [
                 'gratuit' => false,
+                'paiement_id' => $enAttente->id,
                 'montant' => (float) $enAttente->montant,
                 'devise' => $enAttente->devise,
                 'lien_paiement' => $lien ?: null,
@@ -78,7 +79,7 @@ class AbonnementService
         $enPromo = $plan->code === 'basique' && $essai?->statut() === EssaiStatut::EnCours;
         $montant = $enPromo ? $essai->prix_promo : $plan->prix;
 
-        Paiement::create([
+        $paiement = Paiement::create([
             'user_id' => $user->id,
             'abonnement_id' => $abonnement->id,
             'montant' => $montant,
@@ -100,6 +101,7 @@ class AbonnementService
 
         return [
             'gratuit' => false,
+            'paiement_id' => $paiement->id,
             'montant' => (float) $montant,
             'devise' => $plan->devise,
             'lien_paiement' => $lienPaiement ?: null,

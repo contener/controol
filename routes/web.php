@@ -48,6 +48,18 @@ Route::get('/marketplace', [MarketplaceController::class, 'index'])->name('marke
 Route::view('/politique-de-confidentialite', 'legal.confidentialite')->name('legal.confidentialite');
 Route::view('/suppression-compte', 'legal.suppression-compte')->name('legal.suppression-compte');
 
+// Page de retour après le paiement CamerPay (merchant_return_url). N'approuve rien :
+// elle déclenche seulement une vérification serveur auprès de CamerPay (la référence,
+// aléatoire, est impossible à deviner) ; l'application ferme sa fenêtre en la voyant.
+Route::get('/paiement/retour', function (\Illuminate\Http\Request $request, \App\Services\PaiementEnLigneService $paiements) {
+    $tentative = \App\Models\TentativePaiement::where('reference_marchand', (string) $request->query('ref'))->first();
+    if ($tentative) {
+        $tentative = $paiements->verifier($tentative);
+    }
+
+    return view('legal.paiement-retour', ['confirme' => $tentative?->statut === \App\Models\TentativePaiement::CONFIRMEE]);
+})->middleware('throttle:30,1')->name('paiement.retour');
+
 Route::middleware('guest')->group(function () {
     Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
     Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');

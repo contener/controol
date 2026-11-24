@@ -120,7 +120,7 @@ const rejeter = () => {
                                     <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ formatDate(audit.created_at) }}</td>
                                     <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-slate-100">{{ actionLabels[audit.action] }}</td>
                                     <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ statutLabels[audit.statut_avant] }} → {{ statutLabels[audit.statut_apres] }}</td>
-                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ audit.admin.name }}</td>
+                                    <td class="px-6 py-3 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">{{ audit.admin?.name ?? 'Paiement en ligne (CamerPay)' }}</td>
                                     <td class="px-6 py-3 text-sm text-slate-500 dark:text-slate-400">{{ audit.motif ?? '—' }}</td>
                                     <td class="px-6 py-3 whitespace-nowrap text-xs text-slate-400 dark:text-slate-500">{{ audit.ip_address }}</td>
                                 </tr>
