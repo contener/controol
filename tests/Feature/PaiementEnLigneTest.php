@@ -140,6 +140,21 @@ class PaiementEnLigneTest extends TestCase
         $this->assertNotNull(TentativePaiement::first()->empreinte_notification);
     }
 
+    public function test_testeur_de_webhook_camerpay_accepte_sans_aucun_effet(): void
+    {
+        // Charge utile identique à celle du "Testeur de webhook" de l'espace CamerPay.
+        $donnees = ['uuid' => 'TEST-lvtWYD2IaoeiKKIB', 'invoice_id' => 'TEST-INV-LW8ytF', 'status' => 'completed', 'amount' => '15000.00', 'test' => '1'];
+        $signature = hash_hmac('sha256', 'TEST-lvtWYD2IaoeiKKIB|TEST-INV-LW8ytF|completed|15000.00', self::SECRET);
+
+        $this->post('/api/webhooks/camerpay', [...$donnees, 'signature' => $signature], ['X-CamerPay-Signature' => $signature, 'X-CamerPay-Test' => '1'])
+            ->assertOk()->assertSee('OK');
+
+        // Même charge utile avec une mauvaise signature : toujours refusée.
+        $this->post('/api/webhooks/camerpay', [...$donnees, 'signature' => str_repeat('0', 64)])->assertStatus(401)->assertSee('Invalid signature');
+
+        $this->assertSame(0, Paiement::where('statut', Paiement::STATUT_APPROUVE)->count());
+    }
+
     public function test_notification_signee_mais_camerpay_dit_en_attente_n_approuve_rien(): void
     {
         $this->camerpay('pending');

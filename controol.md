@@ -1479,7 +1479,7 @@ changement de comportement significatif)*
   parrainage, notification) : une seule règle financière. Routes : `POST
   /api/abonnement/plans/{plan}/payer` (10/min), `GET /api/abonnement/paiements/{reference}`
   (60/min, propriétaire seulement), `POST /api/webhooks/camerpay` (public, signé, 60/min,
-  répond `OK`/401), `GET /paiement/retour?ref=` (page Blade `legal.paiement-retour`,
+  401 si signature invalide ; signature valide mais transaction inconnue, ex. « Testeur de webhook » CamerPay → 200 `OK` sans aucun effet), `GET /paiement/retour?ref=` (page Blade `legal.paiement-retour`,
   déclenche une vérification). `GET /api/abonnement` renvoie `paiement_en_ligne` (clés
   configurées ou non). App : `compte/paiement_camerpay_screen.dart` (WebView
   `webview_flutter`, liens non HTTPS bloqués sauf tel/intent ouverts à l'extérieur,

@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Notification serveur→serveur de CamerPay (merchant_callback_url). Signature
- * HMAC-SHA256 obligatoire (champ "signature" ou en-tête X-CamerPay-Signature) ; une
- * notification valide déclenche seulement une vérification auprès de CamerPay, elle
- * n'approuve jamais un paiement par elle-même -- voir PaiementEnLigneService.
+ * HMAC-SHA256 obligatoire (champ "signature" ou en-tête X-CamerPay-Signature) : sinon
+ * 401. Une notification valide déclenche seulement une vérification auprès de
+ * CamerPay, elle n'approuve jamais un paiement par elle-même ; signée mais pour une
+ * transaction inconnue (testeur de webhook CamerPay, uuid TEST-...) : 200 "OK" sans
+ * aucun effet -- voir PaiementEnLigneService::traiterNotification().
  */
 class CamerPayNotificationController extends Controller
 {
@@ -21,10 +23,18 @@ class CamerPayNotificationController extends Controller
         $donnees = $request->only(['uuid', 'invoice_id', 'merchant_invoice_id', 'status', 'amount']);
         $signature = (string) ($request->input('signature') ?: $request->header('X-CamerPay-Signature', ''));
 
-        if (! $paiements->traiterNotification($donnees, $signature)) {
-            Log::warning('CamerPay : notification refusée (signature invalide ou transaction inconnue).', ['ip' => $request->ip()]);
+        $resultat = $paiements->traiterNotification($donnees, $signature);
+
+        if ($resultat === PaiementEnLigneService::NOTIFICATION_SIGNATURE_INVALIDE) {
+            Log::warning('CamerPay : notification refusée (signature invalide).', ['ip' => $request->ip()]);
 
             return response('Invalid signature', 401);
+        }
+
+        if ($resultat === PaiementEnLigneService::NOTIFICATION_IGNOREE) {
+            Log::info('CamerPay : notification signée pour une transaction inconnue, ignorée sans effet.', [
+                'test' => $request->input('test') === '1' || $request->header('X-CamerPay-Test') === '1',
+            ]);
         }
 
         return response('OK', 200);

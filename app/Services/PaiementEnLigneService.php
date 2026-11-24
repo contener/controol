@@ -182,7 +182,18 @@ class PaiementEnLigneService
      *
      * @param  array<string, mixed>  $donnees
      */
-    public function traiterNotification(array $donnees, string $signature): bool
+    public const NOTIFICATION_SIGNATURE_INVALIDE = 'signature_invalide';
+
+    public const NOTIFICATION_IGNOREE = 'ignoree';
+
+    public const NOTIFICATION_TRAITEE = 'traitee';
+
+    /**
+     * signature_invalide : rejetée (401) ; ignoree : signature correcte mais
+     * transaction inconnue (ex. "Testeur de webhook" CamerPay, uuid TEST-...) --
+     * accusée réception sans AUCUN effet ; traitee : vérification déclenchée.
+     */
+    public function traiterNotification(array $donnees, string $signature): string
     {
         $uuid = (string) ($donnees['uuid'] ?? '');
         $reference = (string) ($donnees['invoice_id'] ?? $donnees['merchant_invoice_id'] ?? '');
@@ -190,12 +201,12 @@ class PaiementEnLigneService
         $montant = (string) ($donnees['amount'] ?? '');
 
         if ($uuid === '' || $reference === '' || ! $this->camerpay->signatureValide($uuid, $reference, $statut, $montant, $signature)) {
-            return false;
+            return self::NOTIFICATION_SIGNATURE_INVALIDE;
         }
 
         $tentative = TentativePaiement::where('reference_prestataire', $uuid)->where('reference_marchand', $reference)->first();
         if (! $tentative) {
-            return false;
+            return self::NOTIFICATION_IGNOREE;
         }
 
         $tentative->update(['empreinte_notification' => hash('sha256', $uuid.'|'.$reference.'|'.$statut.'|'.$montant)]);
@@ -203,7 +214,7 @@ class PaiementEnLigneService
         // La notification ne prouve rien à elle seule : vérification auprès de CamerPay.
         $this->verifier($tentative, forcer: true, montantNotifieSigne: is_numeric($montant) ? (float) $montant : null);
 
-        return true;
+        return self::NOTIFICATION_TRAITEE;
     }
 
     /** @param  array{statut: string, montant: ?float, reference_marchand: ?string, devise: ?string}  $etat */
