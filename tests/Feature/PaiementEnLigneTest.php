@@ -151,6 +151,52 @@ class PaiementEnLigneTest extends TestCase
         $this->assertSame('en_attente', Paiement::first()->statut);
     }
 
+    public function test_statut_sans_montant_confirme_par_le_montant_de_la_notification_signee(): void
+    {
+        $this->camerpay('completed', null);
+        [$user, $reference] = $this->demarrer();
+
+        // Suivi par l'application seul : montant inconnu, jamais approuvé.
+        $this->actingAs($user, 'sanctum')->getJson("/api/abonnement/paiements/{$reference}")->assertJsonPath('statut', 'en_cours');
+
+        // Notification signée avec le bon montant : approuvé.
+        $signature = hash_hmac('sha256', 'uuid-123|'.$reference.'|completed|5000.00', self::SECRET);
+        $this->post('/api/webhooks/camerpay', ['uuid' => 'uuid-123', 'invoice_id' => $reference, 'status' => 'completed', 'amount' => '5000.00', 'signature' => $signature])->assertOk();
+        $this->assertSame(Paiement::STATUT_APPROUVE, Paiement::first()->statut);
+    }
+
+    public function test_notification_signee_avec_mauvais_montant_jamais_approuvee(): void
+    {
+        $this->camerpay('completed', null);
+        [, $reference] = $this->demarrer();
+
+        $signature = hash_hmac('sha256', 'uuid-123|'.$reference.'|completed|100', self::SECRET);
+        $this->post('/api/webhooks/camerpay', ['uuid' => 'uuid-123', 'invoice_id' => $reference, 'status' => 'completed', 'amount' => '100', 'signature' => $signature])->assertOk();
+        $this->assertSame('en_attente', Paiement::first()->statut);
+    }
+
+    public function test_page_de_paiement_ntas_services_acceptee_et_telephone_normalise(): void
+    {
+        $this->camerpay(payUrl: 'https://tespay.ntas-services.com/pay/abc');
+        $user = $this->creerUtilisateurAvecBoutique('gratuit');
+        $user->forceFill(['telephone' => '6 90 12 34 56'])->save();
+        $plan = $this->plan();
+
+        $this->actingAs($user, 'sanctum')->postJson("/api/abonnement/plans/{$plan->id}/payer")->assertCreated();
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/payment/initiate') && $r['customer_phone'] === '+237690123456');
+    }
+
+    public function test_telephone_invalide_non_envoye(): void
+    {
+        $this->camerpay();
+        $user = $this->creerUtilisateurAvecBoutique('gratuit');
+        $user->forceFill(['telephone' => '12345'])->save();
+        $plan = $this->plan();
+
+        $this->actingAs($user, 'sanctum')->postJson("/api/abonnement/plans/{$plan->id}/payer")->assertCreated();
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/payment/initiate') && ! isset($r['customer_phone']));
+    }
+
     public function test_reference_d_un_autre_utilisateur_introuvable(): void
     {
         $this->camerpay('completed');

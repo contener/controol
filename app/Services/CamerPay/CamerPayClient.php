@@ -82,20 +82,29 @@ class CamerPayClient
 
     /**
      * La page de paiement ouverte dans l'application doit être en HTTPS et chez
-     * CamerPay (même domaine que l'API configurée) -- jamais une adresse arbitraire.
+     * CamerPay (domaines de config('services.camerpay.domaines_paiement'), plus celui
+     * de l'API configurée) -- jamais une adresse arbitraire.
      */
     private function urlDePaiementSure(string $url): bool
     {
-        $hote = parse_url($url, PHP_URL_HOST);
-        $hoteApi = parse_url((string) config('services.camerpay.base_url'), PHP_URL_HOST);
-
-        if (parse_url($url, PHP_URL_SCHEME) !== 'https' || ! is_string($hote) || ! is_string($hoteApi)) {
+        $hote = strtolower((string) parse_url($url, PHP_URL_HOST));
+        if (parse_url($url, PHP_URL_SCHEME) !== 'https' || $hote === '') {
             return false;
         }
 
-        $domaine = implode('.', array_slice(explode('.', $hoteApi), -2));
+        $domaines = (array) config('services.camerpay.domaines_paiement', []);
+        $hoteApi = parse_url((string) config('services.camerpay.base_url'), PHP_URL_HOST);
+        if (is_string($hoteApi)) {
+            $domaines[] = implode('.', array_slice(explode('.', strtolower($hoteApi)), -2));
+        }
 
-        return $hote === $domaine || str_ends_with($hote, '.'.$domaine);
+        foreach (array_unique($domaines) as $domaine) {
+            if ($hote === $domaine || str_ends_with($hote, '.'.$domaine)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return array<string, mixed> */

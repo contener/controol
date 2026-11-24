@@ -109,16 +109,31 @@ class PaiementEnLigneService
             'merchant_return_url' => route('paiement.retour', ['ref' => $reference]),
             'customer_name' => $user->name,
             'customer_email' => $user->email,
-            'customer_phone' => $user->telephone,
+            'customer_phone' => $this->telephoneCamerounais($user->telephone),
             'source' => 'mobile',
         ], fn ($v) => $v !== null && $v !== ''));
+    }
+
+    /**
+     * Numéro au format attendu par CamerPay (+2376XXXXXXXX), ou null : un numéro mal
+     * formé ferait refuser toute la demande (422), alors que la page de paiement
+     * CamerPay sait le demander elle-même.
+     */
+    private function telephoneCamerounais(?string $telephone): ?string
+    {
+        $chiffres = preg_replace('/\D+/', '', (string) $telephone);
+        if (preg_match('/^(?:00)?(?:237)?(6\d{8})$/', $chiffres, $m)) {
+            return '+237'.$m[1];
+        }
+
+        return null;
     }
 
     /**
      * Interroge CamerPay pour cette tentative et approuve le paiement si (et seulement
      * si) tout concorde. Sans effet si la tentative est déjà terminée.
      */
-    public function verifier(TentativePaiement $tentative, bool $forcer = false): TentativePaiement
+    public function verifier(TentativePaiement $tentative, bool $forcer = false, ?float $montantNotifieSigne = null): TentativePaiement
     {
         if ($tentative->estTerminee() || ! $tentative->reference_prestataire) {
             return $tentative;
@@ -139,6 +154,12 @@ class PaiementEnLigneService
         $tentative->update(['statut_prestataire' => Str::limit($etat['statut'], 30, '')]);
 
         if ($etat['statut'] === 'completed') {
+            // Réponse de statut sans montant : seul le montant d'une notification dont
+            // la signature HMAC a été vérifiée peut le remplacer (jamais l'application).
+            if ($etat['montant'] === null && $montantNotifieSigne !== null) {
+                $etat['montant'] = $montantNotifieSigne;
+            }
+
             if (! $this->concorde($tentative, $etat)) {
                 Log::warning('CamerPay : paiement "completed" non concordant, non approuvé.', ['tentative' => $tentative->id]);
 
@@ -180,7 +201,7 @@ class PaiementEnLigneService
         $tentative->update(['empreinte_notification' => hash('sha256', $uuid.'|'.$reference.'|'.$statut.'|'.$montant)]);
 
         // La notification ne prouve rien à elle seule : vérification auprès de CamerPay.
-        $this->verifier($tentative, forcer: true);
+        $this->verifier($tentative, forcer: true, montantNotifieSigne: is_numeric($montant) ? (float) $montant : null);
 
         return true;
     }

@@ -60,6 +60,9 @@ return [
         'base_url' => env('CAMERPAY_BASE_URL', 'https://camerpay.biz/api'),
         'api_key' => env('CAMERPAY_API_KEY'),
         'webhook_secret' => env('CAMERPAY_WEBHOOK_SECRET'),
+        // Domaines autorisés pour la page de paiement ouverte dans l'application
+        // (camerpay.biz et ntas-services.com, domaine du SDK officiel, sous-domaines inclus).
+        'domaines_paiement' => array_filter(array_map('trim', explode(',', (string) env('CAMERPAY_DOMAINES_PAIEMENT', 'camerpay.biz,ntas-services.com')))),
     ],
 
 ];

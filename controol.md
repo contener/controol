@@ -1453,7 +1453,7 @@ changement de comportement significatif)*
   `CAMERPAY_WEBHOOK_SECRET` dans `.env`, jamais dans l'app). `PaiementEnLigneService` :
   `demarrer()` (table `tentatives_paiement`, une ligne par passage sur la page CamerPay,
   `reference_marchand` aléatoire `CTRL-<ULID>-<6>` envoyée comme merchant_invoice_id et
-  idempotency_key, URL de paiement acceptée seulement en HTTPS sur le domaine de l'API),
+  idempotency_key, URL de paiement acceptée seulement en HTTPS sur camerpay.biz ou ntas-services.com -- `CAMERPAY_DOMAINES_PAIEMENT` --, téléphone envoyé seulement au format +2376XXXXXXXX ; si la réponse de statut n'a pas de montant, seul le montant d'une notification à signature HMAC vérifiée le remplace),
   `verifier()` (interroge CamerPay, au plus toutes les 4 s par tentative, et n'approuve
   que si statut `completed` ET montant présent et identique ET référence et devise
   identiques), `traiterNotification()` (signature HMAC-SHA256 de `uuid|invoice_id|status|amount`
@@ -1472,7 +1472,10 @@ changement de comportement significatif)*
   suivi serveur toutes les 5 s, fermeture sur la page de retour) ; le SDK
   `camerpay-flutter` fourni n'est PAS utilisé (il embarque la clé API dans l'APK) et
   est exclu de l'analyse. Le site garde l'ancien parcours (lien de paiement +
-  validation admin). Migration `2026_11_24_090000`. Tests :
+  validation admin) ; l'APPLICATION n'utilise plus jamais le lien de paiement
+  externe : sans clés CamerPay (`paiement_en_ligne` = false), un plan payant affiche
+  « Paiement bientôt disponible » (seul le plan Gratuit reste choisissable). Clés
+  à renseigner dans le `.env` du serveur puis `php artisan config:cache`. Migration `2026_11_24_090000`. Tests :
   `tests/Feature/PaiementEnLigneTest.php`. ⚠ Google Play peut refuser la vente d'un
   abonnement numérique hors Google Play Billing.
 
